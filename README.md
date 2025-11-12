@@ -1,4 +1,6 @@
-# MobiCom 2025 - 5G-MAP: Demystifying the Performance Implications of Cloud-Based 5G Core Deployments
+# MobiCom 2025 - 5G-MAP
+
+This repo contains the bare-minimum code to reproduce the results of the MobiCom 2025 paper - 5G-MAP: Demystifying the Performance Implications of Cloud-Based 5G Core Deployments. This platform is currently undergoing commercialzation and forms the technical foundation of the Cellular Optimization, Security & Manamgent via Intelligent Control (COSMIC) platform. For more details please contact the authors of the paper.
 
 This repository contains the instructions for:
 - deployment of the 5G-MAP integrated OpenAirInterface 5G Core
