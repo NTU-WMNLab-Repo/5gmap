@@ -260,6 +260,8 @@ do
 
 
 		helm install gnb$u gnbsim/ -n oai 
+		# 修正 1：精準等待 gnbsim Pod 就緒
+        wait_for_pod "oai" "gnbsim$u"
 		sleep 15
 		echo -e "${BLUE} ${bold} GNBSIM$u deployed ${NC} ${NORMAL}"
 		gnbsimpod=$(kubectl get pods -n oai  | grep gnbsim$u | awk '{print $1}')
@@ -275,10 +277,21 @@ do
 		sed -i "22s/.*/        deplocation: $dnnloc/" oai-dnn/02_deployment.yaml
 
 		kubectl apply -k oai-dnn/
+		# 修正 2：精準等待 dnn Pod 就緒
+        wait_for_pod "oai" "oai-dnn$u"
 		sleep 5
 		echo -e "${BLUE} ${bold} DNN$u deployed ${NC} ${NORMAL}"
 		dnnpod=$(kubectl get pods -n oai  | grep oai-dnn$u | awk '{print $1}')
 		dnneth0=$(kubectl exec -n oai $dnnpod -- ifconfig | grep "inet 10.42" | awk '{print $2}')
+
+		# 修正 3：加入防呆，如果變數不幸還是抓空，強制暫停一下
+        if [ -z "$upfeth0" ] || [ -z "$dnneth0" ]; then
+            echo -e "\033[31m[Warning] UPF or DNN IP is empty, waiting 10s for networking...\033[0m"
+            sleep 10
+            # 重新獲取
+            upfeth0=$(kubectl exec -n oai $upfpod -c spgwu -- ifconfig | grep "inet 10.42" | awk '{print $2}')
+            dnneth0=$(kubectl exec -n oai $dnnpod -- ifconfig | grep "inet 10.42" | awk '{print $2}')
+        fi
 		
 		kubectl exec -it -n oai $dnnpod -- iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 		echo -e "${BLUE} Route 1 ${NC} ${NORMAL}"
