@@ -16,7 +16,7 @@ config:
 
   exporters:
     jaeger:
-      endpoint: "10.42.1.8:14250"
+      endpoint: jaeger.jaeger.svc.cluster.local:14250
       tls:
         insecure: true
 

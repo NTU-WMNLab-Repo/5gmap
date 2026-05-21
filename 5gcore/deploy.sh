@@ -295,7 +295,7 @@ do
 		
 		kubectl exec -it -n oai $dnnpod -- iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 		echo -e "${BLUE} Route 1 ${NC} ${NORMAL}"
-		kubectl exec -it -n oai $dnnpod -- ip route add 12.1.1.0/24 via $upfeth0 dev eth0
+		kubectl exec -it -n oai $dnnpod -- ip route add 12.1.1.0/24 via $upfeth0 dev eth0 onlink
 		echo -e "${BLUE} Route 2 ${NC} ${NORMAL}"
 		kubectl exec -it -n oai $gnbsimpod -c gnbsim -- ip route replace $dnneth0 via 0.0.0.0 dev eth0 src 12.1.1.$ip
 		echo -e "${BLUE} Route 3 ${NC} ${NORMAL}"
