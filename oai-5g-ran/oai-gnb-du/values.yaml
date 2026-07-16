@@ -23,7 +23,7 @@ serviceAccount:
   annotations: {}
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: "oai-gnb-du-sa"
+  name: "oai-gnb-du10-sa"
 
 podSecurityContext:
   runAsUser: 0
@@ -60,24 +60,24 @@ multus:    # needed when gnB service will run on another interface rather than t
   rruHostInterface: "bond1"
 
 config:
-  mountConfig: false          #If config file is mounted then please edit mount.conf in configmap.yaml properly 
+  mountConfig: true
   timeZone: "Europe/Paris"
   rfSimulator: "server"
-  gnbduName: "oai-du-rfsim"
+  gnbduName: "oai-gnb-du10-rfsim"
   useSaTDDcu: "yes"
-  mcc: "001"   # check the information with AMF, SMF, UPF/SPGWU
-  mnc: "01"    # check the information with AMF, SMF, UPF/SPGWU
-  mncLength: "2" # check the information with AMF, SMF, UPF/SPGWU
-  tac: "1"     # check the information with AMF
-  nssaiSst: "1"  #currently only 4 standard values are allowed 1,2,3,4
-  nssaiSd0: "ffffff"    #values in hexa-decimal format
-  amfIpAddress: "oai-amf-svc"  # Not mandatory, you can leave it like this in coming release it will be removed
+  mcc: "208"
+  mnc: "95"
+  mncLength: "2"
+  tac: "0x00a000"
+  nssaiSst: "210"
+  nssaiSd0: "123"
+  amfIpAddress: "10.42.1.94"
   gnbNgaIfName: "eth0"            # net1 in case multus create is true that means another interface is created for ngap interface, n2 to communicate with amf
   gnbNgaIpAddress: "status.podIP" # n2IPadd in case multus create is true
   gnbNguIfName: "eth0"   #net2 in case multus create is true gtu interface for upf/spgwu
   gnbNguIpAddress: "status.podIP" # n3IPadd in case multus create is true
   f1IfName: "eth0"                # net3 incase multus create is true
-  f1cuIpAddress: "10.244.0.92"     # replace this value with GNB_CU_eth0_IP if not using multus
+  f1cuIpAddress: "oai-gnb-cu10"
   f1duIpAddress: "status.podIP"
   f1cuPort: "2153"
   f1duPort: "2153"
@@ -99,6 +99,7 @@ affinity: {}
 
 terminationGracePeriodSeconds: 5
 
-nodeSelector: {}
+nodeSelector:
+  deplocation: az
 
-nodeName:
+nodeName: 

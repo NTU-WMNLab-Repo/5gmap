@@ -8,7 +8,7 @@ data:
   {{- end }}
 {{- if .Values.config.mountConfig }}
   gnb.conf: |
-      Active_gNBs = ( "oai-du-rfsim");
+      Active_gNBs = ( "{{ .Values.config.gnbduName }}");
       # Asn1_verbosity, choice in: none, info, annoying
       Asn1_verbosity = "none";
 
