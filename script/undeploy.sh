@@ -4,6 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
+enable_error_trap
 
 NUM_USERS="${1:-1}"
 NUM_SLICES="${2:-1}"

@@ -27,6 +27,10 @@ die() {
     exit 1
 }
 
+enable_error_trap() {
+    trap 'error "Failed at ${BASH_SOURCE[0]}:${LINENO}: ${BASH_COMMAND}"' ERR
+}
+
 require_commands() {
     local cmd
     for cmd in "$@"; do
@@ -94,6 +98,12 @@ get_pod_ip() {
     local container="${3:-}"
     local ip=""
     local exec_args=(-n "$namespace" "$pod")
+
+    ip="$(kubectl get pod "$pod" -n "$namespace" -o jsonpath='{.status.podIP}' 2>/dev/null || true)"
+    if [ -n "$ip" ]; then
+        echo "$ip"
+        return 0
+    fi
 
     if [ -n "$container" ]; then
         exec_args+=(-c "$container")

@@ -8,6 +8,7 @@ CORE_DIR="$ROOT_DIR/5gcore"
 RAN_DIR="$ROOT_DIR/oai-5g-ran"
 
 source "$SCRIPT_DIR/common.sh"
+enable_error_trap
 
 USECASE="${1:-zoomv3}"
 NUM_USERS="${2:-1}"
