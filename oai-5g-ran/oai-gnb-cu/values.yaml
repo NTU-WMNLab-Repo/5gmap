@@ -69,7 +69,7 @@ config:
   tac: "0x00a000"
   nssaiSst: "210"
   nssaiSd0: "123"
-  amfIpAddress: "10.42.1.98"
+  amfIpAddress: "10.42.1.102"
   gnbNgaIfName: "eth0"            # net1 in case multus create is true that means another interface is created for ngap interface, n2 to communicate with amf
   gnbNgaIpAddress: "status.podIP" # n2IPadd in case multus create is true
   gnbNguIfName: "eth0"   #net2 in case multus create is true gtu interface for upf/spgwu
@@ -79,7 +79,7 @@ config:
   f1duIpAddress: "oai-gnb-du10"
   f1cuPort: "2153"
   f1duPort: "2153"
-  useAdditionalOptions: "--sa --rfsim --log_config.global_log_options level,nocolor,time"
+  useAdditionalOptions: "--rfsim --log_config.global_log_options level,nocolor,time"
 
 
 resources:
