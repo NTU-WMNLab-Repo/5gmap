@@ -16,6 +16,16 @@ data:
         nssai_sd = {{ .Values.config.nssaiSd }};
       };
 
+      rfsimulator = (
+        {
+          serveraddr = "{{ .Values.config.sdrAddrs }}";
+          serverport = "4043";
+          options = "";
+          modelname = "AWGN";
+          IQfile = "/tmp/rfsimulator.iqs";
+        }
+      );
+
       log_config = {
         global_log_level = "info";
         hw_log_level = "info";

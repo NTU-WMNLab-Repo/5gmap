@@ -61,6 +61,13 @@ spec:
           name: f1
           protocol: UDP
         {{- if .Values.start.gnbcu}}
+        command:
+          - /bin/bash
+          - -c
+          - |
+            cp /opt/oai-gnb/etc/gnb.conf /tmp/gnb.conf
+            sed -i "s/__GNB_NGA_IP_ADDRESS__/${GNB_NGA_IP_ADDRESS}/g; s/__GNB_NGU_IP_ADDRESS__/${GNB_NGU_IP_ADDRESS}/g" /tmp/gnb.conf
+            exec /opt/oai-gnb/bin/nr-softmodem -O /tmp/gnb.conf ${USE_ADDITIONAL_OPTIONS}
         {{- else}}
         command:
           - /bin/sleep
@@ -229,5 +236,4 @@ spec:
       {{- if .Values.nodeName}}
       nodeName: {{ .Values.nodeName }}
       {{- end }}
-
 

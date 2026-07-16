@@ -60,7 +60,7 @@ config:
   dnn: "oai"
   nssaiSst: "210"
   nssaiSd: "123"
-  useAdditionalOptions: "-E --sa --rfsim --rfsimulator.serveraddr oai-gnb-du10 -r 106 --numerology 1 -C 3619200000 --nokrnmod" 
+  useAdditionalOptions: "-E --rfsim --thread-pool N --rfsimulator.[0].serveraddr oai-gnb-du10 -r 106 --numerology 1 -C 3619200000"
 
 # in case of du change the command   
 #"--sa --rfsim -r 106 --numerology 1 -C 3619200000 --nokrnmod --log_config.global_log_options level,nocolor,time" 

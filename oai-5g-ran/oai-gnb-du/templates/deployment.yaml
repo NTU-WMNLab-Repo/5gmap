@@ -64,6 +64,13 @@ spec:
           name: f1
           protocol: UDP
         {{- if .Values.start.gnbdu}}
+        command:
+          - /bin/bash
+          - -c
+          - |
+            cp /opt/oai-gnb/etc/gnb.conf /tmp/gnb.conf
+            sed -i "s/__F1_DU_IP_ADDRESS__/${F1_DU_IP_ADDRESS}/g" /tmp/gnb.conf
+            exec /opt/oai-gnb/bin/nr-softmodem -O /tmp/gnb.conf ${USE_ADDITIONAL_OPTIONS}
         {{- else}}
         command:
           - /bin/sleep
@@ -219,18 +226,6 @@ spec:
           - /bin/sleep
           - infinity
         {{- end}}
-      - name: rfsim-relay
-        image: python:3.11-alpine
-        command:
-          - python3
-          - /opt/oai-gnb/etc/rfsim-relay.py
-        ports:
-          - containerPort: 4043
-            name: rfsim
-            protocol: TCP
-        volumeMounts:
-          - mountPath: /opt/oai-gnb/etc
-            name: configuration
       {{- if .Values.config.mountConfig}}
       volumes:
       - configMap:

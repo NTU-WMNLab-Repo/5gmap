@@ -6,49 +6,6 @@ data:
   {{- range $key, $val := .Values.config }}
   {{ $key }}: {{ $val | quote }}
   {{- end }}
-  rfsim-relay.py: |
-      import select
-      import socket
-      import threading
-
-      HOST = "0.0.0.0"
-      PORT = 4043
-
-      def pipe(src, dst):
-          try:
-              while True:
-                  ready, _, _ = select.select([src], [], [], 1)
-                  if not ready:
-                      continue
-                  data = src.recv(65536)
-                  if not data:
-                      break
-                  dst.sendall(data)
-          except OSError:
-              pass
-          finally:
-              for sock in (src, dst):
-                  try:
-                      sock.shutdown(socket.SHUT_RDWR)
-                  except OSError:
-                      pass
-                  try:
-                      sock.close()
-                  except OSError:
-                      pass
-
-      with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
-          server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-          server.bind((HOST, PORT))
-          server.listen(8)
-          print(f"rfsim relay listening on {HOST}:{PORT}", flush=True)
-          while True:
-              first, first_addr = server.accept()
-              print(f"rfsim relay accepted first client {first_addr}", flush=True)
-              second, second_addr = server.accept()
-              print(f"rfsim relay accepted second client {second_addr}", flush=True)
-              threading.Thread(target=pipe, args=(first, second), daemon=True).start()
-              threading.Thread(target=pipe, args=(second, first), daemon=True).start()
 {{- if .Values.config.mountConfig }}
   gnb.conf: |
       Active_gNBs = ( "{{ .Values.config.gnbduName }}");
@@ -147,7 +104,7 @@ data:
               powerRampingStep                                            = 1;
       #ra_ReponseWindow
       #1,2,4,8,10,20,40,80
-              ra_ResponseWindow                                           = 4;
+              ra_ResponseWindow                                           = 5;
       #ssb_perRACH_OccasionAndCB_PreamblesPerSSB_PR
       #1=oneeighth,2=onefourth,3=half,4=one,5=two,6=four,7=eight,8=sixteen
               ssb_perRACH_OccasionAndCB_PreamblesPerSSB_PR                = 4;
@@ -230,7 +187,7 @@ data:
           tr_s_preference  = "local_L1";
           tr_n_preference  = "f1";
           local_n_if_name = "{{ .Values.config.f1IfName }}";
-          local_n_address = "0.0.0.0";
+          local_n_address = "__F1_DU_IP_ADDRESS__";
           remote_n_address = "{{ .Values.config.f1cuIpAddress }}";
           local_n_portc   = 500;
           local_n_portd   = 2153;
@@ -268,6 +225,16 @@ data:
                clock_src = "internal";
           }
       );  
+
+      rfsimulator = (
+        {
+          serveraddr = "{{ .Values.config.sdrAddrs }}";
+          serverport = "4043";
+          options = "";
+          modelname = "AWGN";
+          IQfile = "/tmp/rfsimulator.iqs";
+        }
+      );
 
       THREAD_STRUCT = (
         {
