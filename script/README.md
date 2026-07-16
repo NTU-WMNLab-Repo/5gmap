@@ -215,3 +215,26 @@ log 會寫到：
 - `TEST_TYPE=1` 的 host-level test 尚未移植到 OAI RAN 流程，目前只支援 `TEST_TYPE=0`。
 - MySQL 預設不會在 cleanup 時刪除，避免每次重跑都重建 subscriber database。
 - 如果你保留部署結果後要手動清理，可以再跑 `./script/undeploy.sh <NUM_USERS> <NUM_SLICES>`。
+
+## 中途失敗後如何重跑
+
+如果部署中途失敗，例如某個 Helm values key 找不到，先依照本次執行的 users/slices 清理已經建立的 release：
+
+```bash
+cd /home/genechen/5gmap
+./script/undeploy.sh 1 1
+```
+
+上面會清掉 `nrf10`、`udr10`、`udm10`、`ausf10` 等 core release，以及對應的 gNB、NR-UE、DNN。不存在的 release 會自動略過。
+
+如果也想把 MySQL 一起刪掉：
+
+```bash
+DELETE_MYSQL=1 ./script/undeploy.sh 1 1
+```
+
+清完後重新跑：
+
+```bash
+./script/run.sh
+```

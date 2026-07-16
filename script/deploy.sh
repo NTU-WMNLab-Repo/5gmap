@@ -109,6 +109,9 @@ deploy_core_slice() {
 
     sed -i "22s/.*/name: oai-amf$s/" "$CORE_DIR/oai-amf/Chart.yaml"
     set_yaml_value "$CORE_DIR/oai-amf/values.yaml" nrfFqdn "\"oai-nrf$s-svc\""
+    if ! grep -qE "^[[:space:]]*smfFqdn:" "$CORE_DIR/oai-amf/values.yaml"; then
+        sed -i "/ausfFqdn:/a\  smfFqdn: \"oai-smf$s-svc\"" "$CORE_DIR/oai-amf/values.yaml"
+    fi
     set_yaml_value "$CORE_DIR/oai-amf/values.yaml" smfFqdn "\"oai-smf$s-svc\""
     set_yaml_value "$CORE_DIR/oai-amf/values.yaml" ausfFqdn "\"oai-ausf$s-svc\""
     set_yaml_value "$CORE_DIR/oai-amf/values.yaml" saname "\"oai-amf$s-sa\""
