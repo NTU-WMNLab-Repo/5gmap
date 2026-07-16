@@ -186,7 +186,7 @@ data:
           tr_s_preference  = "local_L1";
           tr_n_preference  = "f1";
           local_n_if_name = "{{ .Values.config.f1IfName }}";
-          local_n_address = "read";
+          local_n_address = "0.0.0.0";
           remote_n_address = "{{ .Values.config.f1cuIpAddress }}";
           local_n_portc   = 500;
           local_n_portd   = 2153;
