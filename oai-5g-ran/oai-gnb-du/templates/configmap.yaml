@@ -6,15 +6,8 @@ data:
   {{- range $key, $val := .Values.config }}
   {{ $key }}: {{ $val | quote }}
   {{- end }}
-
----
 {{- if .Values.config.mountConfig }}
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Chart.Name }}-configmap
-data:
-  mounted.conf: |
+  gnb.conf: |
       Active_gNBs = ( "oai-du-rfsim");
       # Asn1_verbosity, choice in: none, info, annoying
       Asn1_verbosity = "none";
@@ -27,11 +20,11 @@ data:
 
       #     cell_type =  "CELL_MACRO_GNB";
 
-          gNB_name  =  "oai-du-rfsim";
+          gNB_name  =  "{{ .Values.config.gnbduName }}";
 
           // Tracking area code, 0x0000 and 0xfffe are reserved values
-          tracking_area_code  =  1;
-          plmn_list = ({ mcc = 001; mnc = 01; mnc_length = 2; snssaiList = ({ sst = 1, sd = 0xffffff }) });
+          tracking_area_code  =  {{ .Values.config.tac }};
+          plmn_list = ({ mcc = {{ .Values.config.mcc }}; mnc = {{ .Values.config.mnc }}; mnc_length = {{ .Values.config.mncLength }}; snssaiList = ({ sst = {{ .Values.config.nssaiSst }}, sd = 0x{{ .Values.config.nssaiSd0 }} }) });
 
 
           nr_cellid = 12345678L;
@@ -192,9 +185,9 @@ data:
           num_cc           = 1;
           tr_s_preference  = "local_L1";
           tr_n_preference  = "f1";
-          local_n_if_name = "eth0";
-          local_n_address = "10.244.0.84";
-          remote_n_address = "10.244.0.1";
+          local_n_if_name = "{{ .Values.config.f1IfName }}";
+          local_n_address = "read";
+          remote_n_address = "{{ .Values.config.f1cuIpAddress }}";
           local_n_portc   = 500;
           local_n_portd   = 2153;
           remote_n_portc  = 501;
@@ -240,7 +233,7 @@ data:
         }
       );
       rfsimulator: {
-      serveraddr = "server";
+      serveraddr = "{{ .Values.config.rfSimulator }}";
           serverport = "4043";
           options = (); #("saviq"); or/and "chanmod"
           modelname = "AWGN";

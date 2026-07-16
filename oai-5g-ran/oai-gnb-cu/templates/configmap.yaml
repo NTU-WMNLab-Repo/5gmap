@@ -6,15 +6,8 @@ data:
   {{- range $key, $val := .Values.config }}
   {{ $key }}: {{ $val | quote }}
   {{- end }}
-
----
 {{- if .Values.config.mountConfig }}
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Chart.Name }}-configmap
-data:
-  mounted.conf: |
+  gnb.conf: |
       Active_gNBs = ( "oai-cu-rfsim");
       # Asn1_verbosity, choice in: none, info, annoying
       Asn1_verbosity = "none";
@@ -28,11 +21,11 @@ data:
 
       #     cell_type =  "CELL_MACRO_GNB";
 
-          gNB_name  =  "oai-cu-rfsim";
+          gNB_name  =  "{{ .Values.config.gnbcuName }}";
 
           // Tracking area code, 0x0000 and 0xfffe are reserved values
-          tracking_area_code  =  1;
-          plmn_list = ({ mcc = 001; mnc = 01; mnc_length = 2; snssaiList = ({ sst = 1, sd = 0xffffff }) });
+          tracking_area_code  =  {{ .Values.config.tac }};
+          plmn_list = ({ mcc = {{ .Values.config.mcc }}; mnc = {{ .Values.config.mnc }}; mnc_length = {{ .Values.config.mncLength }}; snssaiList = ({ sst = {{ .Values.config.nssaiSst }}, sd = 0x{{ .Values.config.nssaiSd0 }} }) });
 
 
           nr_cellid = 12345678L;
@@ -40,9 +33,9 @@ data:
 
           tr_s_preference = "f1";
 
-          local_s_if_name = "eth0";
-          local_s_address = "10.244.0.83";
-          remote_s_address = "127.0.0.1";
+          local_s_if_name = "{{ .Values.config.f1IfName }}";
+          local_s_address = "read";
+          remote_s_address = "{{ .Values.config.f1duIpAddress }}";
           local_s_portc   = 501;
           local_s_portd   = 2153;
           remote_s_portc  = 500;
@@ -193,7 +186,7 @@ data:
 
 
           ////////// AMF parameters:
-              amf_ip_address      = ( { ipv4       = "10.244.0.72";
+              amf_ip_address      = ( { ipv4       = "{{ .Values.config.amfIpAddress }}";
                                     ipv6       = "192:168:30::17";
                                     active     = "yes";
                                     preference = "ipv4";
@@ -203,10 +196,10 @@ data:
           NETWORK_INTERFACES :
           {
 
-              GNB_INTERFACE_NAME_FOR_NG_AMF            = "eth0";
-              GNB_IPV4_ADDRESS_FOR_NG_AMF              = "10.244.0.83";
-              GNB_INTERFACE_NAME_FOR_NGU               = "eth0";
-              GNB_IPV4_ADDRESS_FOR_NGU                 = "10.244.0.83";
+              GNB_INTERFACE_NAME_FOR_NG_AMF            = "{{ .Values.config.gnbNgaIfName }}";
+              GNB_IPV4_ADDRESS_FOR_NG_AMF              = "read";
+              GNB_INTERFACE_NAME_FOR_NGU               = "{{ .Values.config.gnbNguIfName }}";
+              GNB_IPV4_ADDRESS_FOR_NGU                 = "read";
               GNB_PORT_FOR_S1U                         = 2152; # Spec 2152
           };
         }

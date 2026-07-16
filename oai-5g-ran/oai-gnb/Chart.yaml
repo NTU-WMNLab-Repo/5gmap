@@ -20,7 +20,7 @@
 ################################################################################
 
 apiVersion: v2
-name: oai-gnb
+name: oai-gnb10
 description: A Helm chart for gnb network function
 
 # A chart can be either an 'application' or a 'library' chart.
