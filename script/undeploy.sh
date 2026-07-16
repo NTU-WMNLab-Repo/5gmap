@@ -30,6 +30,8 @@ total=$((NUM_USERS * NUM_SLICES))
 for ((offset=0; offset<total; offset++)); do
     u=$((10 + offset))
     helm_uninstall_if_exists "gnb$u" "$NAMESPACE"
+    helm_uninstall_if_exists "gnbcu$u" "$NAMESPACE"
+    helm_uninstall_if_exists "gnbdu$u" "$NAMESPACE"
     helm_uninstall_if_exists "nrue$u" "$NAMESPACE"
     kubectl delete deployment "oai-dnn$u" -n "$NAMESPACE" --ignore-not-found=true
 done

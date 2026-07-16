@@ -68,6 +68,7 @@ wait_for_pod() {
     local pod=""
     local phase=""
     local ready=""
+    local waiting_reasons=""
 
     info "Waiting for pod ${prefix} in namespace ${namespace}"
 
@@ -77,6 +78,12 @@ wait_for_pod() {
         if [ -n "$pod" ]; then
             phase="$(kubectl get pod "$pod" -n "$namespace" -o jsonpath='{.status.phase}' 2>/dev/null || true)"
             ready="$(kubectl get pod "$pod" -n "$namespace" -o jsonpath='{.status.containerStatuses[*].ready}' 2>/dev/null || true)"
+            waiting_reasons="$(kubectl get pod "$pod" -n "$namespace" -o jsonpath='{.status.containerStatuses[*].state.waiting.reason}' 2>/dev/null || true)"
+
+            if [[ "$waiting_reasons" == *CrashLoopBackOff* ]] || [[ "$waiting_reasons" == *ImagePullBackOff* ]] || [[ "$waiting_reasons" == *ErrImagePull* ]]; then
+                kubectl describe pod "$pod" -n "$namespace" >&2 || true
+                die "Pod $pod is not healthy: $waiting_reasons"
+            fi
 
             if [ "$phase" = "Running" ] && [[ "$ready" != *false* ]]; then
                 success "$pod is running"

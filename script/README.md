@@ -1,6 +1,6 @@
 # 5GMAP Script 使用說明
 
-這個目錄放的是新版的一鍵部署流程，用來把原本的 `gnbsim` 流程改成 `oai-5g-ran` 的 `oai-gnb` + `oai-nr-ue`。
+這個目錄放的是新版的一鍵部署流程，用來把原本的 `gnbsim` 流程改成 `oai-5g-ran` 的 `oai-gnb-cu` + `oai-gnb-du` + `oai-nr-ue`。
 
 目前主流程是：
 
@@ -77,7 +77,7 @@ cd /home/genechen/5gmap
 Press ENTER to cleanup, or Ctrl-C to keep the deployment running...
 ```
 
-按 Enter 會清掉本次部署的 core、gNB、NR-UE、DNN。按 `Ctrl-C` 可以保留部署結果，方便你手動查看 pod log 或 debug。
+按 Enter 會清掉本次部署的 core、CU、DU、NR-UE、DNN。按 `Ctrl-C` 可以保留部署結果，方便你手動查看 pod log 或 debug。
 
 ## 常用參數
 
@@ -178,7 +178,8 @@ DELETE_MYSQL=1 ./script/undeploy.sh 1 1
    - SMF
    - UPF
 4. 依 user 部署：
-   - `oai-gnb`
+   - `oai-gnb-cu`
+   - `oai-gnb-du`
    - `oai-nr-ue`
    - `oai-dnn`
 5. 設定 DNN pod 的 NAT 與到 UE data network `12.1.1.0/24` 的 route。
@@ -225,7 +226,7 @@ cd /home/genechen/5gmap
 ./script/undeploy.sh 1 1
 ```
 
-上面會清掉 `nrf10`、`udr10`、`udm10`、`ausf10` 等 core release，以及對應的 gNB、NR-UE、DNN。不存在的 release 會自動略過。
+上面會清掉 `nrf10`、`udr10`、`udm10`、`ausf10` 等 core release，以及對應的 CU、DU、NR-UE、DNN。不存在的 release 會自動略過。
 
 如果也想把 MySQL 一起刪掉：
 
