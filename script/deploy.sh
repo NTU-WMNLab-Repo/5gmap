@@ -180,7 +180,7 @@ deploy_oai_ran_user() {
     set_yaml_value "$cu_chart/values.yaml" f1duIpAddress "\"oai-gnb-du$u\""
     sed -i "/nodeSelector:/,/nodeName:/c\nodeSelector:\n  deplocation: $RAN_LOC\n\nnodeName: " "$cu_chart/values.yaml"
     helm upgrade --install "gnbcu$u" "$cu_chart" -n "$NAMESPACE"
-    wait_for_pod "$NAMESPACE" "oai-gnb-cu$u" 420
+    wait_for_pod "$NAMESPACE" "oai-gnb-cu$u" 420 45
 
     sed -i "s/^name: .*/name: oai-gnb-du$u/" "$du_chart/Chart.yaml"
     sed -i -E "s|^([[:space:]]*)name: \"oai-gnb-du.*-sa\"|\\1name: \"oai-gnb-du$u-sa\"|" "$du_chart/values.yaml"
@@ -198,7 +198,7 @@ deploy_oai_ran_user() {
     set_yaml_value "$du_chart/values.yaml" f1duIpAddress "\"status.podIP\""
     sed -i "/nodeSelector:/,/nodeName:/c\nodeSelector:\n  deplocation: $RAN_LOC\n\nnodeName: " "$du_chart/values.yaml"
     helm upgrade --install "gnbdu$u" "$du_chart" -n "$NAMESPACE"
-    wait_for_pod "$NAMESPACE" "oai-gnb-du$u" 420
+    wait_for_pod "$NAMESPACE" "oai-gnb-du$u" 420 45
 
     sed -i "s/^name: .*/name: oai-nr-ue$u/" "$ue_chart/Chart.yaml"
     sed -i -E "s|^([[:space:]]*)name: \"oai-nr-ue.*-sa\"|\\1name: \"oai-nr-ue$u-sa\"|" "$ue_chart/values.yaml"
@@ -211,7 +211,7 @@ deploy_oai_ran_user() {
     set_yaml_value "$ue_chart/values.yaml" nssaiSd "\"123\""
     sed -i "/nodeSelector:/,/nodeName:/c\nodeSelector:\n  deplocation: $RAN_LOC\n\nnodeName: " "$ue_chart/values.yaml"
     helm upgrade --install "nrue$u" "$ue_chart" -n "$NAMESPACE"
-    wait_for_pod "$NAMESPACE" "oai-nr-ue$u" 420
+    wait_for_pod "$NAMESPACE" "oai-nr-ue$u" 420 45
 
     sed -i "4s/.*/  name: oai-dnn$u/" "$CORE_DIR/oai-dnn/02_deployment.yaml"
     sed -i "6s/.*/    app: oai-dnn$u/" "$CORE_DIR/oai-dnn/02_deployment.yaml"

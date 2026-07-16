@@ -65,7 +65,9 @@ wait_for_pod() {
     local namespace="$1"
     local prefix="$2"
     local timeout="${3:-300}"
+    local stable_seconds="${4:-10}"
     local elapsed=0
+    local ready_elapsed=0
     local pod=""
     local phase=""
     local ready=""
@@ -87,8 +89,13 @@ wait_for_pod() {
             fi
 
             if [ "$phase" = "Running" ] && [[ "$ready" != *false* ]]; then
-                success "$pod is running"
-                return 0
+                ready_elapsed=$((ready_elapsed + 5))
+                if [ "$ready_elapsed" -ge "$stable_seconds" ]; then
+                    success "$pod is running"
+                    return 0
+                fi
+            else
+                ready_elapsed=0
             fi
         fi
 
