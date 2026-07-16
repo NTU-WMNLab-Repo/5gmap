@@ -57,7 +57,8 @@ pod_by_prefix() {
     kubectl get pods -n "$namespace" \
         --field-selector=status.phase!=Succeeded,status.phase!=Failed \
         --no-headers 2>/dev/null \
-        | awk -v prefix="$prefix" '$1 ~ "^" prefix {print $1; exit}'
+        | awk -v prefix="$prefix" '$1 ~ "^" prefix {print $1; exit}' \
+        || true
 }
 
 wait_for_pod() {
