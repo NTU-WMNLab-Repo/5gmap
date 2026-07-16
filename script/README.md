@@ -213,6 +213,7 @@ log 會寫到：
 ## 注意事項
 
 - `deploy.sh` 會修改 `5gcore/` 和 `oai-5g-ran/` 裡面的 Helm `values.yaml` / `Chart.yaml`，這沿用原本專案的做法。
+- `oai-gnb-cu` 和 `oai-gnb-du` 會開啟 `mountConfig`，並掛載 `gnb.conf` 到 `/opt/oai-gnb/etc`，因為目前使用的 `oaisoftwarealliance/oai-gnb:develop` image 啟動時需要這個設定檔。
 - `TEST_TYPE=1` 的 host-level test 尚未移植到 OAI RAN 流程，目前只支援 `TEST_TYPE=0`。
 - MySQL 預設不會在 cleanup 時刪除，避免每次重跑都重建 subscriber database。
 - 如果你保留部署結果後要手動清理，可以再跑 `./script/undeploy.sh <NUM_USERS> <NUM_SLICES>`。
