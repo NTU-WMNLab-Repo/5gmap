@@ -26,7 +26,7 @@ serviceAccount:
   create: true
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  saname: "oai-udm11-sa"
+  saname: "oai-udm10-sa"
 
 podSecurityContext:
   runAsUser: 0
@@ -56,20 +56,20 @@ config:
   udrIpAddress: "127.0.0.1"
   udrPort: "80"
   udrApiVersionNb: "v1"   #Nb means northbound
-  udrFqdn: "oai-udr11-svc"
+  udrFqdn: "oai-udr10-svc"
   nrfIpAddress: "127.0.0.1"
   nrfPort: "80"
   nrfApiVersionNb: "v1"   #Nb means northbound
-  nrfFqdn: "oai-nrf11-svc"
+  nrfFqdn: "oai-nrf10-svc"
 
 proxy:
   opmode: OTEL
   loglevel: trace
   proxyport: 11095
   serviceport: 8080
-  networksliceID: 11
+  networksliceID: 10
   locationID: az
-  servicename: "udm12"
+  servicename: "udm11"
 
 persistence:
   sharedvolume: false

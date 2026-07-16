@@ -27,7 +27,7 @@ serviceAccount:
   create: true
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  saname: "oai-smf11-sa"
+  saname: "oai-smf10-sa"
 
 podSecurityContext:
   runAsUser: 0
@@ -75,15 +75,15 @@ config:
   discoverPcf: "no"            # Set to yes if PCF is used and want to be discovered via NRF
   ueMtu: 1500
   registerNrf: "yes" # if wants to use NRF registry and discovery
-  nrfFqdn: "oai-nrf11-svc"
-  udmFqdn: "oai-udm11-svc"
-  amfFqdn: "oai-amf11-svc"
+  nrfFqdn: "oai-nrf10-svc"
+  udmFqdn: "oai-udm10-svc"
+  amfFqdn: "oai-amf10-svc"
   # slicing parameter defining one slice is mandatory, if you want to have multiple just copy the below structure and add 1,2 or 3. 
   # You can define maximum 4 slices from here in case of more please change the configuration file. 
   dnnNi0: "oai"
   pdusessiontype0: "IPv4"
   ipv4dnnRange0: "12.1.1.2 - 12.1.1.254"
-  nssaiSst0: "211"
+  nssaiSst0: "210"
   nssaiSd0: "123"
   qosProfile5qi0: 2
   sessionAmbrUl0: "1000Mbps"
@@ -110,9 +110,9 @@ proxy:
   loglevel: trace
   proxyport: 11095
   serviceport: 8080
-  networksliceID: 11
+  networksliceID: 10
   locationID: edge
-  servicename: "smf12"
+  servicename: "smf11"
 
 resources:
   define: false
