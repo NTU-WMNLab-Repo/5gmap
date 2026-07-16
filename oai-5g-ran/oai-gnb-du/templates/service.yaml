@@ -20,5 +20,9 @@ spec:
       port: 2153
       targetPort: 2153
       protocol: UDP
+    - name: rfsim
+      port: 4043
+      targetPort: 4043
+      protocol: TCP
   selector:
     {{- include "oai-gnb-du.selectorLabels" . | nindent 4 }}

@@ -65,6 +65,11 @@ spec:
               configMapKeyRef:
                 name: {{ .Chart.Name }}-configmap
                 key: rfSimulator
+          - name: SDR_ADDRS
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Chart.Name }}-configmap
+                key: sdrAddrs
           - name: FULL_IMSI
             valueFrom:
               configMapKeyRef:

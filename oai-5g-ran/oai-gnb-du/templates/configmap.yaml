@@ -6,6 +6,49 @@ data:
   {{- range $key, $val := .Values.config }}
   {{ $key }}: {{ $val | quote }}
   {{- end }}
+  rfsim-relay.py: |
+      import select
+      import socket
+      import threading
+
+      HOST = "0.0.0.0"
+      PORT = 4043
+
+      def pipe(src, dst):
+          try:
+              while True:
+                  ready, _, _ = select.select([src], [], [], 1)
+                  if not ready:
+                      continue
+                  data = src.recv(65536)
+                  if not data:
+                      break
+                  dst.sendall(data)
+          except OSError:
+              pass
+          finally:
+              for sock in (src, dst):
+                  try:
+                      sock.shutdown(socket.SHUT_RDWR)
+                  except OSError:
+                      pass
+                  try:
+                      sock.close()
+                  except OSError:
+                      pass
+
+      with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
+          server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+          server.bind((HOST, PORT))
+          server.listen(8)
+          print(f"rfsim relay listening on {HOST}:{PORT}", flush=True)
+          while True:
+              first, first_addr = server.accept()
+              print(f"rfsim relay accepted first client {first_addr}", flush=True)
+              second, second_addr = server.accept()
+              print(f"rfsim relay accepted second client {second_addr}", flush=True)
+              threading.Thread(target=pipe, args=(first, second), daemon=True).start()
+              threading.Thread(target=pipe, args=(second, first), daemon=True).start()
 {{- if .Values.config.mountConfig }}
   gnb.conf: |
       Active_gNBs = ( "{{ .Values.config.gnbduName }}");
@@ -25,7 +68,7 @@ data:
 
           // Tracking area code, 0x0000 and 0xfffe are reserved values
           tracking_area_code  =  {{ .Values.config.tac }};
-          plmn_list = ({ mcc = {{ .Values.config.mcc }}; mnc = {{ .Values.config.mnc }}; mnc_length = {{ .Values.config.mncLength }}; snssaiList = ({ sst = {{ .Values.config.nssaiSst }}, sd = 0x{{ .Values.config.nssaiSd0 }} }) });
+          plmn_list = ({ mcc = {{ .Values.config.mcc }}; mnc = {{ .Values.config.mnc }}; mnc_length = {{ .Values.config.mncLength }}; snssaiList = ({ sst = {{ .Values.config.nssaiSst }}, sd = {{ .Values.config.nssaiSd0 }} }) });
 
 
           nr_cellid = 12345678L;
@@ -211,6 +254,7 @@ data:
       RUs = (
           {     
              local_rf       = "yes"
+               sdr_addrs      = "{{ .Values.config.sdrAddrs }}";
                nb_tx          = 1
                nb_rx          = 1
                att_tx         = 0
@@ -233,14 +277,6 @@ data:
           worker_config      = "WORKER_ENABLE";
         }
       );
-      rfsimulator: {
-      serveraddr = "{{ .Values.config.rfSimulator }}";
-          serverport = "4043";
-          options = (); #("saviq"); or/and "chanmod"
-          modelname = "AWGN";
-          IQfile = "/tmp/rfsimulator.iqs"
-      }
-
            log_config :
            {
              global_log_level                      ="info";

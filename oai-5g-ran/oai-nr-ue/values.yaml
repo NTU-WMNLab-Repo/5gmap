@@ -53,13 +53,14 @@ multus:
 config:
   timeZone: "Europe/Paris"
   rfSimulator: "oai-gnb-du10"
+  sdrAddrs: "oai-gnb-du10"
   fullImsi: "208950000000010"
   fullKey: "0C0A34601D4F07677303652C04625310"
   opc: "63bfa50ee6523365ff14c1f45f88737d"
   dnn: "oai"
   nssaiSst: "210"
   nssaiSd: "123"
-  useAdditionalOptions: "-E --sa --rfsim -r 106 --numerology 1 -C 3619200000 --nokrnmod" 
+  useAdditionalOptions: "-E --sa --rfsim --rfsimulator.serveraddr oai-gnb-du10 -r 106 --numerology 1 -C 3619200000 --nokrnmod" 
 
 # in case of du change the command   
 #"--sa --rfsim -r 106 --numerology 1 -C 3619200000 --nokrnmod --log_config.global_log_options level,nocolor,time" 

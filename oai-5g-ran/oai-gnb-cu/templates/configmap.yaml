@@ -25,7 +25,7 @@ data:
 
           // Tracking area code, 0x0000 and 0xfffe are reserved values
           tracking_area_code  =  {{ .Values.config.tac }};
-          plmn_list = ({ mcc = {{ .Values.config.mcc }}; mnc = {{ .Values.config.mnc }}; mnc_length = {{ .Values.config.mncLength }}; snssaiList = ({ sst = {{ .Values.config.nssaiSst }}, sd = 0x{{ .Values.config.nssaiSd0 }} }) });
+          plmn_list = ({ mcc = {{ .Values.config.mcc }}; mnc = {{ .Values.config.mnc }}; mnc_length = {{ .Values.config.mncLength }}; snssaiList = ({ sst = {{ .Values.config.nssaiSst }}, sd = {{ .Values.config.nssaiSd0 }} }) });
 
 
           tr_s_preference = "f1";

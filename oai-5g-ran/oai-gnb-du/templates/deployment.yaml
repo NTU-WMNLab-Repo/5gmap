@@ -87,6 +87,11 @@ spec:
               configMapKeyRef:
                 name: {{ .Chart.Name }}-configmap
                 key: rfSimulator
+          - name: SDR_ADDRS
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Chart.Name }}-configmap
+                key: sdrAddrs
           - name: USE_SA_TDD_DU
             valueFrom:
               configMapKeyRef:
@@ -214,6 +219,18 @@ spec:
           - /bin/sleep
           - infinity
         {{- end}}
+      - name: rfsim-relay
+        image: python:3.11-alpine
+        command:
+          - python3
+          - /opt/oai-gnb/etc/rfsim-relay.py
+        ports:
+          - containerPort: 4043
+            name: rfsim
+            protocol: TCP
+        volumeMounts:
+          - mountPath: /opt/oai-gnb/etc
+            name: configuration
       {{- if .Values.config.mountConfig}}
       volumes:
       - configMap:
