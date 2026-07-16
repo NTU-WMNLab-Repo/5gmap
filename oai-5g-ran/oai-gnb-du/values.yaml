@@ -72,7 +72,7 @@ config:
   tac: "0x00a000"
   nssaiSst: "210"
   nssaiSd0: "123"
-  amfIpAddress: "10.42.1.106"
+  amfIpAddress: "10.42.1.111"
   gnbNgaIfName: "eth0"            # net1 in case multus create is true that means another interface is created for ngap interface, n2 to communicate with amf
   gnbNgaIpAddress: "status.podIP" # n2IPadd in case multus create is true
   gnbNguIfName: "eth0"   #net2 in case multus create is true gtu interface for upf/spgwu
