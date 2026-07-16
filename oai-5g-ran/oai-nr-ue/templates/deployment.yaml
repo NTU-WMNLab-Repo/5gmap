@@ -34,6 +34,9 @@ spec:
       containers:
       - name: nr-ue
         image: "{{ .Values.nfimage.repository }}:{{ .Values.nfimage.version }}"
+        volumeMounts:
+          - mountPath: /opt/oai-nr-ue/etc
+            name: configuration
         {{- if .Values.resources.define}}
         resources:
           requests:
@@ -112,6 +115,10 @@ spec:
           - infinity
         {{- end}}
       dnsPolicy: ClusterFirst
+      volumes:
+      - configMap:
+          name: {{ .Chart.Name }}-configmap
+        name: configuration
       restartPolicy: Always
       serviceAccountName: {{ .Values.serviceAccount.name }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
