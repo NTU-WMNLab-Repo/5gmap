@@ -24,17 +24,24 @@ fi
 require_commands kubectl awk sed grep
 
 run_ping_test() {
-    local dnn_pod="$1"
+    local ue_pod="$1"
     local ue_ip="$2"
-    local index="$3"
+    local dnn_ip="$3"
+    local index="$4"
     local log="$LOG_DIR/ping.$index.log.txt"
 
-    info "Ping test: $dnn_pod -> $ue_ip"
-    kubectl exec -n "$NAMESPACE" "$dnn_pod" -- ping -c 5 "$ue_ip" | tee "$log"
+    info "Ping test: $ue_ip -> $dnn_ip"
+    kubectl exec -n "$NAMESPACE" "$ue_pod" -c nr-ue -- ping -I oaitun_ue1 -c 5 "$dnn_ip" | tee "$log"
 
     local loss
     loss="$(awk -F',' '/packet loss/ {gsub(/^[ \t]+|[ \t]+$/, "", $3); print $3}' "$log")"
     success "Ping result for test $index: ${loss:-see $log}"
+}
+
+get_ue_data_ip() {
+    local ue_pod="$1"
+    kubectl exec -n "$NAMESPACE" "$ue_pod" -c nr-ue -- \
+        ip -4 -o addr show oaitun_ue1 | awk '{split($4, a, "/"); print a[1]}'
 }
 
 run_iperf_test() {
@@ -62,7 +69,9 @@ run_iperf_test() {
         info "DL iperf3 test $index.$ite: $dnn_pod -> $ue_ip"
         kubectl exec -n "$NAMESPACE" "$ue_pod" -c nr-ue -- sh -c "pkill iperf3 2>/dev/null || true; iperf3 -s -B $ue_ip -D"
         sleep 2
-        kubectl exec -n "$NAMESPACE" "$dnn_pod" -- iperf3 -c "$ue_ip" -t 20 | tee -a "$dl_log"
+        if ! kubectl exec -n "$NAMESPACE" "$dnn_pod" -- iperf3 -c "$ue_ip" -t 20 | tee -a "$dl_log"; then
+            info "DL iperf3 failed for $dnn_pod -> $ue_ip; continuing with UL test"
+        fi
 
         info "UL iperf3 test $index.$ite: $ue_pod -> $dnn_ip"
         kubectl exec -n "$NAMESPACE" "$dnn_pod" -- sh -c "pkill iperf3 2>/dev/null || true; iperf3 -s -B $dnn_ip -D"
@@ -73,12 +82,10 @@ run_iperf_test() {
 
 info "Starting OAI RAN traffic tests"
 total=$((NUM_USERS * NUM_SLICES))
-ue_ip_suffix=2
 
 for ((offset=0; offset<total; offset++)); do
     u=$((10 + offset))
     test_index=$((offset + 1))
-    ue_ip="12.1.1.$ue_ip_suffix"
 
     dnn_pod="$(pod_by_prefix "$NAMESPACE" "oai-dnn$u")"
     ue_pod="$(pod_by_prefix "$NAMESPACE" "oai-nr-ue$u")"
@@ -87,11 +94,12 @@ for ((offset=0; offset<total; offset++)); do
     [ -n "$ue_pod" ] || die "Cannot find NR UE pod oai-nr-ue$u"
 
     dnn_ip="$(get_pod_ip "$NAMESPACE" "$dnn_pod")"
+    ue_ip="$(get_ue_data_ip "$ue_pod")"
+    [ -n "$ue_ip" ] || die "Cannot find oaitun_ue1 IPv4 for $ue_pod"
 
-    run_ping_test "$dnn_pod" "$ue_ip" "$test_index"
+    run_ping_test "$ue_pod" "$ue_ip" "$dnn_ip" "$test_index"
     run_iperf_test "$dnn_pod" "$ue_pod" "$dnn_ip" "$ue_ip" "$test_index"
 
-    ue_ip_suffix=$((ue_ip_suffix + 1))
 done
 
 success "Traffic tests complete. Logs are in $LOG_DIR"

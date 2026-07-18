@@ -186,7 +186,7 @@ DELETE_MYSQL=1 ./script/undeploy.sh 1 1
 
 ## Traffic test 與 log
 
-`start_traffic.sh` 目前會先從 DNN pod ping 對應的 UE data IP：
+`start_traffic.sh` 會先從 NR-UE 的 `oaitun_ue1` ping DNN pod IP。UE data IP 會從 `oaitun_ue1` 動態讀取，不再假設一定是：
 
 ```text
 12.1.1.2
@@ -194,7 +194,7 @@ DELETE_MYSQL=1 ./script/undeploy.sh 1 1
 ...
 ```
 
-如果 DNN pod 和 NR-UE container 裡都有 `iperf3`，才會額外跑 DL/UL throughput test。
+如果 DNN pod 和 NR-UE container 裡都有 `iperf3`，才會額外跑 throughput test。UL 方向是 NR-UE -> DNN；DL 方向是 DNN -> NR-UE，在 Calico pod network 沒有額外 node-level route 或 Multus data network 時可能失敗，script 會記錄並繼續跑 UL。
 
 log 會寫到：
 

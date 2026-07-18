@@ -182,6 +182,10 @@ deploy_oai_ran_user() {
     sed -i "/nodeSelector:/,/nodeName:/c\nodeSelector:\n  deplocation: $RAN_LOC\n\nnodeName: " "$cu_chart/values.yaml"
     helm upgrade --install "gnbcu$u" "$cu_chart" -n "$NAMESPACE"
     wait_for_pod "$NAMESPACE" "oai-gnb-cu$u" 420 45
+    local cu_pod
+    local cu_ip
+    cu_pod="$(pod_by_prefix "$NAMESPACE" "oai-gnb-cu$u")"
+    cu_ip="$(get_pod_ip "$NAMESPACE" "$cu_pod")"
 
     sed -i "s/^name: .*/name: oai-gnb-du$u/" "$du_chart/Chart.yaml"
     sed -i -E "s|^([[:space:]]*)name: \"oai-gnb-du.*-sa\"|\\1name: \"oai-gnb-du$u-sa\"|" "$du_chart/values.yaml"
@@ -196,7 +200,7 @@ deploy_oai_ran_user() {
     set_yaml_value "$du_chart/values.yaml" rfSimulator "\"server\""
     set_yaml_value "$du_chart/values.yaml" sdrAddrs "\"server\""
     set_yaml_value "$du_chart/values.yaml" gnbduName "\"oai-gnb-du$u-rfsim\""
-    set_yaml_value "$du_chart/values.yaml" f1cuIpAddress "\"oai-gnb-cu$u\""
+    set_yaml_value "$du_chart/values.yaml" f1cuIpAddress "\"$cu_ip\""
     set_yaml_value "$du_chart/values.yaml" f1duIpAddress "\"status.podIP\""
     set_yaml_value "$du_chart/values.yaml" useAdditionalOptions "\"-E --rfsim --thread-pool N --rfsimulator.[0].serveraddr server --log_config.global_log_options level,nocolor,time\""
     sed -i "/nodeSelector:/,/nodeName:/c\nodeSelector:\n  deplocation: $RAN_LOC\n\nnodeName: " "$du_chart/values.yaml"
