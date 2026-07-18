@@ -1,3 +1,7 @@
+# TODO: DL data plane still needs routing/debug. UE -> DNN ping and UL iperf3 are working; DNN -> UE/DL is not yet fully validated.
+
+# TODO: 把oai和tolgaomeratalay那些docker image抓下來換成自己的，避免對方改版。
+
 # OAI 5G RAN notes for 5GMAP
 
 This directory contains the Helm charts used by `../script/deploy.sh` to deploy

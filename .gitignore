@@ -1,0 +1,27 @@
+# 5GMAP experiment outputs
+5gcore/logs/
+script/logs/
+logs/
+
+# Benchmark output
+benchmarks/*.log
+benchmarks/*.txt
+
+# Packet captures and runtime dumps
+*.pcap
+*.pcapng
+*.cap
+*.iqs
+
+# Local temp/cache files
+*.tmp
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Python/tooling caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
