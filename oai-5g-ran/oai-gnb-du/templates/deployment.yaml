@@ -69,7 +69,7 @@ spec:
           - -c
           - |
             cp /opt/oai-gnb/etc/gnb.conf /tmp/gnb.conf
-            sed -i "s/__F1_DU_IP_ADDRESS__/${F1_DU_IP_ADDRESS}/g" /tmp/gnb.conf
+            sed -i "s/__F1_DU_IP_ADDRESS__/${F1_DU_IP_ADDRESS}/g; s/__F1_CU_IP_ADDRESS__/${F1_CU_IP_ADDRESS}/g" /tmp/gnb.conf
             exec /opt/oai-gnb/bin/nr-softmodem -O /tmp/gnb.conf ${USE_ADDITIONAL_OPTIONS}
         {{- else}}
         command:

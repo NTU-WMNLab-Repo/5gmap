@@ -31,7 +31,7 @@ data:
           tr_s_preference = "f1";
 
           local_s_if_name = "{{ .Values.config.f1IfName }}";
-          local_s_address = "0.0.0.0";
+          local_s_address = "__F1_CU_IP_ADDRESS__";
           remote_s_address = "{{ .Values.config.f1duIpAddress }}";
           local_s_portc   = 501;
           local_s_portd   = 2153;
