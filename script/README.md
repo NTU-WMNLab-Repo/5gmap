@@ -194,7 +194,9 @@ DELETE_MYSQL=1 ./script/undeploy.sh 1 1
 ...
 ```
 
-如果 DNN pod 和 NR-UE container 裡都有 `iperf3`，才會額外跑 throughput test。UL 方向是 NR-UE -> DNN；DL 方向是 DNN -> NR-UE，在 Calico pod network 沒有額外 node-level route 或 Multus data network 時可能失敗，script 會記錄並繼續跑 UL。
+接著會從 NR-UE 的 `oaitun_ue1` ping `8.8.8.8` 作為外部連線診斷；如果實驗環境沒有外網，這個 ping 失敗時不會中斷測試。
+
+如果 DNN pod 和 NR-UE container 裡都有 `iperf3`，才會額外跑 throughput test。UL 方向是 NR-UE -> DNN；DL 方向採用 OAI v2.1.0 相同的 reverse-mode 測法，由 NR-UE 發起 `iperf3 -c <DNN_IP> -B <UE_IP> -R`，DNN 再往 UE 送 downlink data。
 
 log 會寫到：
 
@@ -205,7 +207,8 @@ log 會寫到：
 例如：
 
 ```text
-5gcore/logs/zoomv3/throughput/ping.1.log.txt
+5gcore/logs/zoomv3/throughput/ping.UL.1.log.txt
+5gcore/logs/zoomv3/throughput/ping.INET.1.log.txt
 5gcore/logs/zoomv3/throughput/throughput.DL.1.log.txt
 5gcore/logs/zoomv3/throughput/throughput.UL.1.log.txt
 ```
