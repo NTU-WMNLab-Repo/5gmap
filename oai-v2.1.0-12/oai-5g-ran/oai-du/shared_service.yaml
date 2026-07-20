@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: oai-ran  # the name that UE point
+spec:
+  ports:
+    - name: rfsim
+      port: 4043
+      targetPort: 4043
+      protocol: TCP # UDP連不到
+  selector:
+    # get service from du
+    app.kubernetes.io/name: oai-du

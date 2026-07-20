@@ -1,0 +1,109 @@
+replicaCount: 1 
+
+kubernetesDistribution: Vanilla
+nfimage:
+  repository: docker.io/oaisoftwarealliance/oai-gnb
+  version: 2024.w32
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: "regcred"
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: "oai-du-sa-prime" # rename to avoid conflict
+
+multus:
+  # if default gateway is left blank then it will be removed
+  defaultGateway: ""
+  f1Interface:  # use this interface if using one interface for all 3GPP interfaces
+    create: false
+    ipAdd: "172.21.16.100"
+    netmask: "22"
+    name: "f1"
+    # if gatway is empty then it will be removed
+    #gateway: "172.21.7.254"
+    #routes: [{'dst': '10.8.0.0/24','gw': '172.21.7.254'}, {'dst': '10.9.0.0/24','gw': '172.21.7.254'}]
+    hostInterface: "bond0"      # Interface of the host machine on which this pod will be scheduled
+  ruInterface:            #Only needed if using a ethernet based RU/USRP
+    create: false
+    ipAdd: "192.168.80.90"
+    netmask: "24"
+    name: "ru"
+    # if gatway is commented then it will be remove
+    #gateway: "192.168.80.1"  #In case you don't have a gateway remove it from here
+    ## The value must be [0, master's MTU]. If commented it will masters MTU
+    #mtu: 9000
+    hostInterface: "bond0"      # Interface of the host machine on which this pod will be scheduled
+
+config:
+  timeZone: "Europe/Paris"
+  useAdditionalOptions: "--sa --rfsim --log_config.global_log_options level,nocolor,time"
+  duName: "oai-du-rfsim-prime" # 修改名稱，讓 CU 區分這是 Prime
+  gnbID: "0xe00" # add for different ID with backup
+  gnbDuID: "0xe00" # add for different ID with backup
+  physCellId: 0 # add for different ID with backup
+  nrCellID: "12345678L" # add for different ID with backup
+  mcc: "001"
+  mnc: "01"
+  tac: "1"
+  sst: "1"
+  usrp: rfsim
+  f1IfName: "eth0"
+  cuHost: "oai-cu"
+  f1cuPort: "2153"
+  f1duPort: "2153"
+
+## Debugging section
+podSecurityContext:
+  runAsUser: 0
+  runAsGroup: 0
+
+securityContext:
+  privileged: false
+
+start:
+  gnbdu: true #If false the network function container will run in sleep mode for manually testing
+  tcpdump: false
+
+includeTcpDumpContainer: false #If true it will add a tcpdump container inside network function pod for debugging
+
+tcpdumpimage:
+  repository: docker.io/oaisoftwarealliance/oai-tcpdump-init
+  version: alpine-3.20
+  #pullPolicy: IfNotPresent or Never or Always
+  pullPolicy: IfNotPresent
+
+## NF is the network function and tcpdump is the tcpdump container. 
+## To know more about request and limit it is better to understand that how Kubernetes QoS works. 
+## https://kubernetes.io/docs/concepts/configuration/manage-resources-containers
+## https://kubernetes.io/docs/concepts/workloads/pods/pod-qos
+resources:
+  define: false
+  limits:
+    nf:
+      cpu: 2000m
+      memory: 2Gi
+    #If tcpdump container is disabled this value will not be used
+    tcpdump:
+      cpu: 200m
+      memory: 128Mi
+  requests:
+    nf:
+      cpu: 2000m
+      memory: 2Gi
+    #If tcpdump container is disabled this value will not be used
+    tcpdump:
+      cpu: 100m
+      memory: 128Mi
+
+tolerations: []
+
+affinity: {}
+
+terminationGracePeriodSeconds: 5
+
+nodeSelector: {}
+
+nodeName: 
