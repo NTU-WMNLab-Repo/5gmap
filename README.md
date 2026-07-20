@@ -513,7 +513,8 @@ Traffic logs are written under:
 For example:
 
 ```text
-5gcore/logs/zoomv3/throughput/ping.1.log.txt
+5gcore/logs/zoomv3/throughput/ping.UL.1.log.txt
+5gcore/logs/zoomv3/throughput/ping.INET.1.log.txt
 5gcore/logs/zoomv3/throughput/throughput.UL.1.log.txt
 5gcore/logs/zoomv3/throughput/throughput.DL.1.log.txt
 ```
@@ -521,10 +522,11 @@ For example:
 Current traffic status:
 
 - UE -> DNN ping is the primary connectivity check.
+- UE -> 8.8.8.8 ping is kept as an external reachability diagnostic and may
+  fail in isolated labs.
 - UL iperf3, NR-UE -> DNN, is expected to work when `iperf3` exists in both pods.
-- DL iperf3, DNN -> NR-UE, is still not a hard gate because reverse routing from
-  the DNN pod to the UE data subnet may need additional Multus or node-level
-  routing work.
+- DL iperf3 uses the same model as OAI v2.1.0: the NR-UE starts the client and
+  uses `iperf3 -R`, so the DNN sends downlink data over a UE-initiated session.
 
 More details are documented in `doc/oai-ran-ping-debug.md`.
 
@@ -622,6 +624,14 @@ You can rerun only the traffic test:
 
 ```bash
 ./script/start_traffic.sh zoomv3 1 1 1 0
+```
+
+For manual DL throughput testing, start an iperf3 server on the DNN pod and run
+reverse mode from the UE:
+
+```bash
+kubectl -n oai exec deploy/oai-dnn10 -- sh -c 'pkill iperf3 2>/dev/null || true; iperf3 -s -B <DNN_IP> -D'
+kubectl -n oai exec deploy/oai-nr-ue10 -c nr-ue -- iperf3 -c <DNN_IP> -B <UE_IP> -R -t 20
 ```
 
 ## Notes for Developers

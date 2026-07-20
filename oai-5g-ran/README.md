@@ -1,4 +1,4 @@
-# TODO: DL data plane still needs routing/debug. UE -> DNN ping and UL iperf3 are working; DNN -> UE/DL is not yet fully validated.
+# TODO: Direct DNN -> UE ping/new-flow is still diagnostic-only. DL throughput is validated with UE-initiated `iperf3 -R`, matching OAI v2.1.0.
 
 # TODO: 把oai和tolgaomeratalay那些docker image抓下來換成自己的，避免對方改版。
 
@@ -153,5 +153,13 @@ Traffic test:
 ./script/start_traffic.sh zoomv3 1 1 1 0
 ```
 
-At the time these notes were written, control plane and PDU session setup were
-working, while end-to-end ICMP traffic still needed user-plane debugging.
+The traffic script uses UE -> DNN ping as the primary ICMP check, and UE ->
+`8.8.8.8` ping as a non-fatal external reachability diagnostic. DL throughput is
+tested with UE-initiated reverse mode:
+
+```bash
+iperf3 -c <DNN_IP> -B <UE_IP> -R
+```
+
+This matches the `oai-v2.1.0-12/check_link.sh` model: the UE opens the iperf
+control connection, and the DNN sends downlink data over that session.

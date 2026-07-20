@@ -5,7 +5,7 @@
 這次 `./script/run.sh` 失敗的直接症狀是 `start_traffic.sh` 從 DNN pod ping 固定 UE data IP `12.1.1.2`，結果 100% packet loss。實際上問題分成兩層：
 
 1. CU/DU 的 F1-U address 有錯，DU 建立 DRB tunnel 時拿到 CU 的 remote IPv4 是 `0.0.0.0`，所以 UE 封包沒有進到 CU/UPF。
-2. traffic test 的方向和 UE IP 假設不穩定。UE 的 data IP 不一定永遠是 `12.1.1.2`，而且目前 Calico-only pod network 下，DNN -> UE 方向需要額外 route 或 Multus data network 才比較合理；UE -> DNN 才是目前已驗證可通的方向。
+2. traffic test 的方向和 UE IP 假設不穩定。UE 的 data IP 不一定永遠是 `12.1.1.2`，而且 DNN 直接對 UE data IP 開新連線或 ping 不是 OAI 範例使用的 DL 驗證方式；OAI v2.1.0 的 `check_link.sh` 是由 UE 先連 traffic server，再用 `iperf3 -R` reverse mode 讓 DNN 往 UE 送資料。
 
 修完後已驗證：
 
@@ -14,11 +14,13 @@
 - UE 可完成 registration/PDU session，並產生 `oaitun_ue1`。
 - NR-UE 透過 `oaitun_ue1` ping DNN pod IP 成功。
 - UL iperf3，也就是 NR-UE -> DNN，可成功。
+- DL iperf3 已可用 UE-initiated reverse mode 驗證，也就是 NR-UE `iperf3 -c <DNN_IP> -B <UE_IP> -R`，由 DNN server 送 downlink data。
 
 尚未完成或尚未繼續 debug：
 
-- DL iperf3，也就是 DNN -> NR-UE，仍可能失敗。
-- DNN -> UE data IP 的反向路由尚未完成。當前 cluster 看起來沒有 `NetworkAttachmentDefinition`，所以 DNN pod 的 `dnn-net11` annotation 沒有真的掛上 Multus data network；若要讓 DNN 主動連 UE data IP，可能需要補 Multus/data network，或在 node/Calico 層補 `12.1.1.0/24` 經 UPF 的 routing。
+- DNN 直接 ping UE data IP 仍會失敗，目前保留為診斷訊號，不當作 E2E gating test。
+- DNN 直接主動對 UE data IP 開新 TCP 連線的模型尚未繼續追；目前採用 OAI v2.1.0 相同的 UE-initiated reverse-mode DL 測法。
+- 當前 cluster 看起來沒有 `NetworkAttachmentDefinition`，所以 DNN pod 的 `dnn-net11` annotation 沒有真的掛上 Multus data network。這次修復沒有依賴 Multus；若未來要測真正獨立 N6/data network，仍需要補 Multus 或 node-level route 設計。
 - `oai-5g-ran/README.md` 裡關於 image mirror/pinning 的 TODO 尚未處理。
 
 ## 這次 debug 動了什麼
@@ -102,6 +104,27 @@ kubectl exec -n "$NAMESPACE" "$ue_pod" -c nr-ue -- \
 ```
 
 DL iperf3 目前改為非致命錯誤：失敗時記錄訊息，繼續跑 UL iperf3。
+
+### 4. 修 DL throughput 測法，改用 UE-initiated reverse mode
+
+檔案：
+
+- `script/start_traffic.sh`
+
+比對 `oai-v2.1.0-12/check_link.sh` 後發現，它的 downlink 測法不是讓 traffic server 主動連 UE，而是：
+
+```bash
+iperf3 -c "$TS_IP" -B "$UE_IP" -R
+```
+
+也就是 UE 先建立 TCP control connection 到 traffic server，然後用 reverse mode 讓 traffic server 往 UE 送資料。這次將 `start_traffic.sh` 的 DL iperf 改成同樣模型：
+
+```bash
+kubectl exec -n "$NAMESPACE" "$dnn_pod" -- sh -c "pkill iperf3 2>/dev/null || true; iperf3 -s -B $dnn_ip -D"
+kubectl exec -n "$NAMESPACE" "$ue_pod" -c nr-ue -- iperf3 -c "$dnn_ip" -B "$ue_ip" -t 20 -R
+```
+
+若標準 reverse mode 失敗，script 會再用 `-M 1300` 重試，對齊 `oai-v2.1.0-12/check_link.sh` 的 fallback 思路。
 
 ## Debug 過程
 
@@ -350,6 +373,132 @@ Traffic tests complete.
 - UL 已可作為目前的 throughput validation。
 - DL 需要另外處理 DNN 到 UE subnet 的 routing/data network。
 
+### Step 11: 比對 `oai-v2.1.0-12` 的 traffic server 測法
+
+猜測：
+
+- 之前以為 DL 失敗是單純 DNN/cluster 缺少 UE subnet route。
+- 但 `oai-v2.1.0-12` 可以通，很可能不是因為它一定有額外 Multus，而是它的 DL 測法不同。
+
+使用指令：
+
+```bash
+sed -n '180,380p' oai-v2.1.0-12/check_link.sh
+sed -n '1,260p' oai-v2.1.0-12/oai-5g-core/oai-traffic-server/templates/configmap.yaml
+sed -n '180,360p' oai-v2.1.0-12/oai-5g-core/oai-5g-basic/values.yaml
+```
+
+結果重點：
+
+```bash
+IPERF_DL_CMD="iperf3 -c $TS_IP -p 5201 -t 5 -B $UE_IP -R"
+```
+
+以及 traffic server 啟動時會加 UE subnet route：
+
+```bash
+ip route add {{ .Values.config.ueroute }} via $(getent ahostsv4 {{ .Values.config.upfHost }} | awk 'NR==1{print $1}') dev eth0
+```
+
+新的發現：
+
+- `oai-v2.1.0-12` 的 DL 是 UE 發起 client，再用 `-R` 讓 server 反向送資料。
+- 它不是用 DNN/traffic server 主動 `iperf3 -c <UE_IP>`。
+- 我們目前的 DNN pod 已經有類似 route：`12.1.1.0/24 via <UPF_POD_IP> dev eth0 onlink`，所以缺的不是這條 pod 內 route，而是 traffic test 模型。
+
+### Step 12: 實測目前 cluster 的 direct ping 和 reverse-mode DL
+
+猜測：
+
+- 如果 DNN direct ping UE 失敗，但 `iperf3 -R` 成功，代表 DL data path 可用，但不支援或不適合用 DNN-initiated ICMP/new-flow 當驗證。
+
+使用指令：
+
+```bash
+kubectl -n oai get pods -o wide
+kubectl -n oai exec deploy/oai-dnn10 -- ip route
+kubectl -n oai exec deploy/oai-nr-ue10 -c nr-ue -- ip -4 addr show oaitun_ue1
+kubectl -n oai exec deploy/oai-dnn10 -- ping -c 3 12.1.1.2
+kubectl -n oai exec deploy/oai-nr-ue10 -c nr-ue -- ping -I oaitun_ue1 -c 3 10.42.1.169
+```
+
+結果重點：
+
+```text
+DNN route: 12.1.1.0/24 via 10.42.1.168 dev eth0 onlink
+UE IP: 12.1.1.2/24 on oaitun_ue1
+DNN -> UE ping: 3 transmitted, 0 received, 100% packet loss
+UE -> DNN ping: 3 transmitted, 3 received, 0% packet loss
+```
+
+接著測 reverse-mode DL：
+
+```bash
+kubectl -n oai exec deploy/oai-dnn10 -- sh -c 'pkill iperf3 2>/dev/null || true; iperf3 -s -B 10.42.1.169 -D'
+kubectl -n oai exec deploy/oai-nr-ue10 -c nr-ue -- iperf3 -c 10.42.1.169 -B 12.1.1.2 -t 5 -R
+```
+
+結果重點：
+
+```text
+Reverse mode, remote host 10.42.1.169 is sending
+0.00-5.00 sec  16.8 MBytes  28.1 Mbits/sec receiver
+```
+
+新的發現：
+
+- DNN direct ICMP/new-flow 仍不通。
+- UE-initiated reverse-mode DL 可以通，這和 `oai-v2.1.0-12` 的驗證方式一致。
+- 因此這次修復應該落在 `start_traffic.sh` 的 DL iperf 測法，而不是先引入 Multus。
+
+### Step 13: 修改 `start_traffic.sh` 並驗證
+
+修改：
+
+```bash
+kubectl exec -n "$NAMESPACE" "$dnn_pod" -- sh -c "pkill iperf3 2>/dev/null || true; iperf3 -s -B $dnn_ip -D"
+kubectl exec -n "$NAMESPACE" "$ue_pod" -c nr-ue -- iperf3 -c "$dnn_ip" -B "$ue_ip" -t 20 -R
+```
+
+驗證指令：
+
+```bash
+./script/start_traffic.sh zoomv3 1 1 1 0
+```
+
+結果重點：
+
+```text
+UE -> DNN ping: 5 transmitted, 5 received, 0% packet loss
+DNN -> UE ping: 5 transmitted, 0 received, 100% packet loss
+DL iperf3 reverse mode: 67.8 MBytes, 28.4 Mbits/sec receiver
+UL iperf3: 2.65 GBytes, 1.14 Gbits/sec receiver
+Traffic tests complete.
+```
+
+結論：
+
+- `start_traffic.sh` 現在能完成 UL ping、DL throughput、UL throughput。
+- Direct DNN -> UE ping 當時仍保留為非 fatal 診斷，不代表 reverse-mode DL 不可用。
+
+### Step 14: 將 ping 診斷改成 UE -> 8.8.8.8
+
+後續調整：
+
+- `start_traffic.sh` 不再執行 DNN -> UE ping。
+- ping test 現在包含：
+  - UE `oaitun_ue1` -> DNN pod IP，作為主要 E2E data path check。
+  - UE `oaitun_ue1` -> `8.8.8.8`，作為外部連線診斷。
+
+修改後的指令形式：
+
+```bash
+kubectl exec -n "$NAMESPACE" "$ue_pod" -c nr-ue -- ping -I oaitun_ue1 -c 5 "$dnn_ip"
+kubectl exec -n "$NAMESPACE" "$ue_pod" -c nr-ue -- ping -I oaitun_ue1 -c 5 8.8.8.8
+```
+
+`8.8.8.8` ping 可能因實驗環境沒有外網而失敗，所以仍是 non-fatal；失敗時 script 會繼續跑 DL/UL iperf3。
+
 ### Step 10: 確認不是單純 VM 資源不足造成
 
 猜測：
@@ -376,17 +525,17 @@ UPF 是 UE user plane 的 gateway/anchor，不是應用端目的地。ping UPF �
 NR-UE oaitun_ue1 -> DU -> CU -> UPF -> DNN pod
 ```
 
-目前已驗證的是這個方向。反方向：
+目前 ICMP 已驗證的是這個方向。反方向：
 
 ```text
 DNN pod -> UPF -> CU -> DU -> NR-UE
 ```
 
-還需要補 DNN/cluster 對 UE subnet 的路由或 data network 設定。
+若是 DNN 直接對 UE data IP 發起 ICMP 或新 TCP 連線，仍會失敗。若要驗證 downlink throughput，採用 OAI v2.1.0 的方式：UE 先連 DNN/traffic-server，再用 `iperf3 -R` 讓 DNN 往 UE 送資料。
 
 ## 後續 TODO
 
-- 補 DNN -> UE 的反向路由設計，優先確認要用 Multus data network 還是 node-level route。
-- 若要使用 Multus，先安裝/確認 `NetworkAttachmentDefinition` CRD，並確認 DNN pod 真的有 data-network interface。
-- 把 DL iperf3 從非致命警告改回正式 gating test，等反向路由修好後再做。
+- 若未來需要 DNN direct ping UE 或 DNN-initiated new TCP flow，再繼續查 UPF NAT/conntrack/PDR/FAR 對 downlink new-flow 的處理。
+- 若要使用獨立 N6/data network，先安裝/確認 `NetworkAttachmentDefinition` CRD，並確認 DNN pod 真的有 data-network interface。
+- 將 direct DNN -> UE ping 定位成診斷訊號，不要作為 OAI RFsim E2E gating test。
 - 固定 OAI/tolgaomeratalay 相關 image tag 或 mirror 到自己的 registry，避免 upstream image 改版造成行為變動。
