@@ -525,8 +525,9 @@ Current traffic status:
 - UE -> 8.8.8.8 ping is kept as an external reachability diagnostic and may
   fail in isolated labs.
 - UL iperf3, NR-UE -> DNN, is expected to work when `iperf3` exists in both pods.
-- DL iperf3 uses the same model as OAI v2.1.0: the NR-UE starts the client and
-  uses `iperf3 -R`, so the DNN sends downlink data over a UE-initiated session.
+- DL iperf3 follows the `oai-v2.1.0-12/check_link.sh` validation flow provided
+  by Jianhan: the NR-UE starts the client and uses `iperf3 -R`, so the DNN sends
+  downlink data over a UE-initiated session.
 
 More details are documented in `doc/oai-ran-ping-debug.md`.
 

@@ -5,7 +5,7 @@
 這次 `./script/run.sh` 失敗的直接症狀是 `start_traffic.sh` 從 DNN pod ping 固定 UE data IP `12.1.1.2`，結果 100% packet loss。實際上問題分成兩層：
 
 1. CU/DU 的 F1-U address 有錯，DU 建立 DRB tunnel 時拿到 CU 的 remote IPv4 是 `0.0.0.0`，所以 UE 封包沒有進到 CU/UPF。
-2. traffic test 的方向和 UE IP 假設不穩定。UE 的 data IP 不一定永遠是 `12.1.1.2`，而且 DNN 直接對 UE data IP 開新連線或 ping 不是 OAI 範例使用的 DL 驗證方式；OAI v2.1.0 的 `check_link.sh` 是由 UE 先連 traffic server，再用 `iperf3 -R` reverse mode 讓 DNN 往 UE 送資料。
+2. traffic test 的方向和 UE IP 假設不穩定。UE 的 data IP 不一定永遠是 `12.1.1.2`，而且 DNN 直接對 UE data IP 開新連線或 ping 不是這次採用的 DL 驗證方式；後續參考建翰學長提供的 `oai-v2.1.0-12/check_link.sh` 驗證流程，由 UE 先連 traffic server，再用 `iperf3 -R` reverse mode 讓 DNN 往 UE 送資料。
 
 修完後已驗證：
 
@@ -19,7 +19,7 @@
 尚未完成或尚未繼續 debug：
 
 - DNN 直接 ping UE data IP 仍會失敗，目前保留為診斷訊號，不當作 E2E gating test。
-- DNN 直接主動對 UE data IP 開新 TCP 連線的模型尚未繼續追；目前採用 OAI v2.1.0 相同的 UE-initiated reverse-mode DL 測法。
+- DNN 直接主動對 UE data IP 開新 TCP 連線的模型尚未繼續追；目前採用參考建翰學長提供的 `oai-v2.1.0-12/check_link.sh` 的 UE-initiated reverse-mode DL 測法。
 - 當前 cluster 看起來沒有 `NetworkAttachmentDefinition`，所以 DNN pod 的 `dnn-net11` annotation 沒有真的掛上 Multus data network。這次修復沒有依賴 Multus；若未來要測真正獨立 N6/data network，仍需要補 Multus 或 node-level route 設計。
 - `oai-5g-ran/README.md` 裡關於 image mirror/pinning 的 TODO 尚未處理。
 
@@ -111,7 +111,7 @@ DL iperf3 目前改為非致命錯誤：失敗時記錄訊息，繼續跑 UL ipe
 
 - `script/start_traffic.sh`
 
-比對 `oai-v2.1.0-12/check_link.sh` 後發現，它的 downlink 測法不是讓 traffic server 主動連 UE，而是：
+比對建翰學長提供的 `oai-v2.1.0-12/check_link.sh` 後發現，它的 downlink 測法不是讓 traffic server 主動連 UE，而是：
 
 ```bash
 iperf3 -c "$TS_IP" -B "$UE_IP" -R
@@ -124,7 +124,7 @@ kubectl exec -n "$NAMESPACE" "$dnn_pod" -- sh -c "pkill iperf3 2>/dev/null || tr
 kubectl exec -n "$NAMESPACE" "$ue_pod" -c nr-ue -- iperf3 -c "$dnn_ip" -B "$ue_ip" -t 20 -R
 ```
 
-若標準 reverse mode 失敗，script 會再用 `-M 1300` 重試，對齊 `oai-v2.1.0-12/check_link.sh` 的 fallback 思路。
+若標準 reverse mode 失敗，script 會再用 `-M 1300` 重試，對齊建翰學長提供的 `oai-v2.1.0-12/check_link.sh` 的 fallback 思路。
 
 ## Debug 過程
 
@@ -373,12 +373,12 @@ Traffic tests complete.
 - UL 已可作為目前的 throughput validation。
 - DL 需要另外處理 DNN 到 UE subnet 的 routing/data network。
 
-### Step 11: 比對 `oai-v2.1.0-12` 的 traffic server 測法
+### Step 11: 比對建翰學長提供的 traffic server 測法
 
 猜測：
 
 - 之前以為 DL 失敗是單純 DNN/cluster 缺少 UE subnet route。
-- 但 `oai-v2.1.0-12` 可以通，很可能不是因為它一定有額外 Multus，而是它的 DL 測法不同。
+- 但建翰學長提供的 `oai-v2.1.0-12/check_link.sh` 流程可以通，很可能不是因為它一定有額外 Multus，而是它的 DL 測法不同。
 
 使用指令：
 
@@ -402,7 +402,7 @@ ip route add {{ .Values.config.ueroute }} via $(getent ahostsv4 {{ .Values.confi
 
 新的發現：
 
-- `oai-v2.1.0-12` 的 DL 是 UE 發起 client，再用 `-R` 讓 server 反向送資料。
+- 建翰學長提供的 `oai-v2.1.0-12/check_link.sh` 裡，DL 是 UE 發起 client，再用 `-R` 讓 server 反向送資料。
 - 它不是用 DNN/traffic server 主動 `iperf3 -c <UE_IP>`。
 - 我們目前的 DNN pod 已經有類似 route：`12.1.1.0/24 via <UPF_POD_IP> dev eth0 onlink`，所以缺的不是這條 pod 內 route，而是 traffic test 模型。
 
@@ -448,7 +448,7 @@ Reverse mode, remote host 10.42.1.169 is sending
 新的發現：
 
 - DNN direct ICMP/new-flow 仍不通。
-- UE-initiated reverse-mode DL 可以通，這和 `oai-v2.1.0-12` 的驗證方式一致。
+- UE-initiated reverse-mode DL 可以通，這和建翰學長提供的 `oai-v2.1.0-12/check_link.sh` 驗證流程一致。
 - 因此這次修復應該落在 `start_traffic.sh` 的 DL iperf 測法，而不是先引入 Multus。
 
 ### Step 13: 修改 `start_traffic.sh` 並驗證
@@ -531,7 +531,7 @@ NR-UE oaitun_ue1 -> DU -> CU -> UPF -> DNN pod
 DNN pod -> UPF -> CU -> DU -> NR-UE
 ```
 
-若是 DNN 直接對 UE data IP 發起 ICMP 或新 TCP 連線，仍會失敗。若要驗證 downlink throughput，採用 OAI v2.1.0 的方式：UE 先連 DNN/traffic-server，再用 `iperf3 -R` 讓 DNN 往 UE 送資料。
+若是 DNN 直接對 UE data IP 發起 ICMP 或新 TCP 連線，仍會失敗。若要驗證 downlink throughput，目前採用參考建翰學長提供的 `oai-v2.1.0-12/check_link.sh` 的方式：UE 先連 DNN/traffic-server，再用 `iperf3 -R` 讓 DNN 往 UE 送資料。
 
 ## 後續 TODO
 

@@ -1,4 +1,4 @@
-# TODO: Direct DNN -> UE ping/new-flow is still diagnostic-only. DL throughput is validated with UE-initiated `iperf3 -R`, matching OAI v2.1.0.
+# TODO: Direct DNN -> UE ping/new-flow is still diagnostic-only. DL throughput is validated with UE-initiated `iperf3 -R`, following the `oai-v2.1.0-12/check_link.sh` flow provided by Jianhan.
 
 # TODO: 把oai和tolgaomeratalay那些docker image抓下來換成自己的，避免對方改版。
 
@@ -161,5 +161,6 @@ tested with UE-initiated reverse mode:
 iperf3 -c <DNN_IP> -B <UE_IP> -R
 ```
 
-This matches the `oai-v2.1.0-12/check_link.sh` model: the UE opens the iperf
-control connection, and the DNN sends downlink data over that session.
+This follows the `oai-v2.1.0-12/check_link.sh` validation flow provided by
+Jianhan: the UE opens the iperf control connection, and the DNN sends downlink
+data over that session.
