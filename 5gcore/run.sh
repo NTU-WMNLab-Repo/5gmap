@@ -1,3 +1,4 @@
+# run.sh
 #!/bin/bash
 
 #---------------------------------------------------------------
@@ -15,7 +16,7 @@ NORMAL=$(tput sgr0)
 
 
                         #gnbsimim   dnnim   users   slices iterationstest thrtesttype(1==hostlvl, 0==podlvl)     iperf_client_host        iperf_server_ip       log_server_ip
-/bin/bash ./deploy.sh   zoomv3      zoomv3    5       2           1                     0                          10.0.12.155               10.0.1.126           10.0.1.71
+/bin/bash ./deploy.sh   zoomv3      zoomv3    1       1           1                     0                          10.0.12.155               10.0.1.126           10.0.1.71
 
 #For now, the number of users, slices and iterationstest is set 1 and the remainder of the use cases is commented out. The user can adjust these values according to their need
 

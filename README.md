@@ -1,134 +1,644 @@
-# MobiCom 2025 - 5G-MAP
+# 5G-MAP
 
-This repo contains the bare-minimum code to reproduce the results of the MobiCom 2025 paper - 5G-MAP: Demystifying the Performance Implications of Cloud-Based 5G Core Deployments. This platform is currently undergoing commercialzation and forms the technical foundation of the Cellular Optimization, Security & Manamgent via Intelligent Control (COSMIC) platform. For more details please contact the authors of the paper.
+This repository contains the code needed to deploy a 5G-MAP testbed with an
+OpenAirInterface 5G Core, the 5G-MAP sidecar proxy, and an OAI RF-simulator RAN.
 
-This repository contains the instructions for:
-- deployment of the 5G-MAP integrated OpenAirInterface 5G Core
-- the source code of the 5G-MAP Side Car Proxy
+The current deployment path uses the rewritten scripts in `script/`:
 
-# 5G Core Deploymment
-
-**-----------------------**
-
-## Deploying the Cluster and Running the Users
-
-### Preliminaries
-
-1. Docker installed on the target node
-2. On the target node, set "AllowTCPForwarding" and "PermitRootLogin" to **yes** from /etc/ssh/sshd.conf  
-3. On the target node, add current user, which will be used by the RKE to access the docker daemon to the docker group 
-```
-$ sudo usermod -aG docker $USER
+```text
+OAI 5GC slice -> OAI gNB-CU -> OAI gNB-DU -> OAI NR-UE -> DNN test pod
 ```
 
-### Step 1: Setting up the K8s Cluster
+The old `5gcore/run.sh` path used `gnbsim`. For new deployments, use
+`./script/run.sh`.
 
-In this deployment, the K8s cluster is set up using the Ranchers Kubernetes Engine (RKE) which can be installed following this [link](https://rancher.com/docs/rke/latest/en/installation/). Certain RKE versions can only setup certain versions of Kubernetes. We used rke 1.4.3 with Kubernetes 1.24.8.
+## Tested Baseline
 
+These instructions assume Ubuntu 22.04.5 VMs and an RKE-created Kubernetes
+cluster. The versions below are the versions used while bringing this repo up:
 
-Once the RKE binary is setup, the [cluster.yaml](cluster.yml) file is used in order to setup the K8s cluster. The given file shows how to configure multiple nodes to be used in the same cluster. In order to adapt the yaml to one's own environment, change the following parameters:
+- Docker CE `5:20.10.24~3-0~ubuntu-jammy`
+- RKE `v1.4.3`
+- Kubernetes `v1.24.x`
+- kubectl `v1.24.8`
+- Helm `v3.12.3`
 
-1. Make the necessary modifications to the cluster.yaml. A sample snippet is shown below with the relevant descriptions
-<pre>
-\```yaml
+Other versions may work, but RKE and Docker version skew matters. If `rke up`
+fails because the Docker version is unsupported, install the pinned Docker
+20.10 package shown below.
 
-- address: 10.0.1.165 # --> change to the address of the relevant node
-  port: "22"
-  role:
-  - controlplane # --> remove if the node is a worker
-  - etcd # --> remove if the node is a worker
-  - worker # --> remove if the node is a control plane node
-  user: ubuntu # --> change to the username on the relevant targent cluster node
-  ssh_key_path: "~/.ssh/awscluster.pem" # --> change the name of the key to the one that will be used
-  labels:
-    type: az # --> Labeling the nodes in the cluster so that VNFs can be assigned to either the AZ or edge zones. Use 'az' for AZs and 'edge' for edge zones.
+## 1. Prepare Each Cluster Node
 
-\```
-</pre>
+Run this on every VM that will join the Kubernetes cluster.
 
-The above snippet shows an example for a single node in the cluster. 
+### Install Docker
 
-a) IP addresses of the target nodes
-b) If using a network abstraction with multiple subnets (as is the case with most OpenStack setups), change the "internal_address" variable for the pertaining subnet
-c) The ssh key path to the key that is copied on all the hosts
-d) The host usernames
+```bash
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
 
- From the directory that contains the cluster.yaml file, run
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update
+apt-cache madison docker-ce
+
+DOCKER_VER="5:20.10.24~3-0~ubuntu-jammy"
+
+sudo apt-get install -y \
+  docker-ce=$DOCKER_VER \
+  docker-ce-cli=$DOCKER_VER \
+  containerd.io \
+  docker-buildx-plugin \
+  docker-compose-plugin
+
+sudo apt-mark hold docker-ce docker-ce-cli
+sudo usermod -aG docker "$(whoami)"
 ```
-$ rke up
+
+Log out and back in, or reboot, so the Docker group change takes effect.
+
+Check:
+
+```bash
+docker version
 ```
-2. Set up kubectl on your workstation by following this [link](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/).
-3. The directory that you executed item 7 in Step 1 now contains the "kube_config_cluster.yml file", which is the configuration file of the cluster. Set up the access with
 
+### Enable SSH Access for RKE
+
+Install SSH server if needed:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y openssh-server
+sudo systemctl enable --now ssh
 ```
-$ mkdir -p ~/.kube;
-$  kube_config_cluster.yml ~/.kube/config; 
+
+Edit SSH config:
+
+```bash
+sudo nano /etc/ssh/sshd_config
 ```
 
-4. Install Helm
+Ensure these settings are enabled:
 
-https://helm.sh/docs/intro/install/
-
-### Step 2: Deploy the Instrumentation Pipeline
-
-1. Add the required helm repositories to the Bastion node
-
+```text
+AllowTCPForwarding yes
+PermitRootLogin yes
 ```
+
+Restart SSH:
+
+```bash
+sudo systemctl restart ssh
+```
+
+### Ensure Enough Disk Space
+
+Docker images and Kubernetes pod logs can fill small default VM root volumes.
+If your VM disk was provisioned larger than `/` currently shows, expand the LVM
+volume:
+
+```bash
+df -h /
+sudo lvextend -l +100%FREE /dev/ubuntu-vg/ubuntu-lv
+sudo resize2fs /dev/ubuntu-vg/ubuntu-lv
+df -h /
+```
+
+## 2. Prepare the Control Node
+
+Run the following commands on the VM where you will execute `rke`, `kubectl`,
+`helm`, and `./script/run.sh`.
+
+### Configure Passwordless SSH
+
+```bash
+ssh-keygen -t rsa -b 2048 -N "" -f ~/.ssh/id_rsa
+ssh-copy-id <user>@<control-node-ip>
+ssh-copy-id <user>@<worker-node-ip>
+```
+
+Check that both logins work without a password:
+
+```bash
+ssh <user>@<control-node-ip>
+ssh <user>@<worker-node-ip>
+```
+
+### Install RKE
+
+```bash
+wget https://github.com/rancher/rke/releases/download/v1.4.3/rke_linux-amd64
+chmod +x rke_linux-amd64
+sudo mv rke_linux-amd64 /usr/local/bin/rke
+rke --version
+```
+
+Expected version:
+
+```text
+rke version v1.4.3
+```
+
+### Create `cluster.yml`
+
+Create a cluster file on the control node:
+
+```bash
+nano cluster.yml
+```
+
+Example for one control-plane VM and one worker VM:
+
+```yaml
+nodes:
+  - address: <control-node-ip>
+    port: "22"
+    role:
+      - controlplane
+      - etcd
+    user: <user>
+    ssh_key_path: "~/.ssh/id_rsa"
+    labels:
+      deplocation: az
+
+  - address: <worker-node-ip>
+    port: "22"
+    role:
+      - worker
+    user: <user>
+    ssh_key_path: "~/.ssh/id_rsa"
+    labels:
+      deplocation: edge
+```
+
+The label key must be `deplocation`. The scripts schedule pods with
+`nodeSelector.deplocation`, so `type: az` / `type: edge` is not enough.
+
+Bring the cluster up:
+
+```bash
+rke up
+```
+
+### Install kubectl
+
+The Kubernetes v1.24 apt repository can fail because of an expired signing key,
+so the direct binary install is the simplest path:
+
+```bash
+curl -LO https://dl.k8s.io/release/v1.24.8/bin/linux/amd64/kubectl
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+kubectl version --client --output=yaml
+```
+
+Set the kubeconfig generated by RKE:
+
+```bash
+mkdir -p ~/.kube
+cp kube_config_cluster.yml ~/.kube/config
+kubectl get nodes
+```
+
+### Install Helm
+
+Helm `3.9.x` to `3.12.x` works with Kubernetes `1.24.x`. This setup uses
+Helm `v3.12.3`.
+
+```bash
+curl -LO https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz
+curl -LO https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz.sha256
+curl -LO https://github.com/helm/helm/releases/download/v3.12.3/helm-v3.12.3-linux-amd64.tar.gz.asc
+
+# 讀取下載的 .sha256 檔案並進行校驗
+echo "$(cat helm-v3.12.3-linux-amd64.tar.gz.sha256) helm-v3.12.3-linux-amd64.tar.gz" | sha256sum -c
+# expected log: helm-v3.12.3-linux-amd64.tar.gz: OK
+
+curl -s https://raw.githubusercontent.com/helm/helm/main/KEYS | gpg --import
+gpg --verify helm-v3.12.3-linux-amd64.tar.gz.asc helm-v3.12.3-linux-amd64.tar.gz
+# expected log: gpg: Good signature from "Matthew Farina <matt@mattfarina.com>" [unknown]
+
+tar -zxvf helm-v3.12.3-linux-amd64.tar.gz
+sudo mv linux-amd64/helm /usr/local/bin/helm
+rm -rf linux-amd64 helm-v3.12.3-linux-amd64.tar.gz*
+
+# check
+helm version
+# expected log: version.BuildInfo{Version:"v3.12.3", GitCommit:"3a31588ad33fe3b89af5a2a54ee1d25bfe6eaa5e", GitTreeState:"clean", GoVersion:"go1.20.7"}
+helm list -A
+# expected log: NAME    NAMESPACE       REVISION        UPDATED STATUS  CHART   APP VERSION
+```
+
+## 3. Clone 5G-MAP
+
+```bash
+cd ~
+git clone https://github.com/gene466/5gmap.git
+cd 5gmap
+```
+
+## 4. Install the Instrumentation Pipeline
+
+The 5G-MAP proxy exports traces to OpenTelemetry, and OpenTelemetry forwards
+them to Jaeger.
+
+### Add Helm Repositories
+
+```bash
 helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
 helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+helm repo update
 ```
 
-2. Create the necessary namespaces in the cluster
+### Create Namespaces
 
-```
-kubectl create ns jaeger; 
-kubectl create ns otel; 
-kubectl create ns oai
+```bash
+kubectl create namespace jaeger --dry-run=client -o yaml | kubectl apply -f -
+kubectl create namespace otel --dry-run=client -o yaml | kubectl apply -f -
+kubectl create namespace oai --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-3. Deploy certificate manager
+These commands are idempotent, so they are safe to rerun.
 
-```
+### Install cert-manager
+
+```bash
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.17.0/cert-manager.yaml
+kubectl get pods -n cert-manager -w
 ```
 
-4. Install Jaeger using Helm charts
+Wait for:
 
-```
-helm install jaeger jaegertracing/jaeger -n jaeger
-```
-This installation can take 4-5 minutes. Some pods may remain in CrashLoopBackOff but after 4-5 restarts all pods should be "Running"
-
-5. In case DNS resolution does not work in the cluster, replace the IP of Jaeger Collector in the otel.yaml with the IP of Jaeger Collector pod
-
-6. Install OpenTelemetry
-
-```
-helm upgrade --install opentelemetry-collector open-telemetry/opentelemetry-collector --version 0.65.0 --values otel.yaml -n test
-
+```text
+cert-manager             1/1 Running
+cert-manager-cainjector  1/1 Running
+cert-manager-webhook     1/1 Running
 ```
 
-7. Port Forward for UI access using public IP
+### Install Jaeger
 
-```
-kubectl port-forward -n jaeger service/jaeger-query --address 0.0.0.0 16686:80
-
-```
-
-### Step 3: Run the 5G Core
-
-The 5G core is designed to run using the "one-click" mentality. A series of bash scripts will automate the deployment process and start the chosen traffic patterns depending on the selections made by the user. 
-
-
-1. To run the deployment first instantiate the Mysql database.
-```
-helm install mysql mysql/ -n oai
-```
-2. Start the 5G deployment
-```
-./run.sh
+```bash
+helm upgrade --install jaeger jaegertracing/jaeger -n jaeger
+kubectl get pods -n jaeger -w
 ```
 
-To customize the deployment, the values in the run.sh file can be changed.
+This can take several minutes. Some Jaeger pods may restart a few times before
+settling into `Running`.
 
+### Install OpenTelemetry
 
+The repo already includes `tracing_config/otel.yaml` with:
+
+```yaml
+mode: daemonset
+```
+
+Install it into the `otel` namespace:
+
+```bash
+cd ~/5gmap/tracing_config
+helm upgrade --install opentelemetry-collector open-telemetry/opentelemetry-collector \
+  --version 0.65.0 \
+  --values otel.yaml \
+  -n otel
+
+kubectl get pods -n otel
+```
+
+The proxy code expects the collector at:
+
+```text
+opentelemetry-collector.otel.svc.cluster.local:4317
+```
+
+Do not install the collector into a `test` namespace unless you also change the
+proxy configuration.
+
+### Patch the OpenTelemetry DaemonSet DNS Policy
+
+With `hostNetwork: true`, the DaemonSet may need `ClusterFirstWithHostNet` so
+the collector can resolve cluster DNS names such as the Jaeger service.
+
+Check:
+
+```bash
+kubectl get daemonset -n otel
+kubectl get daemonset -n otel opentelemetry-collector-agent -o yaml | grep dnsPolicy
+```
+
+If it shows `ClusterFirst`, patch it:
+
+```bash
+kubectl patch daemonset -n otel opentelemetry-collector-agent \
+  --type='json' \
+  -p='[{"op":"replace","path":"/spec/template/spec/dnsPolicy","value":"ClusterFirstWithHostNet"}]'
+
+kubectl rollout restart daemonset -n otel opentelemetry-collector-agent
+kubectl rollout status daemonset -n otel opentelemetry-collector-agent
+```
+
+This is currently a manual post-install step.
+
+### Optional: Open the Jaeger UI
+
+```bash
+kubectl port-forward -n jaeger service/jaeger-query --address 0.0.0.0 16686:16686
+```
+
+Then open:
+
+```text
+http://<control-node-ip>:16686
+```
+
+## 5. Verify Node Scheduling Labels
+
+The deployment scripts default to two logical locations:
+
+- `az`
+- `edge`
+
+Check labels:
+
+```bash
+kubectl get nodes --show-labels
+```
+
+If labels are missing, add them:
+
+```bash
+kubectl label nodes <az-node-name> deplocation=az --overwrite
+kubectl label nodes <edge-node-name> deplocation=edge --overwrite
+```
+
+If you only have one VM, give it one label and run everything on that location
+with environment variables:
+
+```bash
+kubectl label nodes <node-name> deplocation=edge --overwrite
+```
+
+Later, run `./script/run.sh` with all location variables set to `edge`.
+
+On small two-node labs, the control-plane node may be tainted and unable to run
+pods. For experiments only, you can remove the taints:
+
+```bash
+kubectl taint nodes <control-node-name> node-role.kubernetes.io/controlplane:NoSchedule- || true
+kubectl taint nodes <control-node-name> node-role.kubernetes.io/etcd:NoExecute- || true
+```
+
+## 6. Run the E2E Deployment
+
+Use the rewritten scripts from the repo root:
+
+```bash
+cd ~/5gmap
+chmod +x script/*.sh
+./script/run.sh
+```
+
+The default run deploys:
+
+- use case: `zoomv3`
+- users: `1`
+- slices: `1`
+- traffic iterations: `1`
+- traffic type: `0`, pod-level traffic test
+
+The script flow is:
+
+```text
+script/run.sh -> script/deploy.sh -> script/start_traffic.sh -> script/undeploy.sh
+```
+
+During deployment, `script/deploy.sh` installs MySQL if needed, then deploys
+NRF, UDR, UDM, AUSF, AMF, SMF, UPF, OAI gNB-CU, OAI gNB-DU, OAI NR-UE, and the
+DNN pod.
+
+After traffic tests finish, `run.sh` prompts:
+
+```text
+Press ENTER to cleanup, or Ctrl-C to keep the deployment running...
+```
+
+Press Enter to clean up the deployed core/RAN/DNN resources. Press `Ctrl-C` to
+keep them running for manual inspection.
+
+### Run on a Single Label/Single VM
+
+If all pods should run on one node labeled `deplocation=edge`:
+
+```bash
+NRF_LOC=edge \
+UDR_LOC=edge \
+UDM_LOC=edge \
+AUSF_LOC=edge \
+AMF_LOC=edge \
+SMF_LOC=edge \
+UPF_LOC=edge \
+RAN_LOC=edge \
+DNN_LOC=edge \
+./script/run.sh
+```
+
+### Common Runtime Options
+
+Set options as environment variables:
+
+```bash
+USECASE=zoomv3 \
+NUM_USERS=1 \
+NUM_SLICES=1 \
+NUM_ITERATIONS=1 \
+TEST_TYPE=0 \
+./script/run.sh
+```
+
+Useful variables:
+
+```text
+USECASE          DNN image tag and log directory name. Default: zoomv3
+NUM_USERS        Number of UEs per slice. Default: 1
+NUM_SLICES       Number of slices. Default: 1
+NUM_ITERATIONS   iperf3 repetitions. Default: 1
+TEST_TYPE        Currently only 0 is supported for the OAI RAN path
+NAMESPACE        Kubernetes namespace. Default: oai
+AUTO_CLEANUP     Set to 1 to clean up without prompting
+DELETE_MYSQL     Set to 1 when running undeploy.sh to delete MySQL too
+```
+
+Auto-cleanup example:
+
+```bash
+AUTO_CLEANUP=1 ./script/run.sh
+```
+
+## 7. Validate the Run
+
+Watch pods:
+
+```bash
+kubectl get pods -n oai -w
+```
+
+All deployed pods should eventually be `Running`. A one-user, one-slice run
+should include pods like:
+
+```text
+mysql
+oai-nrf10
+oai-udr10
+oai-udm10
+oai-ausf10
+oai-amf10
+oai-smf10
+oai-spgwu-tiny10
+oai-gnb-cu10
+oai-gnb-du10
+oai-nr-ue10
+oai-dnn10
+```
+
+Traffic logs are written under:
+
+```text
+5gcore/logs/<USECASE>/throughput/
+```
+
+For example:
+
+```text
+5gcore/logs/zoomv3/throughput/ping.UL.1.log.txt
+5gcore/logs/zoomv3/throughput/ping.INET.1.log.txt
+5gcore/logs/zoomv3/throughput/throughput.UL.1.log.txt
+5gcore/logs/zoomv3/throughput/throughput.DL.1.log.txt
+```
+
+Current traffic status:
+
+- UE -> DNN ping is the primary connectivity check.
+- UE -> 8.8.8.8 ping is kept as an external reachability diagnostic and may
+  fail in isolated labs.
+- UL iperf3, NR-UE -> DNN, is expected to work when `iperf3` exists in both pods.
+- DL iperf3 uses the same model as OAI v2.1.0: the NR-UE starts the client and
+  uses `iperf3 -R`, so the DNN sends downlink data over a UE-initiated session.
+
+More details are documented in `doc/oai-ran-ping-debug.md`.
+
+## 8. Cleanup and Rerun
+
+Clean up one slice with one user:
+
+```bash
+cd ~/5gmap
+./script/undeploy.sh 1 1
+```
+
+Also remove MySQL:
+
+```bash
+DELETE_MYSQL=1 ./script/undeploy.sh 1 1
+```
+
+Then rerun:
+
+```bash
+./script/run.sh
+```
+
+## 9. Troubleshooting
+
+### Pod is Pending Because of Node Selectors
+
+Check:
+
+```bash
+kubectl describe pod <pod-name> -n oai
+kubectl get nodes --show-labels
+```
+
+If the event says the pod did not match node affinity or selector, ensure the
+node has `deplocation=edge` or `deplocation=az`, depending on where that
+component is scheduled.
+
+### Proxy Container Cannot Reach the OTLP Collector
+
+Check the proxy log:
+
+```bash
+kubectl logs <pod-name> -n oai -c proxy -p
+```
+
+If it cannot connect to:
+
+```text
+opentelemetry-collector.otel.svc.cluster.local:4317
+```
+
+verify OpenTelemetry was installed into the `otel` namespace:
+
+```bash
+kubectl get pods -n otel
+kubectl get svc -n otel
+```
+
+Also verify the DaemonSet DNS policy:
+
+```bash
+kubectl get daemonset -n otel opentelemetry-collector-agent -o yaml | grep dnsPolicy
+```
+
+### Pod is Evicted Because of Ephemeral Storage
+
+If `kubectl describe pod` shows `low on resource: ephemeral-storage`, expand the
+root volume or free Docker/containerd storage on the affected node:
+
+```bash
+df -h /
+docker system df
+```
+
+### RAN or UE Registers but Traffic Fails
+
+Useful logs:
+
+```bash
+kubectl -n oai logs deploy/oai-gnb-cu10 --container gnbcu --tail 120
+kubectl -n oai logs deploy/oai-gnb-du10 --container gnbdu --tail 120
+kubectl -n oai logs deploy/oai-nr-ue10 --container nr-ue --tail 120
+kubectl -n oai logs deploy/oai-amf10 --container amf --tail 120
+```
+
+Check the UE data interface:
+
+```bash
+kubectl -n oai exec deploy/oai-nr-ue10 -c nr-ue -- ip -4 -o addr show oaitun_ue1
+```
+
+You can rerun only the traffic test:
+
+```bash
+./script/start_traffic.sh zoomv3 1 1 1 0
+```
+
+For manual DL throughput testing, start an iperf3 server on the DNN pod and run
+reverse mode from the UE:
+
+```bash
+kubectl -n oai exec deploy/oai-dnn10 -- sh -c 'pkill iperf3 2>/dev/null || true; iperf3 -s -B <DNN_IP> -D'
+kubectl -n oai exec deploy/oai-nr-ue10 -c nr-ue -- iperf3 -c <DNN_IP> -B <UE_IP> -R -t 20
+```
+
+## Notes for Developers
+
+- `script/deploy.sh` rewrites several Helm `values.yaml` and `Chart.yaml` files
+  at runtime, following the original project style.
+- `script/README.md` contains a script-focused usage reference.
+- `oai-5g-ran/README.md` contains RFsim-specific notes.
+- The old gnbsim-specific fixes from earlier bring-up are not required for the
+  current OAI CU/DU/NR-UE deployment path.

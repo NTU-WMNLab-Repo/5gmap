@@ -1,3 +1,4 @@
+# start_traffic.sh
 #!/bin/bash
 
 #---------------------------------------------------------------
@@ -167,5 +168,6 @@ do
 done
 
 echo -e "${GREEN} ${bold} Traffic generation complete. Undeploying users. ${NC} ${NORMAL}"
+read -p "Press enter to cleanup"
 /bin/bash ./undeploy.sh $total
 sleep 200
