@@ -20,6 +20,33 @@ slice SST/SD, release names, and per-user RAN names. Do not treat the pod IPs in
 the committed `values.yaml` files as stable configuration; they are deployment
 artifacts from the last run.
 
+## Run modes
+
+`../script/run.sh` supports two RAN modes:
+
+```bash
+./script/run.sh --run_mode rfsim
+./script/run.sh --run_mode usrpb210
+```
+
+`rfsim` is the default. `usrpb210` maps the DU/UE charts to OAI `b2xx` mode for
+USRP B210/B200-series devices. In that mode the charts mount host
+`/dev/bus/usb/` into the DU and UE pods, and `script/deploy.sh` rewrites the
+DU/UE command-line options.
+
+Current `usrpb210` command options:
+
+```bash
+# DU
+-E --continuous-tx --thread-pool N --log_config.global_log_options level,nocolor,time
+
+# UE
+-E --ue-fo-compensation --cont-fo-comp 1 -r 106 --numerology 1 --band 78 --ssb 516 -C 3619200000
+```
+
+This mode is prepared in the scripts and Helm templates, but still needs E2E
+validation with the lab USRP hardware.
+
 ## RFsim configuration
 
 OAI RFsim parameters use an indexed config section. The working command-line

@@ -52,6 +52,7 @@ multus:
 
 config:
   timeZone: "Europe/Paris"
+  usrp: "rfsim"
   rfSimulator: "oai-gnb-du10"
   sdrAddrs: "oai-gnb-du10"
   fullImsi: "208950000000010"

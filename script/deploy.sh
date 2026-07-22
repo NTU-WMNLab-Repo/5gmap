@@ -13,6 +13,7 @@ enable_error_trap
 USECASE="${1:-zoomv3}"
 NUM_USERS="${2:-1}"
 NUM_SLICES="${3:-1}"
+RUN_MODE="${4:-${RUN_MODE:-rfsim}}"
 
 NAMESPACE="${NAMESPACE:-oai}"
 OPMODE="${OPMODE:-OTEL}"
@@ -32,6 +33,64 @@ RAN_LOC="${RAN_LOC:-az}"
 DNN_LOC="${DNN_LOC:-edge}"
 
 require_commands kubectl helm sed awk grep
+
+case "$RUN_MODE" in
+    rfsim|usrpb210)
+        ;;
+    *)
+        die "Unsupported run_mode '$RUN_MODE'. Supported values: rfsim, usrpb210"
+        ;;
+esac
+
+ran_usrp_type() {
+    case "$1" in
+        rfsim) echo "rfsim" ;;
+        usrpb210) echo "b2xx" ;;
+    esac
+}
+
+ran_sdr_addrs() {
+    case "$1" in
+        rfsim) echo "$2" ;;
+        usrpb210) echo "" ;;
+    esac
+}
+
+du_additional_options() {
+    case "$1" in
+        rfsim)
+            echo "-E --rfsim --thread-pool N --rfsimulator.[0].serveraddr server --log_config.global_log_options level,nocolor,time"
+            ;;
+        usrpb210)
+            echo "-E --continuous-tx --thread-pool N --log_config.global_log_options level,nocolor,time"
+            ;;
+    esac
+}
+
+cu_additional_options() {
+    case "$1" in
+        rfsim)
+            echo "--rfsim --log_config.global_log_options level,nocolor,time"
+            ;;
+        usrpb210)
+            echo "--log_config.global_log_options level,nocolor,time"
+            ;;
+    esac
+}
+
+ue_additional_options() {
+    local mode="$1"
+    local du_host="$2"
+
+    case "$mode" in
+        rfsim)
+            echo "-E --rfsim --thread-pool N --rfsimulator.[0].serveraddr $du_host -r 106 --numerology 1 -C 3619200000"
+            ;;
+        usrpb210)
+            echo "-E --ue-fo-compensation --cont-fo-comp 1 -r 106 --numerology 1 --band 78 --ssb 516 -C 3619200000"
+            ;;
+    esac
+}
 
 configure_proxy_values() {
     local chart="$1"
@@ -161,8 +220,15 @@ deploy_oai_ran_user() {
     local cu_chart="$RAN_DIR/oai-gnb-cu"
     local du_chart="$RAN_DIR/oai-gnb-du"
     local ue_chart="$RAN_DIR/oai-nr-ue"
+    local usrp_type
+    local du_sdr_addrs
+    local ue_sdr_addrs
 
-    info "Deploying OAI CU/DU/NR-UE for UE $u on slice $s"
+    usrp_type="$(ran_usrp_type "$RUN_MODE")"
+    du_sdr_addrs="$(ran_sdr_addrs "$RUN_MODE" "server")"
+    ue_sdr_addrs="$(ran_sdr_addrs "$RUN_MODE" "oai-gnb-du$u")"
+
+    info "Deploying OAI CU/DU/NR-UE for UE $u on slice $s with run_mode=$RUN_MODE"
 
     sed -i "s/^name: .*/name: oai-gnb-cu$u/" "$cu_chart/Chart.yaml"
     sed -i -E "s|^([[:space:]]*)name: \"oai-gnb-cu.*-sa\"|\\1name: \"oai-gnb-cu$u-sa\"|" "$cu_chart/values.yaml"
@@ -175,10 +241,10 @@ deploy_oai_ran_user() {
     set_yaml_value "$cu_chart/values.yaml" amfIpAddress "\"$AMF_IP\""
     set_yaml_value "$cu_chart/values.yaml" mountConfig "true"
     set_yaml_value "$cu_chart/values.yaml" rfSimulator "\"server\""
-    set_yaml_value "$cu_chart/values.yaml" gnbcuName "\"oai-gnb-cu$u-rfsim\""
+    set_yaml_value "$cu_chart/values.yaml" gnbcuName "\"oai-gnb-cu$u-$RUN_MODE\""
     set_yaml_value "$cu_chart/values.yaml" f1cuIpAddress "\"status.podIP\""
     set_yaml_value "$cu_chart/values.yaml" f1duIpAddress "\"oai-gnb-du$u\""
-    set_yaml_value "$cu_chart/values.yaml" useAdditionalOptions "\"--rfsim --log_config.global_log_options level,nocolor,time\""
+    set_yaml_value "$cu_chart/values.yaml" useAdditionalOptions "\"$(cu_additional_options "$RUN_MODE")\""
     sed -i "/nodeSelector:/,/nodeName:/c\nodeSelector:\n  deplocation: $RAN_LOC\n\nnodeName: " "$cu_chart/values.yaml"
     helm upgrade --install "gnbcu$u" "$cu_chart" -n "$NAMESPACE"
     wait_for_pod "$NAMESPACE" "oai-gnb-cu$u" 420 45
@@ -197,27 +263,29 @@ deploy_oai_ran_user() {
     set_yaml_value "$du_chart/values.yaml" nssaiSd0 "\"123\""
     set_yaml_value "$du_chart/values.yaml" amfIpAddress "\"$AMF_IP\""
     set_yaml_value "$du_chart/values.yaml" mountConfig "true"
+    set_yaml_value "$du_chart/values.yaml" usrp "\"$usrp_type\""
     set_yaml_value "$du_chart/values.yaml" rfSimulator "\"server\""
-    set_yaml_value "$du_chart/values.yaml" sdrAddrs "\"server\""
-    set_yaml_value "$du_chart/values.yaml" gnbduName "\"oai-gnb-du$u-rfsim\""
+    set_yaml_value "$du_chart/values.yaml" sdrAddrs "\"$du_sdr_addrs\""
+    set_yaml_value "$du_chart/values.yaml" gnbduName "\"oai-gnb-du$u-$RUN_MODE\""
     set_yaml_value "$du_chart/values.yaml" f1cuIpAddress "\"$cu_ip\""
     set_yaml_value "$du_chart/values.yaml" f1duIpAddress "\"status.podIP\""
-    set_yaml_value "$du_chart/values.yaml" useAdditionalOptions "\"-E --rfsim --thread-pool N --rfsimulator.[0].serveraddr server --log_config.global_log_options level,nocolor,time\""
+    set_yaml_value "$du_chart/values.yaml" useAdditionalOptions "\"$(du_additional_options "$RUN_MODE")\""
     sed -i "/nodeSelector:/,/nodeName:/c\nodeSelector:\n  deplocation: $RAN_LOC\n\nnodeName: " "$du_chart/values.yaml"
     helm upgrade --install "gnbdu$u" "$du_chart" -n "$NAMESPACE"
     wait_for_pod "$NAMESPACE" "oai-gnb-du$u" 420 45
 
     sed -i "s/^name: .*/name: oai-nr-ue$u/" "$ue_chart/Chart.yaml"
     sed -i -E "s|^([[:space:]]*)name: \"oai-nr-ue.*-sa\"|\\1name: \"oai-nr-ue$u-sa\"|" "$ue_chart/values.yaml"
+    set_yaml_value "$ue_chart/values.yaml" usrp "\"$usrp_type\""
     set_yaml_value "$ue_chart/values.yaml" rfSimulator "\"oai-gnb-du$u\""
-    set_yaml_value "$ue_chart/values.yaml" sdrAddrs "\"oai-gnb-du$u\""
+    set_yaml_value "$ue_chart/values.yaml" sdrAddrs "\"$ue_sdr_addrs\""
     set_yaml_value "$ue_chart/values.yaml" fullImsi "\"$imsi\""
     set_yaml_value "$ue_chart/values.yaml" fullKey "\"$key\""
     set_yaml_value "$ue_chart/values.yaml" opc "\"63bfa50ee6523365ff14c1f45f88737d\""
     set_yaml_value "$ue_chart/values.yaml" dnn "\"oai\""
     set_yaml_value "$ue_chart/values.yaml" nssaiSst "\"2$s\""
     set_yaml_value "$ue_chart/values.yaml" nssaiSd "\"123\""
-    set_yaml_value "$ue_chart/values.yaml" useAdditionalOptions "\"-E --rfsim --thread-pool N --rfsimulator.[0].serveraddr oai-gnb-du$u -r 106 --numerology 1 -C 3619200000\""
+    set_yaml_value "$ue_chart/values.yaml" useAdditionalOptions "\"$(ue_additional_options "$RUN_MODE" "oai-gnb-du$u")\""
     sed -i "/nodeSelector:/,/nodeName:/c\nodeSelector:\n  deplocation: $RAN_LOC\n\nnodeName: " "$ue_chart/values.yaml"
     helm upgrade --install "nrue$u" "$ue_chart" -n "$NAMESPACE"
     wait_for_pod "$NAMESPACE" "oai-nr-ue$u" 420 45

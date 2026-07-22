@@ -211,7 +211,9 @@ data:
       RUs = (
           {     
              local_rf       = "yes"
+          {{- if ne .Values.config.usrp "b2xx" }}
                sdr_addrs      = "{{ .Values.config.sdrAddrs }}";
+          {{- end }}
                nb_tx          = 1
                nb_rx          = 1
                att_tx         = 0

@@ -62,6 +62,7 @@ multus:    # needed when gnB service will run on another interface rather than t
 config:
   mountConfig: true
   timeZone: "Europe/Paris"
+  usrp: "rfsim"
   rfSimulator: "server"
   sdrAddrs: "server"
   gnbduName: "oai-gnb-du10-rfsim"
@@ -72,13 +73,13 @@ config:
   tac: "0x00a000"
   nssaiSst: "210"
   nssaiSd0: "123"
-  amfIpAddress: "10.42.1.151"
+  amfIpAddress: "10.42.1.195"
   gnbNgaIfName: "eth0"            # net1 in case multus create is true that means another interface is created for ngap interface, n2 to communicate with amf
   gnbNgaIpAddress: "status.podIP" # n2IPadd in case multus create is true
   gnbNguIfName: "eth0"   #net2 in case multus create is true gtu interface for upf/spgwu
   gnbNguIpAddress: "status.podIP" # n3IPadd in case multus create is true
   f1IfName: "eth0"                # net3 incase multus create is true
-  f1cuIpAddress: "10.42.0.127"
+  f1cuIpAddress: "10.42.0.153"
   f1duIpAddress: "status.podIP"
   f1cuPort: "2153"
   f1duPort: "2153"

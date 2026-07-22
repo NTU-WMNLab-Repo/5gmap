@@ -100,6 +100,7 @@ NUM_USERS        每個 slice 的 UE 數量，預設 1
 NUM_SLICES       slice 數量，預設 1
 NUM_ITERATIONS   iperf3 測試重複次數，預設 1
 TEST_TYPE        目前 OAI RAN 只支援 0，也就是 pod-level test
+RUN_MODE         RAN 執行模式，預設 rfsim；可設 rfsim 或 usrpb210
 NAMESPACE        Kubernetes namespace，預設 oai
 AUTO_CLEANUP     設成 1 時，測試結束後不詢問，直接 cleanup
 DELETE_MYSQL     cleanup 時設成 1 才會刪 mysql release
@@ -117,6 +118,20 @@ AUTO_CLEANUP=1 ./script/run.sh
 NAMESPACE=oai-test ./script/run.sh
 ```
 
+使用 USRP B210/B200 系列：
+
+```bash
+./script/run.sh --run_mode usrpb210
+```
+
+也可以用環境變數：
+
+```bash
+RUN_MODE=usrpb210 ./script/run.sh
+```
+
+`run_mode` 預設是 `rfsim`，所以平常 RF simulator 測試不用特別加參數。
+
 ## 分段執行
 
 如果你想分開 debug，可以手動分段跑。
@@ -130,7 +145,13 @@ NAMESPACE=oai-test ./script/run.sh
 參數順序是：
 
 ```text
-deploy.sh <USECASE> <NUM_USERS> <NUM_SLICES>
+deploy.sh <USECASE> <NUM_USERS> <NUM_SLICES> [RUN_MODE]
+```
+
+例如只部署 USRP B210/B200 模式：
+
+```bash
+./script/deploy.sh zoomv3 1 1 usrpb210
 ```
 
 只跑 traffic test：
@@ -217,6 +238,7 @@ log 會寫到：
 
 - `deploy.sh` 會修改 `5gcore/` 和 `oai-5g-ran/` 裡面的 Helm `values.yaml` / `Chart.yaml`，這沿用原本專案的做法。
 - `oai-gnb-cu` 和 `oai-gnb-du` 會開啟 `mountConfig`，並掛載 `gnb.conf` 到 `/opt/oai-gnb/etc`，因為目前使用的 `oaisoftwarealliance/oai-gnb:develop` image 啟動時需要這個設定檔。
+- `RUN_MODE=usrpb210` 目前只完成 script/chart 設定，會讓 DU/UE 使用 B210/B200 系列的 `b2xx` 設定並掛載 host `/dev/bus/usb/`。這個模式尚未在實驗室 USRP 上做 E2E 驗證。
 - `TEST_TYPE=1` 的 host-level test 尚未移植到 OAI RAN 流程，目前只支援 `TEST_TYPE=0`。
 - MySQL 預設不會在 cleanup 時刪除，避免每次重跑都重建 subscriber database。
 - 如果你保留部署結果後要手動清理，可以再跑 `./script/undeploy.sh <NUM_USERS> <NUM_SLICES>`。

@@ -41,6 +41,10 @@ spec:
         volumeMounts:
           - mountPath: /opt/oai-gnb/etc
             name: configuration
+          {{- if eq .Values.config.usrp "b2xx" }}
+          - mountPath: /dev/bus/usb/
+            name: usrp
+          {{- end}}
         {{- end}}
         {{- if .Values.resources.define}}
         resources:
@@ -70,6 +74,9 @@ spec:
           - |
             cp /opt/oai-gnb/etc/gnb.conf /tmp/gnb.conf
             sed -i "s/__F1_DU_IP_ADDRESS__/${F1_DU_IP_ADDRESS}/g; s/__F1_CU_IP_ADDRESS__/${F1_CU_IP_ADDRESS}/g" /tmp/gnb.conf
+            if [ "${USRP}" = "b2xx" ]; then
+              /opt/oai-gnb/bin/uhd_images_downloader.py -t b2xx
+            fi
             exec /opt/oai-gnb/bin/nr-softmodem -O /tmp/gnb.conf ${USE_ADDITIONAL_OPTIONS}
         {{- else}}
         command:
@@ -99,6 +106,11 @@ spec:
               configMapKeyRef:
                 name: {{ .Chart.Name }}-configmap
                 key: sdrAddrs
+          - name: USRP
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Chart.Name }}-configmap
+                key: usrp
           - name: USE_SA_TDD_DU
             valueFrom:
               configMapKeyRef:
@@ -231,6 +243,11 @@ spec:
       - configMap:
           name: {{ .Chart.Name }}-configmap
         name: configuration
+      {{- if eq .Values.config.usrp "b2xx" }}
+      - hostPath:
+          path: /dev/bus/usb/
+        name: usrp
+      {{- end}}
       {{- end}}
       dnsPolicy: ClusterFirst
       restartPolicy: Always

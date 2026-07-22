@@ -1,7 +1,9 @@
 # 5G-MAP
 
 This repository contains the code needed to deploy a 5G-MAP testbed with an
-OpenAirInterface 5G Core, the 5G-MAP sidecar proxy, and an OAI RF-simulator RAN.
+OpenAirInterface 5G Core, the 5G-MAP sidecar proxy, and an OAI split RAN. The
+default RAN mode is RF simulator; an experimental USRP B210/B200 mode is also
+available through the rewritten scripts.
 
 The current deployment path uses the rewritten scripts in `script/`:
 
@@ -409,6 +411,7 @@ The default run deploys:
 - slices: `1`
 - traffic iterations: `1`
 - traffic type: `0`, pod-level traffic test
+- RAN mode: `rfsim`
 
 The script flow is:
 
@@ -467,6 +470,7 @@ NUM_USERS        Number of UEs per slice. Default: 1
 NUM_SLICES       Number of slices. Default: 1
 NUM_ITERATIONS   iperf3 repetitions. Default: 1
 TEST_TYPE        Currently only 0 is supported for the OAI RAN path
+RUN_MODE         RAN mode. Default: rfsim. Supported: rfsim, usrpb210
 NAMESPACE        Kubernetes namespace. Default: oai
 AUTO_CLEANUP     Set to 1 to clean up without prompting
 DELETE_MYSQL     Set to 1 when running undeploy.sh to delete MySQL too
@@ -477,6 +481,15 @@ Auto-cleanup example:
 ```bash
 AUTO_CLEANUP=1 ./script/run.sh
 ```
+
+USRP B210/B200 mode example:
+
+```bash
+./script/run.sh --run_mode usrpb210
+```
+
+This mode prepares the DU/UE pods for OAI `b2xx` operation and mounts host
+`/dev/bus/usb/`. It still needs validation with the lab USRP hardware.
 
 ## 7. Validate the Run
 
