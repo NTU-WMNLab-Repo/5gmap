@@ -239,7 +239,7 @@ helm list -A
 
 ```bash
 cd ~
-git clone https://github.com/gene466/5gmap.git
+git clone https://github.com/NTU-WMNLab-Repo/5gmap.git
 cd 5gmap
 ```
 
