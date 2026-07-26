@@ -348,7 +348,7 @@ This is currently a manual post-install step.
 ### Optional: Open the Jaeger UI
 
 ```bash
-kubectl port-forward -n jaeger service/jaeger-query --address 0.0.0.0 16686:16686
+kubectl port-forward -n jaeger service/jaeger --address 0.0.0.0 16686:16686
 ```
 
 Then open:
