@@ -59,7 +59,7 @@ proxy:
   proxyport: 11095
   serviceport: 8080
   networksliceID: 10
-  locationID: edge
+  locationID: az
   servicename: "nrf11"
 
 persistent:
@@ -91,6 +91,6 @@ readinessProbe: true
 livenessProbe: false
 
 nodeSelector:
-  deplocation: edge
+  deplocation: az
 
 nodeName: 

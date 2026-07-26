@@ -78,6 +78,6 @@ resources:
 terminationGracePeriodSeconds: 5
 
 nodeSelector:
-  deplocation: az
+  deplocation: edge
 
 nodeName: 

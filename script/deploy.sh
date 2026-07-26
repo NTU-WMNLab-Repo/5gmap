@@ -22,15 +22,15 @@ PROXY_PORT="${PROXY_PORT:-11095}"
 SERVICE_PORT="${SERVICE_PORT:-8080}"
 PROXY_VERSION="${PROXY_VERSION:-7.0.0}"
 
-NRF_LOC="${NRF_LOC:-edge}"
+NRF_LOC="${NRF_LOC:-az}"
 UDR_LOC="${UDR_LOC:-az}"
 UDM_LOC="${UDM_LOC:-az}"
 AUSF_LOC="${AUSF_LOC:-az}"
-AMF_LOC="${AMF_LOC:-edge}"
-SMF_LOC="${SMF_LOC:-edge}"
-UPF_LOC="${UPF_LOC:-edge}"
-RAN_LOC="${RAN_LOC:-az}"
-DNN_LOC="${DNN_LOC:-edge}"
+AMF_LOC="${AMF_LOC:-az}"
+SMF_LOC="${SMF_LOC:-az}"
+UPF_LOC="${UPF_LOC:-az}"
+RAN_LOC="${RAN_LOC:-edge}"
+DNN_LOC="${DNN_LOC:-az}"
 
 require_commands kubectl helm sed awk grep
 

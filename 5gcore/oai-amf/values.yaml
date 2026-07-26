@@ -104,7 +104,7 @@ proxy:
   proxyport: 11095
   serviceport: 8080
   networksliceID: 10
-  locationID: edge
+  locationID: az
   servicename: "amf11"
 
 resources:
@@ -131,6 +131,6 @@ livenessProbe: false
 terminationGracePeriodSeconds: 5
 
 nodeSelector:
-  deplocation: edge
+  deplocation: az
 
 nodeName:
