@@ -308,7 +308,7 @@ helm upgrade --install opentelemetry-collector open-telemetry/opentelemetry-coll
   --values otel.yaml \
   -n otel
 
-kubectl get pods -n otel
+kubectl get pods -n otel -w
 ```
 
 The proxy code expects the collector at:
