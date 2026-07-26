@@ -63,6 +63,8 @@ az
 - slices: `1`
 - test iterations: `1`
 - test type: `0`，也就是 pod-level traffic test
+- run mode: `rfsim`
+- DeployUE: `1`，也就是會部署 NR-UE 與 DNN
 
 執行：
 
@@ -79,6 +81,8 @@ Press ENTER to cleanup, or Ctrl-C to keep the deployment running...
 
 按 Enter 會清掉本次部署的 core、CU、DU、NR-UE、DNN。按 `Ctrl-C` 可以保留部署結果，方便你手動查看 pod log 或 debug。
 
+如果 `DeployUE=0`，`run.sh` 只會部署到 CU/DU，並跳過 traffic test，因為 NR-UE 與 DNN 不會被部署。
+
 ## 常用參數
 
 參數用環境變數設定：
@@ -89,6 +93,8 @@ NUM_USERS=1 \
 NUM_SLICES=1 \
 NUM_ITERATIONS=1 \
 TEST_TYPE=0 \
+RUN_MODE=rfsim \
+DeployUE=1 \
 ./script/run.sh
 ```
 
@@ -100,11 +106,14 @@ NUM_USERS        每個 slice 的 UE 數量，預設 1
 NUM_SLICES       slice 數量，預設 1
 NUM_ITERATIONS   iperf3 測試重複次數，預設 1
 TEST_TYPE        目前 OAI RAN 只支援 0，也就是 pod-level test
-RUN_MODE         RAN 執行模式，預設 rfsim；可設 rfsim 或 usrpb210
+RUN_MODE         RAN 執行模式，預設 rfsim；可設 rfsim、usrp 或 usrpb210
+DeployUE         是否部署 NR-UE 與 DNN，預設 1；可設 0 或 1
 NAMESPACE        Kubernetes namespace，預設 oai
 AUTO_CLEANUP     設成 1 時，測試結束後不詢問，直接 cleanup
 DELETE_MYSQL     cleanup 時設成 1 才會刪 mysql release
 ```
+
+`DeployUE` 也可以寫成 `DEPLOY_UE`，CLI 參數也支援 `--DeployUE`、`--deploy_ue`、`--deploy-ue`。
 
 例如測試結束後自動清理：
 
@@ -124,6 +133,12 @@ NAMESPACE=oai-test ./script/run.sh
 ./script/run.sh --run_mode usrpb210
 ```
 
+也可以用 `usrp` 作為 `usrpb210` 的 alias：
+
+```bash
+./script/run.sh --runmode usrp
+```
+
 也可以用環境變數：
 
 ```bash
@@ -131,6 +146,52 @@ RUN_MODE=usrpb210 ./script/run.sh
 ```
 
 `run_mode` 預設是 `rfsim`，所以平常 RF simulator 測試不用特別加參數。
+
+只部署到 DU、不部署 NR-UE/DNN：
+
+```bash
+RUN_MODE=usrp DeployUE=0 ./script/run.sh
+```
+
+這個情境不需要部署 DNN。DNN 是給 UE attach 後的資料面 traffic test 使用；如果沒有部署 NR-UE，就沒有 UE data IP，也沒有需要連線的 DNN endpoint。
+
+## 常用情境範例
+
+USRP 模式，只部署到 DU，不部署 UE/DNN，cleanup 時清掉 MySQL：
+
+```bash
+RUN_MODE=usrp \
+DeployUE=0 \
+DELETE_MYSQL=1 \
+./script/run.sh
+```
+
+同一個情境也可以用 CLI 參數：
+
+```bash
+DELETE_MYSQL=1 ./script/run.sh --runmode usrp --DeployUE 0
+```
+
+RF simulator 模式，部署 UE/DNN，cleanup 時清掉 MySQL：
+
+```bash
+RUN_MODE=rfsim \
+DeployUE=1 \
+DELETE_MYSQL=1 \
+./script/run.sh
+```
+
+同一個情境也可以用 CLI 參數：
+
+```bash
+DELETE_MYSQL=1 ./script/run.sh --runmode rfsim --DeployUE 1
+```
+
+如果想跑完後自動 cleanup，可以加上 `AUTO_CLEANUP=1`：
+
+```bash
+AUTO_CLEANUP=1 DELETE_MYSQL=1 ./script/run.sh --runmode rfsim --DeployUE 1
+```
 
 ## 分段執行
 
@@ -145,13 +206,25 @@ RUN_MODE=usrpb210 ./script/run.sh
 參數順序是：
 
 ```text
-deploy.sh <USECASE> <NUM_USERS> <NUM_SLICES> [RUN_MODE]
+deploy.sh <USECASE> <NUM_USERS> <NUM_SLICES> [RUN_MODE] [DeployUE]
 ```
 
 例如只部署 USRP B210/B200 模式：
 
 ```bash
 ./script/deploy.sh zoomv3 1 1 usrpb210
+```
+
+例如只部署 USRP 模式的 core、CU、DU，不部署 NR-UE/DNN：
+
+```bash
+./script/deploy.sh zoomv3 1 1 usrp 0
+```
+
+也可以用 named arguments：
+
+```bash
+./script/deploy.sh zoomv3 1 1 --runmode usrp --DeployUE 0
 ```
 
 只跑 traffic test：
@@ -165,6 +238,8 @@ deploy.sh <USECASE> <NUM_USERS> <NUM_SLICES> [RUN_MODE]
 ```text
 start_traffic.sh <USECASE> <NUM_USERS> <NUM_SLICES> <NUM_ITERATIONS> <TEST_TYPE>
 ```
+
+`start_traffic.sh` 需要 NR-UE 與 DNN 都存在，所以只適合 `DeployUE=1` 的部署。如果前面用 `DeployUE=0`，請不要單獨跑 traffic test。
 
 只清理：
 
@@ -205,6 +280,8 @@ DELETE_MYSQL=1 ./script/undeploy.sh 1 1
    - `oai-dnn`
 5. 設定 DNN pod 的 NAT 與到 UE data network `12.1.1.0/24` 的 route。
 
+如果 `DeployUE=0`，第 4 步只會部署 `oai-gnb-cu` 和 `oai-gnb-du`，並跳過 `oai-nr-ue`、`oai-dnn` 以及第 5 步的 DNN route/NAT 設定。
+
 ## Traffic test 與 log
 
 `start_traffic.sh` 會先從 NR-UE 的 `oaitun_ue1` ping DNN pod IP。UE data IP 會從 `oaitun_ue1` 動態讀取，不再假設一定是：
@@ -238,7 +315,7 @@ log 會寫到：
 
 - `deploy.sh` 會修改 `5gcore/` 和 `oai-5g-ran/` 裡面的 Helm `values.yaml` / `Chart.yaml`，這沿用原本專案的做法。
 - `oai-gnb-cu` 和 `oai-gnb-du` 會開啟 `mountConfig`，並掛載 `gnb.conf` 到 `/opt/oai-gnb/etc`，因為目前使用的 `oaisoftwarealliance/oai-gnb:develop` image 啟動時需要這個設定檔。
-- `RUN_MODE=usrpb210` 目前只完成 script/chart 設定，會讓 DU/UE 使用 B210/B200 系列的 `b2xx` 設定並掛載 host `/dev/bus/usb/`。這個模式尚未在實驗室 USRP 上做 E2E 驗證。
+- `RUN_MODE=usrpb210` 或 `RUN_MODE=usrp` 目前只完成 script/chart 設定，會讓 DU/UE 使用 B210/B200 系列的 `b2xx` 設定並掛載 host `/dev/bus/usb/`。如果只有一台 USRP，請使用 `DeployUE=0` 先部署到 DU。
 - `TEST_TYPE=1` 的 host-level test 尚未移植到 OAI RAN 流程，目前只支援 `TEST_TYPE=0`。
 - MySQL 預設不會在 cleanup 時刪除，避免每次重跑都重建 subscriber database。
 - 如果你保留部署結果後要手動清理，可以再跑 `./script/undeploy.sh <NUM_USERS> <NUM_SLICES>`。
@@ -252,7 +329,7 @@ cd /home/genechen/5gmap
 ./script/undeploy.sh 1 1
 ```
 
-上面會清掉 `nrf10`、`udr10`、`udm10`、`ausf10` 等 core release，以及對應的 CU、DU、NR-UE、DNN。不存在的 release 會自動略過。
+上面會清掉 `nrf10`、`udr10`、`udm10`、`ausf10` 等 core release，以及對應的 CU、DU、NR-UE、DNN。不存在的 release 會自動略過；如果前面是 `DeployUE=0`，沒有部署的 NR-UE/DNN 也會被自動略過。
 
 如果也想把 MySQL 一起刪掉：
 
