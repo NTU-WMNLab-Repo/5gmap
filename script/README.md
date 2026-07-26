@@ -311,6 +311,37 @@ log 會寫到：
 5gcore/logs/zoomv3/throughput/throughput.UL.1.log.txt
 ```
 
+## USRP DU 啟動成功判斷
+
+如果使用 `RUN_MODE=usrp DeployUE=0` 只部署到 DU，可以用 DU pod log 確認 USRP 是否真的被 OAI DU 使用：
+
+```bash
+kubectl logs <oai-gnb-du-pod> -n oai
+```
+
+例如：
+
+```bash
+kubectl logs oai-gnb-du10-7f6f496dbb-8dtgk -n oai
+```
+
+看到下面幾類訊息時，代表 DU 已經連到 CU，並且 UHD/OAI 已成功偵測與啟動 B210/B200 系列 USRP：
+
+```text
+CMDLINE: "/opt/oai-gnb/bin/nr-softmodem" ... "--continuous-tx" ...
+[MAC]    I received F1 Setup Response from CU oai-gnb-cu10-usrp
+[HW]     I Found USRP b200
+[INFO] [B200] Detected Device: B210
+[INFO] [B200] Operating over USB 3.
+[HW]     I Actual RX sample rate: 46.080000MSps...
+[HW]     I Actual TX sample rate: 46.080000MSps...
+[HW]     I [RAU] has loaded USRP B200 device.
+[PHY]    I RU 0 rf device ready
+[PHY]    I RU 0 RF started cpu_meas_enabled 0
+```
+
+這裡的 `received F1 Setup Response from CU` 表示 DU/CU 的 F1 interface 已建立；`Detected Device: B210`、`Operating over USB 3.` 和 `RU 0 RF started` 則表示 DU container 已經透過 UHD 找到並啟動實體 USRP。
+
 ## 注意事項
 
 - `deploy.sh` 會修改 `5gcore/` 和 `oai-5g-ran/` 裡面的 Helm `values.yaml` / `Chart.yaml`，這沿用原本專案的做法。
