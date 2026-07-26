@@ -13,19 +13,32 @@ NUM_ITERATIONS="${NUM_ITERATIONS:-1}"
 TEST_TYPE="${TEST_TYPE:-0}"
 AUTO_CLEANUP="${AUTO_CLEANUP:-0}"
 RUN_MODE="${RUN_MODE:-rfsim}"
+DEPLOY_UE="${DEPLOY_UE:-${DeployUE:-1}}"
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
-        --run_mode|--run-mode)
+        --run_mode|--run-mode|--runmode)
             shift
             [ "$#" -gt 0 ] || die "Missing value for --run_mode"
             RUN_MODE="$1"
             ;;
-        --run_mode=*|--run-mode=*)
+        --run_mode=*|--run-mode=*|--runmode=*)
             RUN_MODE="${1#*=}"
             ;;
-        run_mode=*)
+        run_mode=*|runmode=*)
             RUN_MODE="${1#*=}"
+            ;;
+        --DeployUE|--deploy_ue|--deploy-ue)
+            opt="$1"
+            shift
+            [ "$#" -gt 0 ] || die "Missing value for $opt"
+            DEPLOY_UE="$1"
+            ;;
+        --DeployUE=*|--deploy_ue=*|--deploy-ue=*)
+            DEPLOY_UE="${1#*=}"
+            ;;
+        DeployUE=*|deployUE=*|deploy_ue=*)
+            DEPLOY_UE="${1#*=}"
             ;;
         *)
             die "Unknown argument: $1"
@@ -35,28 +48,41 @@ while [ "$#" -gt 0 ]; do
 done
 
 case "$RUN_MODE" in
-    rfsim|usrpb210)
+    rfsim|usrp|usrpb210)
         ;;
     *)
-        die "Unsupported run_mode '$RUN_MODE'. Supported values: rfsim, usrpb210"
+        die "Unsupported run_mode '$RUN_MODE'. Supported values: rfsim, usrp, usrpb210"
+        ;;
+esac
+
+case "$DEPLOY_UE" in
+    0|1)
+        ;;
+    *)
+        die "Unsupported DeployUE '$DEPLOY_UE'. Supported values: 0, 1"
         ;;
 esac
 
 info "Starting 5GMAP with OAI RAN"
-info "usecase=${USECASE}, users=${NUM_USERS}, slices=${NUM_SLICES}, iterations=${NUM_ITERATIONS}, test_type=${TEST_TYPE}, run_mode=${RUN_MODE}"
+info "usecase=${USECASE}, users=${NUM_USERS}, slices=${NUM_SLICES}, iterations=${NUM_ITERATIONS}, test_type=${TEST_TYPE}, run_mode=${RUN_MODE}, DeployUE=${DEPLOY_UE}"
 
 "$SCRIPT_DIR/deploy.sh" \
     "$USECASE" \
     "$NUM_USERS" \
     "$NUM_SLICES" \
-    "$RUN_MODE"
+    "$RUN_MODE" \
+    "$DEPLOY_UE"
 
-"$SCRIPT_DIR/start_traffic.sh" \
-    "$USECASE" \
-    "$NUM_USERS" \
-    "$NUM_SLICES" \
-    "$NUM_ITERATIONS" \
-    "$TEST_TYPE"
+if [ "$DEPLOY_UE" = "1" ]; then
+    "$SCRIPT_DIR/start_traffic.sh" \
+        "$USECASE" \
+        "$NUM_USERS" \
+        "$NUM_SLICES" \
+        "$NUM_ITERATIONS" \
+        "$TEST_TYPE"
+else
+    info "DeployUE=0; skipping traffic tests because NR-UE and DNN were not deployed"
+fi
 
 if [ "$AUTO_CLEANUP" = "1" ]; then
     "$SCRIPT_DIR/undeploy.sh" "$NUM_USERS" "$NUM_SLICES"

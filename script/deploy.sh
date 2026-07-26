@@ -10,10 +10,54 @@ RAN_DIR="$ROOT_DIR/oai-5g-ran"
 source "$SCRIPT_DIR/common.sh"
 enable_error_trap
 
-USECASE="${1:-zoomv3}"
-NUM_USERS="${2:-1}"
-NUM_SLICES="${3:-1}"
-RUN_MODE="${4:-${RUN_MODE:-rfsim}}"
+USECASE="${USECASE:-zoomv3}"
+NUM_USERS="${NUM_USERS:-1}"
+NUM_SLICES="${NUM_SLICES:-1}"
+RUN_MODE="${RUN_MODE:-rfsim}"
+DEPLOY_UE="${DEPLOY_UE:-${DeployUE:-1}}"
+
+positional_args=()
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --run_mode|--run-mode|--runmode)
+            shift
+            [ "$#" -gt 0 ] || die "Missing value for --run_mode"
+            RUN_MODE="$1"
+            ;;
+        --run_mode=*|--run-mode=*|--runmode=*)
+            RUN_MODE="${1#*=}"
+            ;;
+        run_mode=*|runmode=*)
+            RUN_MODE="${1#*=}"
+            ;;
+        --DeployUE|--deploy_ue|--deploy-ue)
+            opt="$1"
+            shift
+            [ "$#" -gt 0 ] || die "Missing value for $opt"
+            DEPLOY_UE="$1"
+            ;;
+        --DeployUE=*|--deploy_ue=*|--deploy-ue=*)
+            DEPLOY_UE="${1#*=}"
+            ;;
+        DeployUE=*|deployUE=*|deploy_ue=*)
+            DEPLOY_UE="${1#*=}"
+            ;;
+        --*)
+            die "Unknown argument: $1"
+            ;;
+        *)
+            positional_args+=("$1")
+            ;;
+    esac
+    shift
+done
+
+[ "${#positional_args[@]}" -le 5 ] || die "Too many positional arguments"
+if [ "${#positional_args[@]}" -ge 1 ]; then USECASE="${positional_args[0]}"; fi
+if [ "${#positional_args[@]}" -ge 2 ]; then NUM_USERS="${positional_args[1]}"; fi
+if [ "${#positional_args[@]}" -ge 3 ]; then NUM_SLICES="${positional_args[2]}"; fi
+if [ "${#positional_args[@]}" -ge 4 ]; then RUN_MODE="${positional_args[3]}"; fi
+if [ "${#positional_args[@]}" -ge 5 ]; then DEPLOY_UE="${positional_args[4]}"; fi
 
 NAMESPACE="${NAMESPACE:-oai}"
 OPMODE="${OPMODE:-OTEL}"
@@ -35,24 +79,32 @@ DNN_LOC="${DNN_LOC:-az}"
 require_commands kubectl helm sed awk grep
 
 case "$RUN_MODE" in
-    rfsim|usrpb210)
+    rfsim|usrp|usrpb210)
         ;;
     *)
-        die "Unsupported run_mode '$RUN_MODE'. Supported values: rfsim, usrpb210"
+        die "Unsupported run_mode '$RUN_MODE'. Supported values: rfsim, usrp, usrpb210"
+        ;;
+esac
+
+case "$DEPLOY_UE" in
+    0|1)
+        ;;
+    *)
+        die "Unsupported DeployUE '$DEPLOY_UE'. Supported values: 0, 1"
         ;;
 esac
 
 ran_usrp_type() {
     case "$1" in
         rfsim) echo "rfsim" ;;
-        usrpb210) echo "b2xx" ;;
+        usrp|usrpb210) echo "b2xx" ;;
     esac
 }
 
 ran_sdr_addrs() {
     case "$1" in
         rfsim) echo "$2" ;;
-        usrpb210) echo "" ;;
+        usrp|usrpb210) echo "" ;;
     esac
 }
 
@@ -61,7 +113,7 @@ du_additional_options() {
         rfsim)
             echo "-E --rfsim --thread-pool N --rfsimulator.[0].serveraddr server --log_config.global_log_options level,nocolor,time"
             ;;
-        usrpb210)
+        usrp|usrpb210)
             echo "-E --continuous-tx --thread-pool N --log_config.global_log_options level,nocolor,time"
             ;;
     esac
@@ -72,7 +124,7 @@ cu_additional_options() {
         rfsim)
             echo "--rfsim --log_config.global_log_options level,nocolor,time"
             ;;
-        usrpb210)
+        usrp|usrpb210)
             echo "--log_config.global_log_options level,nocolor,time"
             ;;
     esac
@@ -86,7 +138,7 @@ ue_additional_options() {
         rfsim)
             echo "-E --rfsim --thread-pool N --rfsimulator.[0].serveraddr $du_host -r 106 --numerology 1 -C 3619200000"
             ;;
-        usrpb210)
+        usrp|usrpb210)
             echo "-E --ue-fo-compensation --cont-fo-comp 1 -r 106 --numerology 1 --band 78 --ssb 516 -C 3619200000"
             ;;
     esac
@@ -228,7 +280,7 @@ deploy_oai_ran_user() {
     du_sdr_addrs="$(ran_sdr_addrs "$RUN_MODE" "server")"
     ue_sdr_addrs="$(ran_sdr_addrs "$RUN_MODE" "oai-gnb-du$u")"
 
-    info "Deploying OAI CU/DU/NR-UE for UE $u on slice $s with run_mode=$RUN_MODE"
+    info "Deploying OAI CU/DU for user $u on slice $s with run_mode=$RUN_MODE"
 
     sed -i "s/^name: .*/name: oai-gnb-cu$u/" "$cu_chart/Chart.yaml"
     sed -i -E "s|^([[:space:]]*)name: \"oai-gnb-cu.*-sa\"|\\1name: \"oai-gnb-cu$u-sa\"|" "$cu_chart/values.yaml"
@@ -273,6 +325,13 @@ deploy_oai_ran_user() {
     sed -i "/nodeSelector:/,/nodeName:/c\nodeSelector:\n  deplocation: $RAN_LOC\n\nnodeName: " "$du_chart/values.yaml"
     helm upgrade --install "gnbdu$u" "$du_chart" -n "$NAMESPACE"
     wait_for_pod "$NAMESPACE" "oai-gnb-du$u" 420 45
+
+    if [ "$DEPLOY_UE" = "0" ]; then
+        info "DeployUE=0; skipping NR-UE and DNN for user $u"
+        return 0
+    fi
+
+    info "Deploying OAI NR-UE and DNN for UE $u on slice $s"
 
     sed -i "s/^name: .*/name: oai-nr-ue$u/" "$ue_chart/Chart.yaml"
     sed -i -E "s|^([[:space:]]*)name: \"oai-nr-ue.*-sa\"|\\1name: \"oai-nr-ue$u-sa\"|" "$ue_chart/values.yaml"
