@@ -20,7 +20,7 @@ Equivalent CLI forms:
 ./script/deploy.sh zoomv3 1 1 --RanProxy 1
 ```
 
-When `RanProxy=1`, `deploy.sh` deploys one `oai-f1ap-proxy<user>` service and
+When `RanProxy=1`, `deploy.sh` deploys one `f1proxy<user>` service and
 deployment per CU/DU pair, then points the DU F1-C target to that proxy. When
 `RanProxy=0`, the DU connects directly to the CU as before.
 
@@ -28,12 +28,12 @@ Useful image variables:
 
 ```text
 RAN_PROXY_IMAGE          Default: docker.io/genechen0203/f1ap-sctp-proxy:latest
-RAN_PROXY_F1C_PORT       Default: 501
+RAN_PROXY_F1C_PORT       Default: 38472
 RAN_PROXY_OTEL_ENDPOINT  Default: http://opentelemetry-collector.otel.svc.cluster.local:4317
 RAN_PROXY_OTEL_INSECURE  Default: true
 ```
 
-`undeploy.sh` always attempts to remove `oai-f1ap-proxy<user>` resources, so it
+`undeploy.sh` always attempts to remove `f1proxy<user>` resources, so it
 is safe to run cleanup after either `RanProxy=0` or `RanProxy=1`.
 
 # 5GMAP Script 使用說明

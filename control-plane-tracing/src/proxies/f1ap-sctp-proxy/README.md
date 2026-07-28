@@ -25,9 +25,9 @@ For OAI DU deployments, both the high-level CU host value and the generated
 | Variable | Default | Description |
 | --- | --- | --- |
 | `CU_HOST` | `oai-cu` | Real CU host or service name. |
-| `CU_PORT` | `501` | Real CU F1-C SCTP port. |
+| `CU_PORT` | `38472` | Real CU F1-C SCTP port. |
 | `LISTEN_HOST` | `0.0.0.0` | Address to listen on for DU connections. |
-| `LISTEN_PORT` | `501` | Proxy F1-C SCTP listen port. |
+| `LISTEN_PORT` | `38472` | Proxy F1-C SCTP listen port. |
 | `SCTP_PPID` | `62` | F1AP SCTP PPID. |
 | `OTEL_SERVICE_NAME` | `f1ap-sctp-proxy` | OpenTelemetry service name. |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | unset | Optional OTLP gRPC endpoint. |
@@ -35,8 +35,9 @@ For OAI DU deployments, both the high-level CU host value and the generated
 | `CU_CONNECT_RETRIES` | `60` | CU connection retry count at startup. |
 | `CU_CONNECT_RETRY_SECONDS` | `2` | Seconds between CU connection retries. |
 
-For this repository's OAI split-RAN charts, F1-C uses SCTP port `501` on the
-CU side and the DU connects to the remote control port `501`.
+For this repository's OAI split-RAN deployment, the CU process listens for F1-C
+SCTP on port `38472`. Keep the proxy service name short because the DU-side OAI
+configuration path can truncate longer hostnames.
 
 ## Local Run
 

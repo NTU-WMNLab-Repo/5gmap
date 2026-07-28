@@ -82,7 +82,7 @@ PROXY_VERSION="${PROXY_VERSION:-7.0.0}"
 RAN_PROXY_IMAGE="${RAN_PROXY_IMAGE:-docker.io/genechen0203/f1ap-sctp-proxy:latest}"
 RAN_PROXY_OTEL_ENDPOINT="${RAN_PROXY_OTEL_ENDPOINT:-http://opentelemetry-collector.otel.svc.cluster.local:4317}"
 RAN_PROXY_OTEL_INSECURE="${RAN_PROXY_OTEL_INSECURE:-true}"
-RAN_PROXY_F1C_PORT="${RAN_PROXY_F1C_PORT:-501}"
+RAN_PROXY_F1C_PORT="${RAN_PROXY_F1C_PORT:-38472}"
 RAN_PROXY_DIR="$RAN_DIR/f1-proxy"
 RAN_PROXY_MANIFEST="${RAN_PROXY_MANIFEST:-$RAN_PROXY_DIR/oai-f1ap-proxy.yaml}"
 RAN_PROXY_TEMPLATE_SOURCE="$ROOT_DIR/control-plane-tracing/src/proxies/f1ap-sctp-proxy/k8s-example.yaml"
@@ -133,7 +133,7 @@ ran_usrp_type() {
 deploy_ran_proxy_user() {
     local u="$1"
     local cu_ip="$2"
-    local proxy_name="oai-f1ap-proxy$u"
+    local proxy_name="f1proxy$u"
     local rendered_manifest
 
     info "Deploying experimental F1AP tracing proxy $proxy_name for CU $cu_ip"
@@ -372,7 +372,7 @@ deploy_oai_ran_user() {
     local f1cu_target="$cu_ip"
     if [ "$RAN_PROXY" = "1" ]; then
         deploy_ran_proxy_user "$u" "$cu_ip"
-        f1cu_target="oai-f1ap-proxy$u"
+        f1cu_target="f1proxy$u"
     fi
 
     sed -i "s/^name: .*/name: oai-gnb-du$u/" "$du_chart/Chart.yaml"

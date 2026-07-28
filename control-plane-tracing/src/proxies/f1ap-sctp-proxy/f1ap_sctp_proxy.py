@@ -42,9 +42,9 @@ class Peer:
 def load_config() -> Config:
     return Config(
         cu_host=os.getenv("CU_HOST", "oai-cu"),
-        cu_port=int(os.getenv("CU_PORT", "501")),
+        cu_port=int(os.getenv("CU_PORT", "38472")),
         listen_host=os.getenv("LISTEN_HOST", "0.0.0.0"),
-        listen_port=int(os.getenv("LISTEN_PORT", "501")),
+        listen_port=int(os.getenv("LISTEN_PORT", "38472")),
         sctp_ppid=int(os.getenv("SCTP_PPID", str(F1AP_PPID))),
         service_name=os.getenv("OTEL_SERVICE_NAME", "f1ap-sctp-proxy"),
         log_hex_bytes=int(os.getenv("LOG_HEX_BYTES", "32")),
