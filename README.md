@@ -357,6 +357,30 @@ Then open:
 http://<control-node-ip>:16686
 ```
 
+If the Kubernetes control host is only reachable through SSH and port `16686`
+is not exposed externally, use an SSH local tunnel instead.
+
+First get the Jaeger service ClusterIP on the remote host:
+
+```bash
+kubectl get svc -n jaeger jaeger -o jsonpath='{.spec.clusterIP}'
+```
+
+Then run this from your local machine:
+
+```bash
+ssh -p <external-ssh-port> -N -L 16687:<jaeger-service-cluster-ip>:16686 <user>@<external-hostname-or-ip>
+```
+
+Then open locally:
+
+```text
+http://127.0.0.1:16687
+```
+
+The Jaeger service ClusterIP can change if the service is recreated, so re-run
+the `kubectl get svc` command when the tunnel stops working after a redeploy.
+
 ## 5. Verify Node Scheduling Labels
 
 The deployment scripts default to two logical locations:
