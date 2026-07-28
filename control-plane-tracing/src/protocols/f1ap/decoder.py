@@ -5,20 +5,78 @@ from typing import Any, Optional
 from protocols.asn1_per.pycrate_decoder import PycratePerDecoder
 
 
-F1AP_PROCEDURES = {
-    0: "Reset",
-    1: "F1Setup",
-    2: "gNBDUConfigurationUpdate",
-    3: "gNBCUConfigurationUpdate",
-    4: "gNBDUResourceCoordination",
-    5: "UEContextSetup",
-    6: "UEContextRelease",
-    7: "UEContextModification",
-    8: "UEContextModificationRequired",
-    9: "UEContextReleaseRequest",
-    11: "InitialULRRCMessageTransfer",
-    12: "DLRRCMessageTransfer",
-    13: "ULRRCMessageTransfer",
+F1AP_PROCEDURES: dict[int, dict[str, Optional[str]]] = {
+    0: {
+        "procedure": "Reset",
+        "initiatingMessage": "Reset",
+        "successfulOutcome": "ResetAcknowledge",
+    },
+    1: {
+        "procedure": "F1Setup",
+        "initiatingMessage": "F1SetupRequest",
+        "successfulOutcome": "F1SetupResponse",
+        "unsuccessfulOutcome": "F1SetupFailure",
+    },
+    2: {
+        "procedure": "ErrorIndication",
+        "initiatingMessage": "ErrorIndication",
+    },
+    3: {
+        "procedure": "gNBDUConfigurationUpdate",
+        "initiatingMessage": "GNBDUConfigurationUpdate",
+        "successfulOutcome": "GNBDUConfigurationUpdateAcknowledge",
+        "unsuccessfulOutcome": "GNBDUConfigurationUpdateFailure",
+    },
+    4: {
+        "procedure": "gNBCUConfigurationUpdate",
+        "initiatingMessage": "GNBCUConfigurationUpdate",
+        "successfulOutcome": "GNBCUConfigurationUpdateAcknowledge",
+        "unsuccessfulOutcome": "GNBCUConfigurationUpdateFailure",
+    },
+    5: {
+        "procedure": "UEContextSetup",
+        "initiatingMessage": "UEContextSetupRequest",
+        "successfulOutcome": "UEContextSetupResponse",
+        "unsuccessfulOutcome": "UEContextSetupFailure",
+    },
+    6: {
+        "procedure": "UEContextRelease",
+        "initiatingMessage": "UEContextReleaseCommand",
+        "successfulOutcome": "UEContextReleaseComplete",
+    },
+    7: {
+        "procedure": "UEContextModification",
+        "initiatingMessage": "UEContextModificationRequest",
+        "successfulOutcome": "UEContextModificationResponse",
+        "unsuccessfulOutcome": "UEContextModificationFailure",
+    },
+    8: {
+        "procedure": "UEContextModificationRequired",
+        "initiatingMessage": "UEContextModificationRequired",
+        "successfulOutcome": "UEContextModificationConfirm",
+        "unsuccessfulOutcome": "UEContextModificationRefuse",
+    },
+    10: {
+        "procedure": "UEContextReleaseRequest",
+        "initiatingMessage": "UEContextReleaseRequest",
+    },
+    11: {
+        "procedure": "InitialULRRCMessageTransfer",
+        "initiatingMessage": "InitialULRRCMessageTransfer",
+    },
+    12: {
+        "procedure": "DLRRCMessageTransfer",
+        "initiatingMessage": "DLRRCMessageTransfer",
+    },
+    13: {
+        "procedure": "ULRRCMessageTransfer",
+        "initiatingMessage": "ULRRCMessageTransfer",
+    },
+    16: {
+        "procedure": "gNBDUResourceCoordination",
+        "initiatingMessage": "GNBDUResourceCoordinationRequest",
+        "successfulOutcome": "GNBDUResourceCoordinationResponse",
+    },
 }
 
 PDU_TYPE_BY_MARKER = {
@@ -76,8 +134,13 @@ class F1apDecoder:
         pdu_marker = payload[0] & 0xC0
         pdu_type = PDU_TYPE_BY_MARKER.get(pdu_marker, "unknownPDU")
         procedure_code = payload[1]
-        procedure_name = F1AP_PROCEDURES.get(procedure_code, f"procedure_{procedure_code}")
-        message_name = self._message_name(procedure_name, pdu_type)
+        procedure = F1AP_PROCEDURES.get(procedure_code)
+        if procedure:
+            procedure_name = procedure["procedure"] or f"procedure_{procedure_code}"
+            message_name = procedure.get(pdu_type) or f"{procedure_name}_{pdu_type}"
+        else:
+            procedure_name = f"procedure_{procedure_code}"
+            message_name = f"{procedure_name}_{pdu_type}"
 
         return DecodedMessage(
             protocol="f1ap",
@@ -91,19 +154,3 @@ class F1apDecoder:
                 "f1ap.pdu.marker": pdu_marker,
             },
         )
-
-    @staticmethod
-    def _message_name(procedure_name: str, pdu_type: str) -> str:
-        suffix_by_pdu = {
-            "initiatingMessage": "Request",
-            "successfulOutcome": "Response",
-            "unsuccessfulOutcome": "Failure",
-        }
-        suffix = suffix_by_pdu.get(pdu_type)
-        if not suffix:
-            return procedure_name
-
-        if procedure_name.endswith(("Request", "Response", "Failure", "Notification")):
-            return procedure_name
-
-        return f"{procedure_name}{suffix}"
