@@ -1,12 +1,111 @@
-# Source Placeholder
+# Control-Plane Tracing Source
 
-This folder is reserved for future control-plane tracing prototype.
+This folder contains the control-plane tracing prototype code.
 
-The expected package areas are:
+## Layout
 
-- `correlator/`: maps protocol identifiers to trace/span relationships;
-- `protocols/`: protocol-specific classifiers and parsers;
-- `proxies/`: transport-level SCTP and UDP proxy code.
+```text
+control-plane-tracing/src/
+  proxies/
+    sctp/
+      relay.py
+      async_trace_worker.py
+    f1ap-sctp-proxy/
+      f1ap_sctp_proxy.py
+  protocols/
+    asn1_per/
+      pycrate_decoder.py
+    f1ap/
+      decoder.py
+    ngap/
+      decoder.py
+    e1ap/
+      decoder.py
+```
 
-No production code has been added yet. The first likely prototype should be an
-F1-C SCTP tracing proxy based on the previously proven F1 proxy approach.
+## Responsibility Split
+
+- `proxies/sctp/relay.py` handles generic SCTP forwarding.
+- `proxies/sctp/async_trace_worker.py` handles async decode and span emission.
+- `protocols/f1ap/decoder.py` handles F1AP message classification and decode.
+- `protocols/asn1_per/pycrate_decoder.py` is the optional pycrate APER adapter.
+- `proxies/f1ap-sctp-proxy/f1ap_sctp_proxy.py` is only a thin wrapper that wires
+  config, SCTP relay, F1AP decoder, and the tracing worker together.
+
+The SCTP relay does not wait for F1AP decoding. It forwards the original bytes
+first, then enqueues a copied payload for the tracing worker.
+
+## Forwarding And Decode Timing
+
+The hot path is:
+
+```text
+SCTP recv
+  -> record recv_time_ns with time.time_ns()
+  -> forward original bytes
+  -> compute forwarding duration with time.monotonic_ns()
+  -> derive send_done_time_ns from recv_time_ns + forwarding duration
+  -> enqueue copied payload and metadata
+```
+
+The worker path is:
+
+```text
+dequeue event
+  -> measure queue delay with time.monotonic_ns()
+  -> decode F1AP
+  -> measure decoder duration with time.monotonic_ns()
+  -> emit OpenTelemetry span
+```
+
+If the queue is full, the trace event is dropped and packet forwarding continues.
+Decode delay should not become packet forwarding overhead.
+
+## Jaeger Time Semantics
+
+For each proxied F1AP message, the span timestamps are set explicitly:
+
+- span start time: when the proxy received the SCTP message;
+- span end time: when the proxy finished forwarding the original bytes;
+- Jaeger duration: proxy forwarding duration, not decode duration;
+- `proxy.forward.duration_ms`: same forwarding duration shown as an attribute;
+- `decoder.queue_delay_ms`: time spent waiting in the async trace queue;
+- `decoder.duration_ms`: time spent decoding and preparing span attributes.
+
+`decoder.queue_delay_ms` and `decoder.duration_ms` are observability costs, not
+packet forwarding latency. They are intentionally excluded from the Jaeger span
+duration because packet forwarding happens before decode.
+
+The receive timestamp uses `time.time_ns()`, which is Unix epoch wall-clock time
+in nanoseconds. OpenTelemetry Python span `start_time` and `end_time` also expect
+Unix epoch nanoseconds, so the recorded event time and the exported span time use
+the same time basis. The forwarding duration itself is measured with
+`time.monotonic_ns()` and added to the receive timestamp for the span end time,
+so small system clock adjustments do not distort the forwarding-duration
+attribute. Queue delay and decoder duration are also elapsed-time measurements,
+so they use `time.monotonic_ns()` as well.
+
+Across pods or nodes, timestamp alignment depends on the hosts' system clocks.
+With normal NTP or chrony synchronization, spans from different pods should be
+aligned well enough for this tracing view. If host clocks drift, Jaeger can show
+cross-pod ordering skew even though this proxy records its own packet timestamps
+correctly.
+
+## F1AP Decode Status
+
+The current F1AP decoder has two levels:
+
+- lightweight top-level decode: extracts PDU type, procedure code, and procedure
+  name from observed OAI F1AP APER payloads;
+- optional pycrate APER decode: enabled only when a generated F1AP pycrate module
+  is provided through `F1AP_PYCRATE_MODULE`.
+
+The pycrate adapter is shared by future NGAP and E1AP decoders.
+
+## References
+
+- OpenTelemetry Trace API Specification
+  - https://opentelemetry.io/docs/specs/otel/trace/api/
+
+- pycrate (PyPI)
+  - https://pypi.org/project/pycrate/

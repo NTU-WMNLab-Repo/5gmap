@@ -9,10 +9,10 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY proxies/f1ap-sctp-proxy/requirements.txt .
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-COPY f1ap_sctp_proxy.py .
+COPY protocols ./protocols
+COPY proxies ./proxies
 
-CMD ["python3", "-u", "f1ap_sctp_proxy.py"]
-
+CMD ["python3", "-u", "proxies/f1ap-sctp-proxy/f1ap_sctp_proxy.py"]
