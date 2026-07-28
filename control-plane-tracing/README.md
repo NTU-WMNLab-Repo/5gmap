@@ -72,6 +72,19 @@ control-plane-tracing/
     README.md
 ```
 
+## Current Prototype
+
+The first runnable prototype is:
+
+```text
+src/proxies/f1ap-sctp-proxy/
+```
+
+It is an experimental F1-C SCTP proxy. In this repository's RAN deployment it
+listens on SCTP port `501`, forwards messages unchanged to the real CU, and
+exports spans to the OpenTelemetry collector when
+`OTEL_EXPORTER_OTLP_ENDPOINT` is configured.
+
 ## Environment Reminder
 
 Run control-plane experiments in an environment that supports the required

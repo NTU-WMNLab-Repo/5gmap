@@ -1,3 +1,41 @@
+## Experimental RanProxy Flag
+
+**Warning: `RanProxy=1` is experimental. The current F1AP proxy is a test
+prototype for F1-C tracing only. It forwards F1AP control messages unchanged and
+exports basic spans, but robust ASN.1 PER decoding, full procedure correlation,
+multi-DU behavior, and production hardening are not finished yet.**
+
+Use `RanProxy=1` to insert the experimental F1AP SCTP tracing proxy between
+each DU and CU:
+
+```bash
+RanProxy=1 ./script/run.sh
+```
+
+Equivalent CLI forms:
+
+```bash
+./script/run.sh --RanProxy 1
+./script/deploy.sh zoomv3 1 1 rfsim 1 1
+./script/deploy.sh zoomv3 1 1 --RanProxy 1
+```
+
+When `RanProxy=1`, `deploy.sh` deploys one `oai-f1ap-proxy<user>` service and
+deployment per CU/DU pair, then points the DU F1-C target to that proxy. When
+`RanProxy=0`, the DU connects directly to the CU as before.
+
+Useful image variables:
+
+```text
+RAN_PROXY_IMAGE          Default: docker.io/genechen0203/f1ap-sctp-proxy:latest
+RAN_PROXY_F1C_PORT       Default: 501
+RAN_PROXY_OTEL_ENDPOINT  Default: http://opentelemetry-collector.otel.svc.cluster.local:4317
+RAN_PROXY_OTEL_INSECURE  Default: true
+```
+
+`undeploy.sh` always attempts to remove `oai-f1ap-proxy<user>` resources, so it
+is safe to run cleanup after either `RanProxy=0` or `RanProxy=1`.
+
 # 5GMAP Script 使用說明
 
 這個目錄放的是新版的一鍵部署流程，用來把原本的 `gnbsim` 流程改成 `oai-5g-ran` 的 `oai-gnb-cu` + `oai-gnb-du` + `oai-nr-ue`。

@@ -28,6 +28,8 @@ class Config:
     sctp_ppid: int
     service_name: str
     log_hex_bytes: int
+    cu_connect_retries: int
+    cu_connect_retry_seconds: float
 
 
 @dataclass
@@ -40,12 +42,14 @@ class Peer:
 def load_config() -> Config:
     return Config(
         cu_host=os.getenv("CU_HOST", "oai-cu"),
-        cu_port=int(os.getenv("CU_PORT", "38472")),
+        cu_port=int(os.getenv("CU_PORT", "501")),
         listen_host=os.getenv("LISTEN_HOST", "0.0.0.0"),
-        listen_port=int(os.getenv("LISTEN_PORT", "38472")),
+        listen_port=int(os.getenv("LISTEN_PORT", "501")),
         sctp_ppid=int(os.getenv("SCTP_PPID", str(F1AP_PPID))),
         service_name=os.getenv("OTEL_SERVICE_NAME", "f1ap-sctp-proxy"),
         log_hex_bytes=int(os.getenv("LOG_HEX_BYTES", "32")),
+        cu_connect_retries=int(os.getenv("CU_CONNECT_RETRIES", "60")),
+        cu_connect_retry_seconds=float(os.getenv("CU_CONNECT_RETRY_SECONDS", "2")),
     )
 
 
@@ -187,10 +191,26 @@ def forward_message(
 
 
 def connect_cu(cfg: Config) -> Peer:
-    cu_sock = sctp.sctpsocket_tcp(socket.AF_INET)
-    logging.info("Connecting to CU %s:%d", cfg.cu_host, cfg.cu_port)
-    cu_sock.connect((cfg.cu_host, cfg.cu_port))
-    return Peer(name="CU", sock=cu_sock, addr=(cfg.cu_host, cfg.cu_port))
+    last_error = None
+
+    for attempt in range(1, cfg.cu_connect_retries + 1):
+        cu_sock = sctp.sctpsocket_tcp(socket.AF_INET)
+        logging.info(
+            "Connecting to CU %s:%d, attempt %d/%d",
+            cfg.cu_host,
+            cfg.cu_port,
+            attempt,
+            cfg.cu_connect_retries,
+        )
+        try:
+            cu_sock.connect((cfg.cu_host, cfg.cu_port))
+            return Peer(name="CU", sock=cu_sock, addr=(cfg.cu_host, cfg.cu_port))
+        except Exception as exc:
+            last_error = exc
+            cu_sock.close()
+            time.sleep(cfg.cu_connect_retry_seconds)
+
+    raise RuntimeError(f"failed to connect to CU {cfg.cu_host}:{cfg.cu_port}: {last_error}")
 
 
 def listen_for_du(cfg: Config) -> object:

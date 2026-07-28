@@ -14,6 +14,7 @@ TEST_TYPE="${TEST_TYPE:-0}"
 AUTO_CLEANUP="${AUTO_CLEANUP:-0}"
 RUN_MODE="${RUN_MODE:-rfsim}"
 DEPLOY_UE="${DEPLOY_UE:-${DeployUE:-1}}"
+RAN_PROXY="${RAN_PROXY:-${RanProxy:-0}}"
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -40,6 +41,18 @@ while [ "$#" -gt 0 ]; do
         DeployUE=*|deployUE=*|deploy_ue=*)
             DEPLOY_UE="${1#*=}"
             ;;
+        --RanProxy|--ran_proxy|--ran-proxy)
+            opt="$1"
+            shift
+            [ "$#" -gt 0 ] || die "Missing value for $opt"
+            RAN_PROXY="$1"
+            ;;
+        --RanProxy=*|--ran_proxy=*|--ran-proxy=*)
+            RAN_PROXY="${1#*=}"
+            ;;
+        RanProxy=*|ranProxy=*|ran_proxy=*)
+            RAN_PROXY="${1#*=}"
+            ;;
         *)
             die "Unknown argument: $1"
             ;;
@@ -63,15 +76,24 @@ case "$DEPLOY_UE" in
         ;;
 esac
 
+case "$RAN_PROXY" in
+    0|1)
+        ;;
+    *)
+        die "Unsupported RanProxy '$RAN_PROXY'. Supported values: 0, 1"
+        ;;
+esac
+
 info "Starting 5GMAP with OAI RAN"
-info "usecase=${USECASE}, users=${NUM_USERS}, slices=${NUM_SLICES}, iterations=${NUM_ITERATIONS}, test_type=${TEST_TYPE}, run_mode=${RUN_MODE}, DeployUE=${DEPLOY_UE}"
+info "usecase=${USECASE}, users=${NUM_USERS}, slices=${NUM_SLICES}, iterations=${NUM_ITERATIONS}, test_type=${TEST_TYPE}, run_mode=${RUN_MODE}, DeployUE=${DEPLOY_UE}, RanProxy=${RAN_PROXY}"
 
 "$SCRIPT_DIR/deploy.sh" \
     "$USECASE" \
     "$NUM_USERS" \
     "$NUM_SLICES" \
     "$RUN_MODE" \
-    "$DEPLOY_UE"
+    "$DEPLOY_UE" \
+    "$RAN_PROXY"
 
 if [ "$DEPLOY_UE" = "1" ]; then
     "$SCRIPT_DIR/start_traffic.sh" \

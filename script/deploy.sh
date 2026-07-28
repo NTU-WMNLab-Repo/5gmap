@@ -15,6 +15,7 @@ NUM_USERS="${NUM_USERS:-1}"
 NUM_SLICES="${NUM_SLICES:-1}"
 RUN_MODE="${RUN_MODE:-rfsim}"
 DEPLOY_UE="${DEPLOY_UE:-${DeployUE:-1}}"
+RAN_PROXY="${RAN_PROXY:-${RanProxy:-0}}"
 
 positional_args=()
 while [ "$#" -gt 0 ]; do
@@ -42,6 +43,18 @@ while [ "$#" -gt 0 ]; do
         DeployUE=*|deployUE=*|deploy_ue=*)
             DEPLOY_UE="${1#*=}"
             ;;
+        --RanProxy|--ran_proxy|--ran-proxy)
+            opt="$1"
+            shift
+            [ "$#" -gt 0 ] || die "Missing value for $opt"
+            RAN_PROXY="$1"
+            ;;
+        --RanProxy=*|--ran_proxy=*|--ran-proxy=*)
+            RAN_PROXY="${1#*=}"
+            ;;
+        RanProxy=*|ranProxy=*|ran_proxy=*)
+            RAN_PROXY="${1#*=}"
+            ;;
         --*)
             die "Unknown argument: $1"
             ;;
@@ -52,12 +65,13 @@ while [ "$#" -gt 0 ]; do
     shift
 done
 
-[ "${#positional_args[@]}" -le 5 ] || die "Too many positional arguments"
+[ "${#positional_args[@]}" -le 6 ] || die "Too many positional arguments"
 if [ "${#positional_args[@]}" -ge 1 ]; then USECASE="${positional_args[0]}"; fi
 if [ "${#positional_args[@]}" -ge 2 ]; then NUM_USERS="${positional_args[1]}"; fi
 if [ "${#positional_args[@]}" -ge 3 ]; then NUM_SLICES="${positional_args[2]}"; fi
 if [ "${#positional_args[@]}" -ge 4 ]; then RUN_MODE="${positional_args[3]}"; fi
 if [ "${#positional_args[@]}" -ge 5 ]; then DEPLOY_UE="${positional_args[4]}"; fi
+if [ "${#positional_args[@]}" -ge 6 ]; then RAN_PROXY="${positional_args[5]}"; fi
 
 NAMESPACE="${NAMESPACE:-oai}"
 OPMODE="${OPMODE:-OTEL}"
@@ -65,6 +79,13 @@ LOGLEVEL="${LOGLEVEL:-trace}"
 PROXY_PORT="${PROXY_PORT:-11095}"
 SERVICE_PORT="${SERVICE_PORT:-8080}"
 PROXY_VERSION="${PROXY_VERSION:-7.0.0}"
+RAN_PROXY_IMAGE="${RAN_PROXY_IMAGE:-docker.io/genechen0203/f1ap-sctp-proxy:latest}"
+RAN_PROXY_OTEL_ENDPOINT="${RAN_PROXY_OTEL_ENDPOINT:-http://opentelemetry-collector.otel.svc.cluster.local:4317}"
+RAN_PROXY_OTEL_INSECURE="${RAN_PROXY_OTEL_INSECURE:-true}"
+RAN_PROXY_F1C_PORT="${RAN_PROXY_F1C_PORT:-501}"
+RAN_PROXY_DIR="$RAN_DIR/f1-proxy"
+RAN_PROXY_MANIFEST="${RAN_PROXY_MANIFEST:-$RAN_PROXY_DIR/oai-f1ap-proxy.yaml}"
+RAN_PROXY_TEMPLATE_SOURCE="$ROOT_DIR/control-plane-tracing/src/proxies/f1ap-sctp-proxy/k8s-example.yaml"
 
 NRF_LOC="${NRF_LOC:-az}"
 UDR_LOC="${UDR_LOC:-az}"
@@ -94,11 +115,54 @@ case "$DEPLOY_UE" in
         ;;
 esac
 
+case "$RAN_PROXY" in
+    0|1)
+        ;;
+    *)
+        die "Unsupported RanProxy '$RAN_PROXY'. Supported values: 0, 1"
+        ;;
+esac
+
 ran_usrp_type() {
     case "$1" in
         rfsim) echo "rfsim" ;;
         usrp|usrpb210) echo "b2xx" ;;
     esac
+}
+
+deploy_ran_proxy_user() {
+    local u="$1"
+    local cu_ip="$2"
+    local proxy_name="oai-f1ap-proxy$u"
+    local rendered_manifest
+
+    info "Deploying experimental F1AP tracing proxy $proxy_name for CU $cu_ip"
+
+    mkdir -p "$RAN_PROXY_DIR"
+    if [ ! -f "$RAN_PROXY_MANIFEST" ]; then
+        info "Creating RAN proxy manifest from $RAN_PROXY_TEMPLATE_SOURCE"
+        cp "$RAN_PROXY_TEMPLATE_SOURCE" "$RAN_PROXY_MANIFEST"
+    fi
+
+    rendered_manifest="$(mktemp)"
+    cp "$RAN_PROXY_MANIFEST" "$rendered_manifest"
+
+    sed -i \
+        -e "s|__PROXY_NAME__|$proxy_name|g" \
+        -e "s|__CU_HOST__|$cu_ip|g" \
+        -e "s|__F1C_PORT__|$RAN_PROXY_F1C_PORT|g" \
+        -e "s|__RAN_LOC__|$RAN_LOC|g" \
+        -e "s|__OTEL_ENDPOINT__|$RAN_PROXY_OTEL_ENDPOINT|g" \
+        -e "s|__OTEL_INSECURE__|$RAN_PROXY_OTEL_INSECURE|g" \
+        "$rendered_manifest"
+
+    set_yaml_value "$rendered_manifest" image "$RAN_PROXY_IMAGE"
+    set_yaml_value "$rendered_manifest" imagePullPolicy "Always"
+
+    kubectl apply -n "$NAMESPACE" -f "$rendered_manifest"
+    rm -f "$rendered_manifest"
+
+    wait_for_pod "$NAMESPACE" "$proxy_name" 300 10
 }
 
 ran_sdr_addrs() {
@@ -305,6 +369,12 @@ deploy_oai_ran_user() {
     cu_pod="$(pod_by_prefix "$NAMESPACE" "oai-gnb-cu$u")"
     cu_ip="$(get_pod_ip "$NAMESPACE" "$cu_pod")"
 
+    local f1cu_target="$cu_ip"
+    if [ "$RAN_PROXY" = "1" ]; then
+        deploy_ran_proxy_user "$u" "$cu_ip"
+        f1cu_target="oai-f1ap-proxy$u"
+    fi
+
     sed -i "s/^name: .*/name: oai-gnb-du$u/" "$du_chart/Chart.yaml"
     sed -i -E "s|^([[:space:]]*)name: \"oai-gnb-du.*-sa\"|\\1name: \"oai-gnb-du$u-sa\"|" "$du_chart/values.yaml"
     set_yaml_value "$du_chart/values.yaml" mcc "\"208\""
@@ -319,7 +389,7 @@ deploy_oai_ran_user() {
     set_yaml_value "$du_chart/values.yaml" rfSimulator "\"server\""
     set_yaml_value "$du_chart/values.yaml" sdrAddrs "\"$du_sdr_addrs\""
     set_yaml_value "$du_chart/values.yaml" gnbduName "\"oai-gnb-du$u-$RUN_MODE\""
-    set_yaml_value "$du_chart/values.yaml" f1cuIpAddress "\"$cu_ip\""
+    set_yaml_value "$du_chart/values.yaml" f1cuIpAddress "\"$f1cu_target\""
     set_yaml_value "$du_chart/values.yaml" f1duIpAddress "\"status.podIP\""
     set_yaml_value "$du_chart/values.yaml" useAdditionalOptions "\"$(du_additional_options "$RUN_MODE")\""
     sed -i "/nodeSelector:/,/nodeName:/c\nodeSelector:\n  deplocation: $RAN_LOC\n\nnodeName: " "$du_chart/values.yaml"

@@ -25,13 +25,18 @@ For OAI DU deployments, both the high-level CU host value and the generated
 | Variable | Default | Description |
 | --- | --- | --- |
 | `CU_HOST` | `oai-cu` | Real CU host or service name. |
-| `CU_PORT` | `38472` | Real CU F1-C SCTP port. |
+| `CU_PORT` | `501` | Real CU F1-C SCTP port. |
 | `LISTEN_HOST` | `0.0.0.0` | Address to listen on for DU connections. |
-| `LISTEN_PORT` | `38472` | Proxy F1-C SCTP listen port. |
+| `LISTEN_PORT` | `501` | Proxy F1-C SCTP listen port. |
 | `SCTP_PPID` | `62` | F1AP SCTP PPID. |
 | `OTEL_SERVICE_NAME` | `f1ap-sctp-proxy` | OpenTelemetry service name. |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | unset | Optional OTLP gRPC endpoint. |
 | `LOG_HEX_BYTES` | `32` | Number of payload bytes shown in logs. |
+| `CU_CONNECT_RETRIES` | `60` | CU connection retry count at startup. |
+| `CU_CONNECT_RETRY_SECONDS` | `2` | Seconds between CU connection retries. |
+
+For this repository's OAI split-RAN charts, F1-C uses SCTP port `501` on the
+CU side and the DU connects to the remote control port `501`.
 
 ## Local Run
 
@@ -45,7 +50,26 @@ python3 -u f1ap_sctp_proxy.py
 ## Container
 
 ```sh
-docker build -t f1ap-sctp-proxy:dev .
+IMAGE=docker.io/genechen0203/f1ap-sctp-proxy:latest
+
+docker login
+docker build -t "$IMAGE" .
+docker push "$IMAGE"
+```
+
+Docker Hub can create a missing repository on first push for a user namespace,
+subject to the account or organization privacy settings. Creating the repository
+manually first is still useful when you want to choose visibility and metadata
+explicitly.
+
+For an amd64 lab cluster, build explicitly for amd64 when building from a
+different architecture:
+
+```sh
+IMAGE=docker.io/genechen0203/f1ap-sctp-proxy:latest
+
+docker login
+docker buildx build --platform linux/amd64 -t "$IMAGE" --push .
 ```
 
 ## Notes
