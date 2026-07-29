@@ -35,14 +35,42 @@ spec:
               value: "__CU_HOST__"
             - name: CU_PORT
               value: "__F1C_PORT__"
+            - name: LISTEN_HOST
+              value: "0.0.0.0"
             - name: LISTEN_PORT
               value: "__F1C_PORT__"
+            - name: SCTP_PPID
+              value: "62"
             - name: OTEL_SERVICE_NAME
               value: "__PROXY_NAME__"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "__OTEL_ENDPOINT__"
             - name: OTEL_EXPORTER_OTLP_INSECURE
               value: "__OTEL_INSECURE__"
+            - name: LOG_LEVEL
+              value: "INFO"
+            - name: LOG_HEX_BYTES
+              value: "32"
+            - name: CU_CONNECT_RETRIES
+              value: "60"
+            - name: CU_CONNECT_RETRY_SECONDS
+              value: "2"
+            - name: TRACE_QUEUE_SIZE
+              value: "10000"
+            - name: F1AP_ENABLE_PYCRATE
+              value: "1"
+            - name: F1AP_PYCRATE_MODULE
+              value: "pycrate_asn1dir.F1AP"
+            - name: F1AP_PYCRATE_OBJECT
+              value: "F1AP_PDU_Descriptions.F1AP_PDU"
+            - name: ASN1_COPY_ROOT
+              value: "0"
+            - name: ASN1_INCLUDE_VALUE
+              value: "1"
+            - name: ASN1_VALUE_REPR_LIMIT
+              value: "2048"
+            - name: ASN1_INCLUDE_SHOW
+              value: "0"
           ports:
             - containerPort: __F1C_PORT__
               protocol: SCTP
