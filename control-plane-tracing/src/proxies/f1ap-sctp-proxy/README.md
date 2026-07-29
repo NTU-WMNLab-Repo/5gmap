@@ -7,16 +7,17 @@ observed F1AP messages. Packet forwarding is non-blocking with respect to
 decoding: the proxy forwards the original SCTP payload first, then sends a copied
 payload to an async trace worker.
 
-The F1AP decoder is not a complete ASN.1 PER decoder yet. The current default
-decoder only performs lightweight top-level classification from observed OAI
-F1AP APER payloads, such as F1 setup, UE context setup, and selected RRC transfer
-procedures. It does not fully decode all F1AP information elements, UE IDs,
-transaction fields, or nested RRC/NAS payloads.
+The F1AP decoder uses pycrate's built-in F1AP ASN.1 module by default and falls
+back to lightweight top-level classification if pycrate is unavailable or a
+payload cannot be decoded. The full APER-decoded F1AP value is available as a
+truncated `asn1.value` span attribute; selected fields such as IE names,
+procedure metadata, and common UE identifiers are promoted to dedicated
+attributes.
 
-Full F1AP decoding still requires generating and wiring a pycrate-compatible
-F1AP ASN.1 module, then validating the decoded fields against OAI traffic. The
-shared pycrate adapter is present, but no generated F1AP ASN.1 module is bundled
-with this proxy yet.
+The decoder does not yet promote every decoded IE into first-class Jaeger
+attributes, and it does not decode nested RRC or NAS payloads. Those payloads are
+kept opaque because they require their own protocol decoders and may contain
+data outside the F1AP control-message layer.
 
 This prototype proxies F1-C traffic between a DU and CU over SCTP and emits
 control-plane tracing information.
@@ -53,8 +54,11 @@ For OAI DU deployments, both the high-level CU host value and the generated
 | `CU_CONNECT_RETRIES` | `60` | CU connection retry count at startup. |
 | `CU_CONNECT_RETRY_SECONDS` | `2` | Seconds between CU connection retries. |
 | `TRACE_QUEUE_SIZE` | `10000` | Async decode/tracing queue depth. |
-| `F1AP_PYCRATE_MODULE` | unset | Optional pycrate-generated F1AP module name. |
-| `F1AP_PYCRATE_OBJECT` | `F1AP_PDU` | Optional pycrate F1AP root object name. |
+| `F1AP_ENABLE_PYCRATE` | `1` | Enable pycrate APER decode. Set to `0` for lightweight-only decode. |
+| `F1AP_PYCRATE_MODULE` | `pycrate_asn1dir.F1AP` | pycrate F1AP module name. |
+| `F1AP_PYCRATE_OBJECT` | `F1AP_PDU_Descriptions.F1AP_PDU` | pycrate F1AP root object path. |
+| `ASN1_VALUE_REPR_LIMIT` | `2048` | Maximum characters stored in the `asn1.value` span attribute. |
+| `ASN1_INCLUDE_SHOW` | `0` | Include pycrate `show()` output in `asn1.show` when set to `1`. |
 
 For this repository's OAI split-RAN deployment, the CU process listens for F1-C
 SCTP on port `38472`. Keep the proxy service name short because the DU-side OAI
@@ -102,10 +106,9 @@ docker buildx build --platform linux/amd64 \
 
 ## Notes
 
-The current F1AP decoder is asynchronous. It does a lightweight top-level F1AP
-decode by default and can also call a pycrate-generated APER decoder when
-`F1AP_PYCRATE_MODULE` is configured. Packet forwarding does not wait for either
-decoder path.
+The current F1AP decoder is asynchronous. It uses pycrate APER decoding by
+default and keeps the lightweight classifier as a fallback. Packet forwarding
+does not wait for either decoder path.
 
 This proxy is intentionally F1-C only. If F1-U forwarding is needed for a
 specific topology, keep it separate from tracing and do not emit per-packet

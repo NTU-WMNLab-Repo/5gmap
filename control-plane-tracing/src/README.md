@@ -93,14 +93,17 @@ correctly.
 
 ## F1AP Decode Status
 
-The current F1AP decoder has two levels:
+The current F1AP decoder has two paths:
 
-- lightweight top-level decode: extracts PDU type, procedure code, and procedure
-  name from observed OAI F1AP APER payloads;
-- optional pycrate APER decode: enabled only when a generated F1AP pycrate module
-  is provided through `F1AP_PYCRATE_MODULE`.
+- pycrate APER decode: enabled by default with pycrate's built-in
+  `pycrate_asn1dir.F1AP` module;
+- lightweight top-level decode: fallback that extracts PDU type, procedure code,
+  and procedure name from observed OAI F1AP APER payloads.
 
-The pycrate adapter is shared by future NGAP and E1AP decoders.
+The pycrate adapter is shared by future NGAP and E1AP decoders. The F1AP decoder
+currently exports the decoded ASN.1 value in truncated form and promotes selected
+fields into span attributes. It does not yet promote every IE into a dedicated
+attribute or decode nested RRC/NAS payloads.
 
 ## References
 

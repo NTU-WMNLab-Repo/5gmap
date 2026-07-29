@@ -4,11 +4,18 @@ This folder contains the F1AP decoder used by the SCTP tracing proxy.
 
 ## Current Decoder Level
 
-The current decoder is a lightweight top-level classifier. It is enough to name
-common F1AP procedures in Jaeger spans, but it is not a complete ASN.1 PER
-decoder.
+The current decoder has two paths:
 
-It currently extracts:
+- pycrate APER decode: enabled by default through pycrate's built-in
+  `pycrate_asn1dir.F1AP` module;
+- lightweight top-level classification: used as a fallback when pycrate is not
+  available or a payload cannot be decoded.
+
+The pycrate path decodes the F1AP ASN.1 PDU and stores a truncated representation
+of the decoded value in the `asn1.value` span attribute. It also promotes
+selected fields into dedicated attributes.
+
+The lightweight path extracts:
 
 - F1AP PDU type: `initiatingMessage`, `successfulOutcome`, or
   `unsuccessfulOutcome`;
@@ -16,13 +23,16 @@ It currently extracts:
 - procedure name and message name for the procedures currently listed in
   `decoder.py`.
 
-It does not fully decode:
+The decoder does not yet promote every decoded IE into a first-class span
+attribute. It also does not decode nested RRC or NAS payloads.
 
-- protocol IE containers;
-- CU/DU UE F1AP IDs;
-- transaction IDs;
-- nested RRC or NAS payloads;
-- extension IEs or release-specific additions.
+Currently promoted fields include:
+
+- pycrate module/object metadata;
+- top-level PDU type, procedure code, criticality, and message name;
+- protocol IE IDs and IE value names;
+- common control identifiers when present, such as transaction ID,
+  gNB-CU-UE-F1AP-ID, gNB-DU-UE-F1AP-ID, C-RNTI, SRB/DRB IDs, and PDU session ID.
 
 ## Lightweight Decode Basis
 
@@ -86,13 +96,25 @@ Observed OAI F1-C payload prefixes decode as:
 | `000c...` | `DLRRCMessageTransfer` |
 | `000d...` | `ULRRCMessageTransfer` |
 
-## Full Decode Path
+## Pycrate Decode Path
 
-The next step is to generate a pycrate-compatible F1AP ASN.1 module from the
-F1AP ASN.1 specification and wire it through
-`protocols/asn1_per/pycrate_decoder.py`. Once that exists, this decoder can keep
-the lightweight classifier as a fallback and use pycrate output to add fields
-such as transaction ID and CU/DU UE F1AP IDs to span attributes.
+pycrate 0.8.1 ships a generated F1AP module. The default runtime configuration
+uses:
+
+```text
+F1AP_PYCRATE_MODULE=pycrate_asn1dir.F1AP
+F1AP_PYCRATE_OBJECT=F1AP_PDU_Descriptions.F1AP_PDU
+```
+
+`protocols/asn1_per/pycrate_decoder.py` imports that root object, decodes the
+payload with APER, then returns the pycrate `get_val()` structure to the F1AP
+decoder. The F1AP decoder keeps the lightweight classification as a fallback and
+uses the pycrate value to add richer attributes.
+
+The next useful step is not generating the F1AP module anymore; it is expanding
+the field extraction policy. In particular, UE correlation needs robust
+promotion of CU/DU UE F1AP IDs, transaction ID, and bearer/session identifiers
+from every relevant message type.
 
 ## References
 
