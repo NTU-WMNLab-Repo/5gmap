@@ -10,6 +10,8 @@ NUM_USERS="${1:-1}"
 NUM_SLICES="${2:-1}"
 NAMESPACE="${NAMESPACE:-oai}"
 DELETE_MYSQL="${DELETE_MYSQL:-0}"
+CLEAR_JAEGER_DATA="${CLEAR_JAEGER_DATA:-0}"
+JAEGER_NAMESPACE="${JAEGER_NAMESPACE:-jaeger}"
 
 require_commands kubectl helm
 
@@ -43,6 +45,16 @@ done
 
 if [ "$DELETE_MYSQL" = "1" ]; then
     helm_uninstall_if_exists mysql "$NAMESPACE"
+fi
+
+if [ "$CLEAR_JAEGER_DATA" = "1" ]; then
+    info "Clearing Jaeger trace data by restarting deployment/jaeger in namespace $JAEGER_NAMESPACE"
+    if kubectl get deployment jaeger -n "$JAEGER_NAMESPACE" >/dev/null 2>&1; then
+        kubectl rollout restart deployment/jaeger -n "$JAEGER_NAMESPACE"
+        kubectl rollout status deployment/jaeger -n "$JAEGER_NAMESPACE" --timeout=120s
+    else
+        info "Jaeger deployment not found in namespace $JAEGER_NAMESPACE; skipping"
+    fi
 fi
 
 success "Cleanup complete"
