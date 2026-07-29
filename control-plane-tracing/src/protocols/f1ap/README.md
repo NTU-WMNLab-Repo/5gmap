@@ -111,6 +111,11 @@ payload with APER, then returns the pycrate `get_val()` structure to the F1AP
 decoder. The F1AP decoder keeps the lightweight classification as a fallback and
 uses the pycrate value to add richer attributes.
 
+pycrate decode is CPU-heavy. The adapter keeps `ASN1_COPY_ROOT=0` by default
+because the tracing worker is single-threaded, so each decode can reuse the same
+root object. If Jaeger does not need the large `asn1.value` debug attribute, set
+`ASN1_INCLUDE_VALUE=0` and keep the promoted F1AP attributes only.
+
 The next useful step is not generating the F1AP module anymore; it is expanding
 the field extraction policy. In particular, UE correlation needs robust
 promotion of CU/DU UE F1AP IDs, transaction ID, and bearer/session identifiers

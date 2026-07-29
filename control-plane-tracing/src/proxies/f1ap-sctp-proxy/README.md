@@ -57,6 +57,8 @@ For OAI DU deployments, both the high-level CU host value and the generated
 | `F1AP_ENABLE_PYCRATE` | `1` | Enable pycrate APER decode. Set to `0` for lightweight-only decode. |
 | `F1AP_PYCRATE_MODULE` | `pycrate_asn1dir.F1AP` | pycrate F1AP module name. |
 | `F1AP_PYCRATE_OBJECT` | `F1AP_PDU_Descriptions.F1AP_PDU` | pycrate F1AP root object path. |
+| `ASN1_COPY_ROOT` | `0` | Deep-copy the pycrate root object before each decode. Keep disabled for the single trace worker. |
+| `ASN1_INCLUDE_VALUE` | `1` | Include truncated pycrate `get_val()` output in `asn1.value`. Disable to reduce decode cost. |
 | `ASN1_VALUE_REPR_LIMIT` | `2048` | Maximum characters stored in the `asn1.value` span attribute. |
 | `ASN1_INCLUDE_SHOW` | `0` | Include pycrate `show()` output in `asn1.show` when set to `1`. |
 

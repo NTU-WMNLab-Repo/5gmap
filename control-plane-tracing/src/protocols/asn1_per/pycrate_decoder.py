@@ -33,6 +33,8 @@ class PycratePerDecoder:
         self._asn_object = None
         self._load_error: Optional[str] = None
         self.repr_limit = repr_limit or int(os.getenv("ASN1_VALUE_REPR_LIMIT", "2048"))
+        self.copy_root = os.getenv("ASN1_COPY_ROOT", "0") == "1"
+        self.include_value = os.getenv("ASN1_INCLUDE_VALUE", "1") != "0"
 
     @property
     def enabled(self) -> bool:
@@ -69,12 +71,13 @@ class PycratePerDecoder:
             if asn_object is None:
                 raise PycrateDecoderUnavailable("pycrate ASN.1 object did not load")
 
-            # pycrate generated modules usually expose singleton ASN.1 objects.
-            # Decode into a copy so later decodes do not reuse mutated state.
-            try:
-                asn_object = deepcopy(asn_object)
-            except Exception:
-                logging.debug("could not deepcopy pycrate ASN.1 object", exc_info=True)
+            if self.copy_root:
+                # pycrate generated modules usually expose singleton ASN.1 objects.
+                # Decode into a copy so later decodes do not reuse mutated state.
+                try:
+                    asn_object = deepcopy(asn_object)
+                except Exception:
+                    logging.debug("could not deepcopy pycrate ASN.1 object", exc_info=True)
 
             if hasattr(asn_object, "from_aper"):
                 asn_object.from_aper(payload)
@@ -98,8 +101,9 @@ class PycratePerDecoder:
                 "asn1.decoder": "pycrate",
                 "asn1.module": self.module_name,
                 "asn1.object": self.object_name,
-                "asn1.value": repr(value)[: self.repr_limit],
             }
+            if self.include_value and self.repr_limit > 0:
+                fields["asn1.value"] = repr(value)[: self.repr_limit]
             if show is not None:
                 fields["asn1.show"] = show[: self.repr_limit]
 
