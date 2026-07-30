@@ -31,8 +31,10 @@ defaults. The most commonly adjusted values are:
 | `OTEL_SERVICE_NAME` | rendered | Service name shown in Jaeger. |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | rendered | OTLP endpoint used by the proxy. |
 | `TRACE_QUEUE_SIZE` | `10000` | Async decode/tracing queue depth. |
+| `F1AP_ENABLE_CORRELATION` | `1` | Add UE-context and transaction correlation attributes to spans. |
+| `F1AP_CORRELATION_MAX_CONTEXTS` | `10000` | Maximum tracked UE bindings before old contexts are evicted. |
 | `F1AP_ENABLE_PYCRATE` | `1` | Enable full pycrate APER decode. |
-| `ASN1_INCLUDE_VALUE` | `1` | Include truncated `asn1.value`; set to `0` to reduce decode-worker cost. |
+| `ASN1_INCLUDE_VALUE` | `0` | Include truncated `asn1.value`; keep disabled to reduce decode-worker cost. |
 | `ASN1_VALUE_REPR_LIMIT` | `2048` | Character limit for `asn1.value` and `asn1.show`. |
 
 Packet forwarding does not wait for F1AP decode. Decode-related settings affect

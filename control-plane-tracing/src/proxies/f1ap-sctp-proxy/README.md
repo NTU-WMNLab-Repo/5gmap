@@ -19,6 +19,11 @@ attributes, and it does not decode nested RRC or NAS payloads. Those payloads ar
 kept opaque because they require their own protocol decoders and may contain
 data outside the F1AP control-message layer.
 
+The proxy also adds a first-pass F1AP correlation layer. It does not change
+OpenTelemetry trace IDs yet; instead it emits Jaeger-searchable attributes such
+as `f1ap.ue.correlation_id`, `f1ap.ue.binding_state`, and
+`f1ap.transaction.correlation_id`.
+
 This prototype proxies F1-C traffic between a DU and CU over SCTP and emits
 control-plane tracing information.
 
@@ -54,11 +59,13 @@ For OAI DU deployments, both the high-level CU host value and the generated
 | `CU_CONNECT_RETRIES` | `60` | CU connection retry count at startup. |
 | `CU_CONNECT_RETRY_SECONDS` | `2` | Seconds between CU connection retries. |
 | `TRACE_QUEUE_SIZE` | `10000` | Async decode/tracing queue depth. |
+| `F1AP_ENABLE_CORRELATION` | `1` | Add UE-context and transaction correlation attributes to spans. |
+| `F1AP_CORRELATION_MAX_CONTEXTS` | `10000` | Maximum tracked UE bindings before old contexts are evicted. |
 | `F1AP_ENABLE_PYCRATE` | `1` | Enable pycrate APER decode. Set to `0` for lightweight-only decode. |
 | `F1AP_PYCRATE_MODULE` | `pycrate_asn1dir.F1AP` | pycrate F1AP module name. |
 | `F1AP_PYCRATE_OBJECT` | `F1AP_PDU_Descriptions.F1AP_PDU` | pycrate F1AP root object path. |
 | `ASN1_COPY_ROOT` | `0` | Deep-copy the pycrate root object before each decode. Keep disabled for the single trace worker. |
-| `ASN1_INCLUDE_VALUE` | `1` | Include truncated pycrate `get_val()` output in `asn1.value`. Disable to reduce decode cost. |
+| `ASN1_INCLUDE_VALUE` | `0` | Include truncated pycrate `get_val()` output in `asn1.value`. Keep disabled to reduce decode cost. |
 | `ASN1_VALUE_REPR_LIMIT` | `2048` | Maximum characters stored in the `asn1.value` span attribute. |
 | `ASN1_INCLUDE_SHOW` | `0` | Include pycrate `show()` output in `asn1.show` when set to `1`. |
 

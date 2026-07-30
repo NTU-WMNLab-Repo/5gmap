@@ -6,6 +6,8 @@ This folder contains the control-plane tracing prototype code.
 
 ```text
 control-plane-tracing/src/
+  correlator/
+    f1ap.py
   proxies/
     sctp/
       relay.py
@@ -27,10 +29,12 @@ control-plane-tracing/src/
 
 - `proxies/sctp/relay.py` handles generic SCTP forwarding.
 - `proxies/sctp/async_trace_worker.py` handles async decode and span emission.
+- `correlator/f1ap.py` keeps lightweight F1AP UE-context correlation state and
+  emits span attributes for Jaeger filtering.
 - `protocols/f1ap/decoder.py` handles F1AP message classification and decode.
 - `protocols/asn1_per/pycrate_decoder.py` is the optional pycrate APER adapter.
 - `proxies/f1ap-sctp-proxy/f1ap_sctp_proxy.py` is only a thin wrapper that wires
-  config, SCTP relay, F1AP decoder, and the tracing worker together.
+  config, SCTP relay, F1AP decoder, correlator, and the tracing worker together.
 
 The SCTP relay does not wait for F1AP decoding. It forwards the original bytes
 first, then enqueues a copied payload for the tracing worker.
@@ -90,6 +94,27 @@ With normal NTP or chrony synchronization, spans from different pods should be
 aligned well enough for this tracing view. If host clocks drift, Jaeger can show
 cross-pod ordering skew even though this proxy records its own packet timestamps
 correctly.
+
+## F1AP Correlation
+
+The first correlation layer is attributes-based. It does not change
+OpenTelemetry trace IDs or parent-child relationships yet. Instead, the async
+worker adds stable Jaeger-searchable tags after decode:
+
+- `f1ap.correlation.kind`: `ue`, `transaction`, or `none`;
+- `f1ap.ue.correlation_id`: stable UE-context key, usually based on
+  `gNB-DU-UE-F1AP-ID`;
+- `f1ap.ue.binding_state`: whether DU and CU UE IDs have both been observed;
+- `f1ap.ue.message_count`: number of observed F1AP messages in that binding;
+- `f1ap.ue.binding_released`: present on `UEContextReleaseComplete` when the
+  in-memory binding is removed;
+- `f1ap.transaction.correlation_id`: fallback key for non-UE transaction
+  messages such as setup/configuration procedures.
+
+This keeps the current low-overhead setting from the reduced ASN.1 export
+experiment: `ASN1_COPY_ROOT=0` and `ASN1_INCLUDE_VALUE=0`. The correlator only
+uses promoted scalar fields extracted by the decoder, so it does not need the
+full `asn1.value` attribute.
 
 ## F1AP Decode Status
 

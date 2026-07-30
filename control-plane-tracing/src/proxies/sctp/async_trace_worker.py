@@ -43,9 +43,11 @@ class AsyncTraceWorker:
         protocol_name: str,
         decoder: Any,
         queue_size: int,
+        correlator: Any = None,
     ) -> None:
         self.protocol_name = protocol_name
         self.decoder = decoder
+        self.correlator = correlator
         self.queue: queue.Queue[TraceJob] = queue.Queue(maxsize=queue_size)
         self.tracer = configure_tracer(service_name)
         self.dropped = 0
@@ -95,6 +97,7 @@ class AsyncTraceWorker:
 
         queue_delay_ms = (worker_start_ns - job.enqueue_monotonic_ns) / 1_000_000.0
         decoder_duration_ms = (decoder_done_ns - decoder_start_ns) / 1_000_000.0
+        correlation_fields = self._correlate(decoded, job.event.recv_time_ns)
 
         span_name = f"{decoded.protocol.upper()} {job.event.direction} {decoded.message_name}"
         span = self.tracer.start_span(span_name, start_time=job.event.recv_time_ns)
@@ -123,8 +126,25 @@ class AsyncTraceWorker:
                 else:
                     span.set_attribute(key, repr(value))
 
+            for key, value in correlation_fields.items():
+                span.set_attribute(key, value)
+
             if decoded.decode_error:
                 span.set_attribute("decoder.error", decoded.decode_error)
         finally:
             end_time = max(job.event.send_done_time_ns, job.event.recv_time_ns + 1)
             span.end(end_time=end_time)
+
+    def _correlate(
+        self,
+        decoded: Any,
+        event_time_ns: int,
+    ) -> dict[str, bool | int | float | str]:
+        if self.correlator is None:
+            return {}
+
+        try:
+            return self.correlator.correlate(decoded, event_time_ns)
+        except Exception:
+            logging.exception("Correlator failed to process event")
+            return {"correlation.error": "correlator_exception"}

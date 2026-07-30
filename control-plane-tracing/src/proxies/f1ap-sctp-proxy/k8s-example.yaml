@@ -57,6 +57,10 @@ spec:
               value: "2"
             - name: TRACE_QUEUE_SIZE
               value: "10000"
+            - name: F1AP_ENABLE_CORRELATION
+              value: "1"
+            - name: F1AP_CORRELATION_MAX_CONTEXTS
+              value: "10000"
             - name: F1AP_ENABLE_PYCRATE
               value: "1"
             - name: F1AP_PYCRATE_MODULE
