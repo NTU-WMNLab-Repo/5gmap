@@ -13,6 +13,7 @@ COPY proxies/f1ap-sctp-proxy/requirements.txt .
 RUN pip3 install --no-cache-dir -r requirements.txt
 
 COPY protocols ./protocols
+COPY correlator ./correlator
 COPY proxies ./proxies
 
 CMD ["python3", "-u", "proxies/f1ap-sctp-proxy/f1ap_sctp_proxy.py"]
