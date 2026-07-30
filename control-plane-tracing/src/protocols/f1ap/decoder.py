@@ -291,6 +291,8 @@ def extract_f1ap_fields(value: Any) -> dict[str, bool | int | float | str]:
         attr_value = as_attr_value(values[0])
         if attr_value is not None:
             fields[f"f1ap.{attr_name}"] = attr_value
+            if attr_name == "c.rnti" and isinstance(attr_value, int):
+                fields["f1ap.c.rnti.hex"] = f"0x{attr_value:04x}"
         if len(values) > 1:
             fields[f"f1ap.{attr_name}.count"] = len(values)
 

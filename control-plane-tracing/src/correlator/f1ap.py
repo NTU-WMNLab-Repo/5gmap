@@ -196,4 +196,5 @@ class F1apCorrelator:
             attrs["f1ap.ue.cu_id"] = binding.cu_ue_id
         if binding.c_rnti is not None:
             attrs["f1ap.ue.c_rnti"] = binding.c_rnti
+            attrs["f1ap.ue.c_rnti.hex"] = f"0x{binding.c_rnti:04x}"
         return attrs
