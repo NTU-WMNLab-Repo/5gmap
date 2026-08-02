@@ -14,7 +14,10 @@ control-plane-tracing/src/
       async_trace_worker.py
     f1ap-sctp-proxy/
       f1ap_sctp_proxy.py
+    ngap-sctp-proxy/
+      ngap_sctp_proxy.py
   protocols/
+    decoded_message.py
     asn1_per/
       pycrate_decoder.py
     f1ap/
@@ -32,9 +35,15 @@ control-plane-tracing/src/
 - `correlator/f1ap.py` keeps lightweight F1AP UE-context correlation state and
   emits span attributes for Jaeger filtering.
 - `protocols/f1ap/decoder.py` handles F1AP message classification and decode.
+- `protocols/ngap/decoder.py` currently emits opaque NGAP message metadata for
+  the NGAP proxy skeleton.
+- `protocols/decoded_message.py` defines the decoded-message shape shared by
+  protocol decoders and the async trace worker.
 - `protocols/asn1_per/pycrate_decoder.py` is the optional pycrate APER adapter.
 - `proxies/f1ap-sctp-proxy/f1ap_sctp_proxy.py` is only a thin wrapper that wires
   config, SCTP relay, F1AP decoder, correlator, and the tracing worker together.
+- `proxies/ngap-sctp-proxy/ngap_sctp_proxy.py` wires config, SCTP relay, the
+  NGAP opaque decoder, and the tracing worker together.
 
 The SCTP relay does not wait for F1AP decoding. It forwards the original bytes
 first, then enqueues a copied payload for the tracing worker.
@@ -57,7 +66,7 @@ The worker path is:
 ```text
 dequeue event
   -> measure queue delay with time.monotonic_ns()
-  -> decode F1AP
+  -> decode protocol metadata
   -> measure decoder duration with time.monotonic_ns()
   -> emit OpenTelemetry span
 ```
@@ -67,7 +76,7 @@ Decode delay should not become packet forwarding overhead.
 
 ## Jaeger Time Semantics
 
-For each proxied F1AP message, the span timestamps are set explicitly:
+For each proxied control-plane message, the span timestamps are set explicitly:
 
 - span start time: when the proxy received the SCTP message;
 - span end time: when the proxy finished forwarding the original bytes;
@@ -129,6 +138,18 @@ The pycrate adapter is shared by future NGAP and E1AP decoders. The F1AP decoder
 currently exports the decoded ASN.1 value in truncated form and promotes selected
 fields into span attributes. It does not yet promote every IE into a dedicated
 attribute or decode nested RRC/NAS payloads.
+
+## NGAP Proxy Status
+
+The NGAP proxy skeleton forwards N2 SCTP traffic unchanged and emits spans using
+the same async tracing path as F1AP. NGAP payloads are currently treated as
+opaque control-plane messages:
+
+- `decoder.strategy = opaque`;
+- `ngap.decode.status = not_decoded`;
+- `ngap.pdu.marker` is recorded from the first payload octet when available.
+
+NGAP APER procedure decoding and NGAP UE correlation are future work.
 
 ## References
 
