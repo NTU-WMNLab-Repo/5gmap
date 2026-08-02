@@ -12,6 +12,13 @@ protocol as `ngap`, record direction, SCTP metadata, payload size, forwarding
 duration, queue delay, and decoder duration. Procedure-level NGAP decode and
 correlation are future work.
 
+Direction labels are protocol-specific:
+
+```text
+CU-CP -> AMF = cu_to_amf
+AMF   -> CU-CP = amf_to_cu
+```
+
 ## Traffic Path
 
 ```text

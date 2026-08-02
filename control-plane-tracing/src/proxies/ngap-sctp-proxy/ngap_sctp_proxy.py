@@ -81,6 +81,8 @@ def run_proxy() -> None:
             connect_retries=cfg.amf_connect_retries,
             connect_retry_seconds=cfg.amf_connect_retry_seconds,
             log_hex_bytes=cfg.log_hex_bytes,
+            downstream_to_upstream_direction="cu_to_amf",
+            upstream_to_downstream_direction="amf_to_cu",
         ),
         on_forwarded=worker.submit,
     )

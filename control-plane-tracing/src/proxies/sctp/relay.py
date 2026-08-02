@@ -25,6 +25,8 @@ class SctpRelayConfig:
     connect_retries: int
     connect_retry_seconds: float
     log_hex_bytes: int
+    downstream_to_upstream_direction: str = "du_to_cu"
+    upstream_to_downstream_direction: str = "cu_to_du"
 
 
 @dataclass
@@ -105,7 +107,11 @@ class SctpRelay:
                     continue
 
                 if downstream is not None and sock is downstream.sock:
-                    if not self._forward(downstream, upstream, "du_to_cu"):
+                    if not self._forward(
+                        downstream,
+                        upstream,
+                        self.cfg.downstream_to_upstream_direction,
+                    ):
                         downstream.sock.close()
                         downstream = None
                     continue
@@ -118,7 +124,11 @@ class SctpRelay:
                             len(data),
                         )
                         continue
-                    if not self._forward(upstream, downstream, "cu_to_du"):
+                    if not self._forward(
+                        upstream,
+                        downstream,
+                        self.cfg.upstream_to_downstream_direction,
+                    ):
                         raise RuntimeError("upstream disconnected")
 
     def _listen(self) -> object:
