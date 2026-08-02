@@ -1,8 +1,8 @@
 import os
-from dataclasses import dataclass, field
 from typing import Any, Iterable, Optional
 
 from protocols.asn1_per.pycrate_decoder import PycratePerDecoder
+from protocols.decoded_message import DecodedMessage
 
 
 F1AP_PROCEDURES: dict[int, dict[str, Optional[str]]] = {
@@ -84,18 +84,6 @@ PDU_TYPE_BY_MARKER = {
     0x40: "successfulOutcome",
     0x80: "unsuccessfulOutcome",
 }
-
-
-@dataclass
-class DecodedMessage:
-    protocol: str
-    direction: str
-    pdu_type: str
-    procedure_code: Optional[int]
-    procedure_name: str
-    message_name: str
-    fields: dict[str, Any] = field(default_factory=dict)
-    decode_error: Optional[str] = None
 
 
 class F1apDecoder:

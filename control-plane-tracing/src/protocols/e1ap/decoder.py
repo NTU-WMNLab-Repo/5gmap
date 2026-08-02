@@ -1,4 +1,4 @@
-from protocols.f1ap.decoder import DecodedMessage
+from protocols.decoded_message import DecodedMessage
 
 
 class E1apDecoder:
@@ -13,4 +13,3 @@ class E1apDecoder:
             fields={"decoder.strategy": "not_implemented"},
             decode_error="E1AP decoding is not implemented yet",
         )
-
