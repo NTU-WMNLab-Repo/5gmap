@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: __PROXY_NAME__
+spec:
+  selector:
+    app: __PROXY_NAME__
+  ports:
+    - name: ngap-sctp
+      protocol: SCTP
+      port: __NGAP_PORT__
+      targetPort: __NGAP_PORT__
+  clusterIP: None
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: __PROXY_NAME__
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: __PROXY_NAME__
+  template:
+    metadata:
+      labels:
+        app: __PROXY_NAME__
+    spec:
+      containers:
+        - name: proxy
+          image: docker.io/genechen0203/ngap-sctp-proxy:latest
+          imagePullPolicy: Always
+          command:
+            - python3
+            - -u
+            - proxies/ngap-sctp-proxy/ngap_sctp_proxy.py
+          env:
+            - name: AMF_HOST
+              value: "__AMF_HOST__"
+            - name: AMF_PORT
+              value: "__NGAP_PORT__"
+            - name: LISTEN_HOST
+              value: "0.0.0.0"
+            - name: LISTEN_PORT
+              value: "__NGAP_PORT__"
+            - name: SCTP_PPID
+              value: "60"
+            - name: OTEL_SERVICE_NAME
+              value: "__PROXY_NAME__"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "__OTEL_ENDPOINT__"
+            - name: OTEL_EXPORTER_OTLP_INSECURE
+              value: "__OTEL_INSECURE__"
+            - name: LOG_LEVEL
+              value: "INFO"
+            - name: LOG_HEX_BYTES
+              value: "32"
+            - name: AMF_CONNECT_RETRIES
+              value: "60"
+            - name: AMF_CONNECT_RETRY_SECONDS
+              value: "2"
+            - name: TRACE_QUEUE_SIZE
+              value: "10000"
+          ports:
+            - containerPort: __NGAP_PORT__
+              protocol: SCTP
+          securityContext:
+            privileged: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      nodeSelector:
+        deplocation: __RAN_LOC__

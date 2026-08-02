@@ -79,13 +79,18 @@ LOGLEVEL="${LOGLEVEL:-trace}"
 PROXY_PORT="${PROXY_PORT:-11095}"
 SERVICE_PORT="${SERVICE_PORT:-8080}"
 PROXY_VERSION="${PROXY_VERSION:-7.0.0}"
-RAN_PROXY_IMAGE="${RAN_PROXY_IMAGE:-docker.io/genechen0203/f1ap-sctp-proxy:latest}"
+RAN_PROXY_F1AP_IMAGE="${RAN_PROXY_F1AP_IMAGE:-docker.io/genechen0203/f1ap-sctp-proxy:latest}"
 RAN_PROXY_OTEL_ENDPOINT="${RAN_PROXY_OTEL_ENDPOINT:-http://opentelemetry-collector.otel.svc.cluster.local:4317}"
 RAN_PROXY_OTEL_INSECURE="${RAN_PROXY_OTEL_INSECURE:-true}"
 RAN_PROXY_F1C_PORT="${RAN_PROXY_F1C_PORT:-38472}"
+RAN_PROXY_NGAP_IMAGE="${RAN_PROXY_NGAP_IMAGE:-docker.io/genechen0203/ngap-sctp-proxy:latest}"
+RAN_PROXY_NGAP_PORT="${RAN_PROXY_NGAP_PORT:-38412}"
 RAN_PROXY_DIR="$RAN_DIR/f1-proxy"
 RAN_PROXY_MANIFEST="${RAN_PROXY_MANIFEST:-$RAN_PROXY_DIR/oai-f1ap-proxy.yaml}"
 RAN_PROXY_TEMPLATE_SOURCE="$ROOT_DIR/control-plane-tracing/src/proxies/f1ap-sctp-proxy/k8s-example.yaml"
+RAN_PROXY_NGAP_DIR="$RAN_DIR/ngap-proxy"
+RAN_PROXY_NGAP_MANIFEST="${RAN_PROXY_NGAP_MANIFEST:-$RAN_PROXY_NGAP_DIR/oai-ngap-proxy.yaml}"
+RAN_PROXY_NGAP_TEMPLATE_SOURCE="$ROOT_DIR/control-plane-tracing/src/proxies/ngap-sctp-proxy/k8s-example.yaml"
 
 NRF_LOC="${NRF_LOC:-az}"
 UDR_LOC="${UDR_LOC:-az}"
@@ -156,7 +161,42 @@ deploy_ran_proxy_user() {
         -e "s|__OTEL_INSECURE__|$RAN_PROXY_OTEL_INSECURE|g" \
         "$rendered_manifest"
 
-    set_yaml_value "$rendered_manifest" image "$RAN_PROXY_IMAGE"
+    set_yaml_value "$rendered_manifest" image "$RAN_PROXY_F1AP_IMAGE"
+    set_yaml_value "$rendered_manifest" imagePullPolicy "Always"
+
+    kubectl apply -n "$NAMESPACE" -f "$rendered_manifest"
+    rm -f "$rendered_manifest"
+
+    wait_for_pod "$NAMESPACE" "$proxy_name" 300 10
+}
+
+deploy_ngap_proxy_user() {
+    local u="$1"
+    local amf_ip="$2"
+    local proxy_name="ngapproxy$u"
+    local rendered_manifest
+
+    info "Deploying experimental NGAP tracing proxy $proxy_name for AMF $amf_ip"
+
+    mkdir -p "$RAN_PROXY_NGAP_DIR"
+    if [ ! -f "$RAN_PROXY_NGAP_MANIFEST" ]; then
+        info "Creating NGAP proxy manifest from $RAN_PROXY_NGAP_TEMPLATE_SOURCE"
+        cp "$RAN_PROXY_NGAP_TEMPLATE_SOURCE" "$RAN_PROXY_NGAP_MANIFEST"
+    fi
+
+    rendered_manifest="$(mktemp)"
+    cp "$RAN_PROXY_NGAP_MANIFEST" "$rendered_manifest"
+
+    sed -i \
+        -e "s|__PROXY_NAME__|$proxy_name|g" \
+        -e "s|__AMF_HOST__|$amf_ip|g" \
+        -e "s|__NGAP_PORT__|$RAN_PROXY_NGAP_PORT|g" \
+        -e "s|__RAN_LOC__|$RAN_LOC|g" \
+        -e "s|__OTEL_ENDPOINT__|$RAN_PROXY_OTEL_ENDPOINT|g" \
+        -e "s|__OTEL_INSECURE__|$RAN_PROXY_OTEL_INSECURE|g" \
+        "$rendered_manifest"
+
+    set_yaml_value "$rendered_manifest" image "$RAN_PROXY_NGAP_IMAGE"
     set_yaml_value "$rendered_manifest" imagePullPolicy "Always"
 
     kubectl apply -n "$NAMESPACE" -f "$rendered_manifest"
@@ -346,6 +386,12 @@ deploy_oai_ran_user() {
 
     info "Deploying OAI CU/DU for user $u on slice $s with run_mode=$RUN_MODE"
 
+    local amf_target="$AMF_IP"
+    if [ "$RAN_PROXY" = "1" ]; then
+        deploy_ngap_proxy_user "$u" "$AMF_IP"
+        amf_target="ngapproxy$u"
+    fi
+
     sed -i "s/^name: .*/name: oai-gnb-cu$u/" "$cu_chart/Chart.yaml"
     sed -i -E "s|^([[:space:]]*)name: \"oai-gnb-cu.*-sa\"|\\1name: \"oai-gnb-cu$u-sa\"|" "$cu_chart/values.yaml"
     set_yaml_value "$cu_chart/values.yaml" mcc "\"208\""
@@ -354,7 +400,7 @@ deploy_oai_ran_user() {
     set_yaml_value "$cu_chart/values.yaml" tac "\"0x00a000\""
     set_yaml_value "$cu_chart/values.yaml" nssaiSst "\"2$s\""
     set_yaml_value "$cu_chart/values.yaml" nssaiSd0 "\"123\""
-    set_yaml_value "$cu_chart/values.yaml" amfIpAddress "\"$AMF_IP\""
+    set_yaml_value "$cu_chart/values.yaml" amfIpAddress "\"$amf_target\""
     set_yaml_value "$cu_chart/values.yaml" mountConfig "true"
     set_yaml_value "$cu_chart/values.yaml" rfSimulator "\"server\""
     set_yaml_value "$cu_chart/values.yaml" gnbcuName "\"oai-gnb-cu$u-$RUN_MODE\""

@@ -30,6 +30,10 @@ for ((offset=0; offset<total; offset++)); do
     kubectl delete deployment "oai-f1ap-proxy$u" -n "$NAMESPACE" --ignore-not-found=true
     kubectl delete service "oai-f1ap-proxy$u" -n "$NAMESPACE" --ignore-not-found=true
     helm_uninstall_if_exists "gnbcu$u" "$NAMESPACE"
+    kubectl delete deployment "ngapproxy$u" -n "$NAMESPACE" --ignore-not-found=true
+    kubectl delete service "ngapproxy$u" -n "$NAMESPACE" --ignore-not-found=true
+    kubectl delete deployment "oai-ngap-proxy$u" -n "$NAMESPACE" --ignore-not-found=true
+    kubectl delete service "oai-ngap-proxy$u" -n "$NAMESPACE" --ignore-not-found=true
     helm_uninstall_if_exists "gnb$u" "$NAMESPACE"
 done
 

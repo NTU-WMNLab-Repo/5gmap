@@ -1,12 +1,16 @@
 ## Experimental RanProxy Flag
 
-**Warning: `RanProxy=1` is experimental. The current F1AP proxy is a test
-prototype for F1-C tracing only. It forwards F1AP control messages unchanged and
-exports basic spans, but robust ASN.1 PER decoding, full procedure correlation,
-multi-DU behavior, and production hardening are not finished yet.**
+**Warning: `RanProxy=1` is experimental. The current RAN proxies are test
+prototypes for F1AP/F1-C and NGAP/N2 tracing. They forward control messages
+unchanged and export spans, but robust NGAP ASN.1 PER decoding,
+cross-procedure/cross-protocol correlation, multi-DU behavior, and production
+hardening are not finished yet.**
 
-Use `RanProxy=1` to insert the experimental F1AP SCTP tracing proxy between
-each DU and CU:
+Use `RanProxy=1` to insert experimental SCTP tracing proxies into the RAN
+control-plane paths:
+
+- `f1proxy<user>` between each DU and CU for F1AP/F1-C.
+- `ngapproxy<user>` between each CU and AMF for NGAP/N2.
 
 ```bash
 RanProxy=1 ./script/run.sh
@@ -20,21 +24,25 @@ Equivalent CLI forms:
 ./script/deploy.sh zoomv3 1 1 --RanProxy 1
 ```
 
-When `RanProxy=1`, `deploy.sh` deploys one `f1proxy<user>` service and
-deployment per CU/DU pair, then points the DU F1-C target to that proxy. When
-`RanProxy=0`, the DU connects directly to the CU as before.
+When `RanProxy=1`, `deploy.sh` deploys one `ngapproxy<user>` and one
+`f1proxy<user>` per RAN user. It points the CU AMF target to `ngapproxy<user>`
+and the DU F1-C target to `f1proxy<user>`. When `RanProxy=0`, the CU connects
+directly to the AMF and the DU connects directly to the CU as before.
 
 Useful image variables:
 
 ```text
-RAN_PROXY_IMAGE          Default: docker.io/genechen0203/f1ap-sctp-proxy:latest
+RAN_PROXY_F1AP_IMAGE     Default: docker.io/genechen0203/f1ap-sctp-proxy:latest
+RAN_PROXY_NGAP_IMAGE     Default: docker.io/genechen0203/ngap-sctp-proxy:latest
 RAN_PROXY_F1C_PORT       Default: 38472
+RAN_PROXY_NGAP_PORT      Default: 38412
 RAN_PROXY_OTEL_ENDPOINT  Default: http://opentelemetry-collector.otel.svc.cluster.local:4317
 RAN_PROXY_OTEL_INSECURE  Default: true
 ```
 
-`undeploy.sh` always attempts to remove `f1proxy<user>` resources, so it
-is safe to run cleanup after either `RanProxy=0` or `RanProxy=1`.
+`undeploy.sh` always attempts to remove `f1proxy<user>` and `ngapproxy<user>`
+resources, so it is safe to run cleanup after either `RanProxy=0` or
+`RanProxy=1`.
 
 # 5GMAP Script 使用說明
 
