@@ -35,15 +35,15 @@ control-plane-tracing/src/
 - `correlator/f1ap.py` keeps lightweight F1AP UE-context correlation state and
   emits span attributes for Jaeger filtering.
 - `protocols/f1ap/decoder.py` handles F1AP message classification and decode.
-- `protocols/ngap/decoder.py` currently emits opaque NGAP message metadata for
-  the NGAP proxy skeleton.
+- `protocols/ngap/decoder.py` handles lightweight NGAP top-level message
+  classification for the NGAP proxy skeleton.
 - `protocols/decoded_message.py` defines the decoded-message shape shared by
   protocol decoders and the async trace worker.
 - `protocols/asn1_per/pycrate_decoder.py` is the optional pycrate APER adapter.
 - `proxies/f1ap-sctp-proxy/f1ap_sctp_proxy.py` is only a thin wrapper that wires
   config, SCTP relay, F1AP decoder, correlator, and the tracing worker together.
 - `proxies/ngap-sctp-proxy/ngap_sctp_proxy.py` wires config, SCTP relay, the
-  NGAP opaque decoder, and the tracing worker together.
+  NGAP lightweight decoder, and the tracing worker together.
 
 The SCTP relay does not wait for F1AP decoding. It forwards the original bytes
 first, then enqueues a copied payload for the tracing worker.
@@ -142,14 +142,18 @@ attribute or decode nested RRC/NAS payloads.
 ## NGAP Proxy Status
 
 The NGAP proxy skeleton forwards N2 SCTP traffic unchanged and emits spans using
-the same async tracing path as F1AP. NGAP payloads are currently treated as
-opaque control-plane messages:
+the same async tracing path as F1AP. NGAP payloads currently use lightweight
+top-level classification:
 
-- `decoder.strategy = opaque`;
-- `ngap.decode.status = not_decoded`;
-- `ngap.pdu.marker` is recorded from the first payload octet when available.
+- `decoder.strategy = lightweight`;
+- `ngap.decode.status = classified`;
+- `ngap.pdu.type`, `ngap.procedure.code`, `ngap.procedure.name`, and
+  `ngap.message.name` identify observed NGAP messages such as `NGSetupRequest`,
+  `InitialUEMessage`, `DownlinkNASTransport`, and `UplinkNASTransport`;
+- `ngap.pdu.selector` and `ngap.pdu.first_octet` record the top-level APER
+  selector used by the lightweight decoder.
 
-NGAP APER procedure decoding and NGAP UE correlation are future work.
+Full NGAP APER IE extraction and NGAP UE correlation are future work.
 
 ## References
 

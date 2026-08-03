@@ -7,10 +7,11 @@ relays SCTP traffic between the CU-CP and AMF, forwards the original packet
 before tracing work, and emits one OpenTelemetry span per observed NGAP SCTP
 message.
 
-NGAP decoding is intentionally minimal in this first version. Spans identify the
-protocol as `ngap`, record direction, SCTP metadata, payload size, forwarding
-duration, queue delay, and decoder duration. Procedure-level NGAP decode and
-correlation are future work.
+NGAP decoding is intentionally lightweight in this first version. Spans identify
+the protocol as `ngap`, record direction, SCTP metadata, payload size,
+forwarding duration, queue delay, decoder duration, top-level PDU type,
+procedure code, procedure name, and message name. Full APER IE extraction and
+NGAP UE correlation are future work.
 
 Direction labels are protocol-specific:
 
