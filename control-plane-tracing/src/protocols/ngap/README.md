@@ -114,9 +114,24 @@ The NGAP correlator uses these promoted IDs to emit:
 
 ```text
 ngap.ue.correlation_id
+ngap.ue.correlation_basis
+ngap.ue.context_generation
 ngap.ue.binding_state
 ngap.ue.message_count
 ```
+
+When `RAN-UE-NGAP-ID` is available, `ngap.ue.correlation_id` is scoped by a
+proxy-local generation counter:
+
+```text
+ngap-ue-ran-1-gen-1
+ngap-ue-ran-1-gen-2
+```
+
+This is necessary because the RAN/CU can reuse `RAN-UE-NGAP-ID` after
+`UEContextReleaseComplete`. The generation is not a protocol field; it is local
+correlation state used to keep separate UE lifetimes from collapsing into one
+Jaeger tag group.
 
 For cross-protocol correlation, `InitialUEMessage` is the likely bridge between
 F1AP and NGAP because it is sent after the CU receives the UE's initial RRC/NAS

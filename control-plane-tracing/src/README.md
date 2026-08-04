@@ -165,13 +165,21 @@ decode by default, with lightweight top-level classification as a fallback:
 The first NGAP correlation layer is also attributes-based:
 
 - `ngap.correlation.kind`: `ue` or `none`;
-- `ngap.ue.correlation_id`: stable UE-context key, usually based on
-  `RAN-UE-NGAP-ID`;
+- `ngap.ue.correlation_id`: stable UE-context key scoped to one NGAP UE
+  lifetime, usually based on `RAN-UE-NGAP-ID` plus a local generation counter;
+- `ngap.ue.correlation_basis`: identifier strategy used for the correlation ID;
+- `ngap.ue.context_generation`: local generation number for reused RAN UE NGAP
+  IDs;
 - `ngap.ue.binding_state`: whether RAN and AMF UE NGAP IDs have both been
   observed;
 - `ngap.ue.message_count`: number of observed NGAP messages in that binding;
 - `ngap.ue.binding_released`: present on `UEContextReleaseComplete` when the
   in-memory binding is removed.
+
+RAN UE NGAP IDs can be reused after a UE context is released. The generation
+counter keeps Jaeger tag grouping from merging multiple UE lifetimes that happen
+to reuse the same protocol ID. The protocol IDs themselves remain available as
+`ngap.ue.ran_id` and `ngap.ue.amf_id`.
 
 Cross-protocol F1AP-to-NGAP correlation is future work.
 

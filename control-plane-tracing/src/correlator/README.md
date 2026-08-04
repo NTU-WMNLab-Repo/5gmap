@@ -45,6 +45,8 @@ When a UE identifier is present, the correlator emits:
 
 - `ngap.correlation.kind=ue`
 - `ngap.ue.correlation_id`
+- `ngap.ue.correlation_basis`
+- `ngap.ue.context_generation`
 - `ngap.ue.binding_state`
 - `ngap.ue.message_count`
 - `ngap.ue.ran_id`
@@ -54,10 +56,22 @@ When a UE identifier is present, the correlator emits:
 not been allocated yet. Later UE-associated messages become `ran_amf_bound` when
 both IDs have been observed.
 
+The correlation ID is generation-scoped when a `RAN-UE-NGAP-ID` is available:
+
+```text
+ngap-ue-ran-1-gen-1
+ngap-ue-ran-1-gen-2
+```
+
+This keeps separate UE context lifetimes apart when the CU/RAN reuses the same
+RAN UE NGAP ID after release. The original protocol IDs are still exported as
+`ngap.ue.ran_id` and `ngap.ue.amf_id`.
+
 When no UE identifier is present, it emits:
 
 - `ngap.correlation.kind=none`
 
 `UEContextReleaseComplete` keeps the same UE correlation attributes on its span
-and then removes the binding from memory, so later reused NGAP IDs do not
-inherit the old UE context.
+and then removes the binding from memory. Generation counters are not reset, so
+later reused NGAP IDs create a new correlation ID instead of inheriting the old
+UE context.

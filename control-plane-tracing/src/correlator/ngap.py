@@ -6,8 +6,10 @@ from typing import Any, Optional
 @dataclass
 class NgapUeBinding:
     correlation_id: str
+    correlation_basis: str
     ran_ue_id: Optional[int] = None
     amf_ue_id: Optional[int] = None
+    context_generation: Optional[int] = None
     first_seen_ns: int = 0
     last_seen_ns: int = 0
     message_count: int = 0
@@ -31,6 +33,7 @@ class NgapCorrelator:
         self.max_contexts = max_contexts
         self._by_ran: dict[int, NgapUeBinding] = {}
         self._by_amf: dict[int, NgapUeBinding] = {}
+        self._ran_generations: dict[int, int] = {}
 
     @classmethod
     def from_env(cls) -> Optional["NgapCorrelator"]:
@@ -77,11 +80,13 @@ class NgapCorrelator:
     ) -> NgapUeBinding:
         self._evict_if_needed()
 
-        seed = self._correlation_seed(ran_ue_id, amf_ue_id)
+        seed, basis, generation = self._correlation_seed(ran_ue_id, amf_ue_id)
         binding = NgapUeBinding(
             correlation_id=f"ngap-ue-{seed}",
+            correlation_basis=basis,
             ran_ue_id=ran_ue_id,
             amf_ue_id=amf_ue_id,
+            context_generation=generation,
             first_seen_ns=event_time_ns,
             last_seen_ns=event_time_ns,
         )
@@ -96,16 +101,22 @@ class NgapCorrelator:
         oldest = min(bindings.values(), key=lambda binding: binding.last_seen_ns)
         self._remove_binding(oldest)
 
-    @staticmethod
     def _correlation_seed(
+        self,
         ran_ue_id: Optional[int],
         amf_ue_id: Optional[int],
-    ) -> str:
+    ) -> tuple[str, str, Optional[int]]:
         if ran_ue_id is not None:
-            return f"ran-{ran_ue_id}"
+            generation = self._next_ran_generation(ran_ue_id)
+            return f"ran-{ran_ue_id}-gen-{generation}", "ran_id_generation", generation
         if amf_ue_id is not None:
-            return f"amf-{amf_ue_id}"
-        return "unknown"
+            return f"amf-{amf_ue_id}", "amf_id", None
+        return "unknown", "unknown", None
+
+    def _next_ran_generation(self, ran_ue_id: int) -> int:
+        generation = self._ran_generations.get(ran_ue_id, 0) + 1
+        self._ran_generations[ran_ue_id] = generation
+        return generation
 
     def _update_binding(
         self,
@@ -152,11 +163,14 @@ class NgapCorrelator:
         attrs: dict[str, bool | int | str] = {
             "ngap.correlation.kind": "ue",
             "ngap.ue.correlation_id": binding.correlation_id,
+            "ngap.ue.correlation_basis": binding.correlation_basis,
             "ngap.ue.binding_state": self._binding_state(binding),
             "ngap.ue.message_count": binding.message_count,
             "ngap.ue.first_seen_unix_ns": binding.first_seen_ns,
             "ngap.ue.last_seen_unix_ns": binding.last_seen_ns,
         }
+        if binding.context_generation is not None:
+            attrs["ngap.ue.context_generation"] = binding.context_generation
         if binding.ran_ue_id is not None:
             attrs["ngap.ue.ran_id"] = binding.ran_ue_id
         if binding.amf_ue_id is not None:
