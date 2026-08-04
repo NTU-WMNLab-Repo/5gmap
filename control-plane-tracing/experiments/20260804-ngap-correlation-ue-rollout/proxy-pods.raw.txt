@@ -1,0 +1,2 @@
+﻿f1proxy10-56c7866ccc-htskq    docker-pullable://genechen0203/f1ap-sctp-proxy@sha256:45fc52abccb502d25cc1177b3eba64d5d964eba3ba0760345c776e1ed5219290   0
+ngapproxy10-8b4b94d5f-mk62s   docker-pullable://genechen0203/ngap-sctp-proxy@sha256:8b92c88c88bd1814e17686454cd58691770b6475fa927c35c4cd63b97ae1fbe8   0
