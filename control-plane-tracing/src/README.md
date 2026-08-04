@@ -34,6 +34,8 @@ control-plane-tracing/src/
 - `proxies/sctp/async_trace_worker.py` handles async decode and span emission.
 - `correlator/f1ap.py` keeps lightweight F1AP UE-context correlation state and
   emits span attributes for Jaeger filtering.
+- `correlator/ngap.py` keeps lightweight NGAP UE-context correlation state and
+  emits span attributes for Jaeger filtering.
 - `protocols/f1ap/decoder.py` handles F1AP message classification and decode.
 - `protocols/ngap/decoder.py` handles lightweight NGAP top-level message
   classification for the NGAP proxy skeleton.
@@ -43,7 +45,7 @@ control-plane-tracing/src/
 - `proxies/f1ap-sctp-proxy/f1ap_sctp_proxy.py` is only a thin wrapper that wires
   config, SCTP relay, F1AP decoder, correlator, and the tracing worker together.
 - `proxies/ngap-sctp-proxy/ngap_sctp_proxy.py` wires config, SCTP relay, the
-  NGAP lightweight decoder, and the tracing worker together.
+  NGAP decoder, correlator, and the tracing worker together.
 
 The SCTP relay does not wait for F1AP decoding. It forwards the original bytes
 first, then enqueues a copied payload for the tracing worker.
@@ -158,7 +160,20 @@ decode by default, with lightweight top-level classification as a fallback:
   `ngap.ran.ue.ngap.id` and `ngap.amf.ue.ngap.id` are added when pycrate
   exposes them.
 
-NGAP UE correlation is future work.
+## NGAP Correlation
+
+The first NGAP correlation layer is also attributes-based:
+
+- `ngap.correlation.kind`: `ue` or `none`;
+- `ngap.ue.correlation_id`: stable UE-context key, usually based on
+  `RAN-UE-NGAP-ID`;
+- `ngap.ue.binding_state`: whether RAN and AMF UE NGAP IDs have both been
+  observed;
+- `ngap.ue.message_count`: number of observed NGAP messages in that binding;
+- `ngap.ue.binding_released`: present on `UEContextReleaseComplete` when the
+  in-memory binding is removed.
+
+Cross-protocol F1AP-to-NGAP correlation is future work.
 
 ## References
 

@@ -11,8 +11,8 @@ NGAP decoding uses pycrate APER decode by default, with the lightweight
 top-level classifier kept as a fallback. Spans identify the protocol as `ngap`,
 record direction, SCTP metadata, payload size, forwarding duration, queue delay,
 decoder duration, top-level PDU type, procedure code, procedure name, message
-name, IE summaries, and selected NGAP identifiers. NGAP UE correlation is future
-work.
+name, IE summaries, selected NGAP identifiers, and NGAP UE correlation
+attributes.
 
 Direction labels are protocol-specific:
 
@@ -46,6 +46,8 @@ The proxy's `AMF_HOST` points to the real AMF service or pod IP.
 | `AMF_CONNECT_RETRIES` | `60` | AMF connection retry count at startup. |
 | `AMF_CONNECT_RETRY_SECONDS` | `2` | Seconds between AMF connection retries. |
 | `TRACE_QUEUE_SIZE` | `10000` | Async decode/tracing queue depth. |
+| `NGAP_ENABLE_CORRELATION` | `1` | Enable NGAP UE correlation attributes. |
+| `NGAP_CORRELATION_MAX_CONTEXTS` | `10000` | Maximum in-memory NGAP UE bindings. |
 | `NGAP_ENABLE_PYCRATE` | `1` | Enable pycrate APER decode. Set `0` to use lightweight decode only. |
 | `NGAP_PYCRATE_MODULE` | `pycrate_asn1dir.NGAP` | pycrate NGAP module to import. |
 | `NGAP_PYCRATE_OBJECT` | `NGAP_PDU_Descriptions.NGAP_PDU` | pycrate NGAP root object. |

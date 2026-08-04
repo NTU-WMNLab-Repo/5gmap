@@ -11,6 +11,7 @@ SRC_ROOT = pathlib.Path(__file__).resolve().parents[2]
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
+from correlator.ngap import NgapCorrelator  # noqa: E402
 from protocols.ngap.decoder import NgapDecoder  # noqa: E402
 from proxies.sctp.async_trace_worker import AsyncTraceWorker  # noqa: E402
 from proxies.sctp.relay import SctpRelay, SctpRelayConfig  # noqa: E402
@@ -62,12 +63,14 @@ def run_proxy() -> None:
     configure_logging()
     cfg = load_config()
     decoder = NgapDecoder()
+    correlator = NgapCorrelator.from_env()
 
     worker = AsyncTraceWorker(
         service_name=cfg.service_name,
         protocol_name="ngap",
         decoder=decoder,
         queue_size=cfg.trace_queue_size,
+        correlator=correlator,
     )
     worker.start()
 

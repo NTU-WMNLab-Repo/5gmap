@@ -110,9 +110,13 @@ ngap.ran.ue.ngap.id
 ngap.amf.ue.ngap.id
 ```
 
-`ngap.ue.correlation_id` is not implemented yet. It should be added by a future
-NGAP correlator once the ID extraction is validated across attach, PDU session,
-release, and UE rollout experiments.
+The NGAP correlator uses these promoted IDs to emit:
+
+```text
+ngap.ue.correlation_id
+ngap.ue.binding_state
+ngap.ue.message_count
+```
 
 For cross-protocol correlation, `InitialUEMessage` is the likely bridge between
 F1AP and NGAP because it is sent after the CU receives the UE's initial RRC/NAS
@@ -156,11 +160,10 @@ This keeps the promoted scalar attributes without exporting the large
 
 Recommended implementation order:
 
-1. Validate NGAP pycrate decode in Jaeger against AMF logs.
-2. Confirm `RAN-UE-NGAP-ID` and `AMF-UE-NGAP-ID` extraction across attach, PDU
-   session setup, release, and UE rollout experiments.
-3. Add an NGAP UE correlator that emits `ngap.ue.correlation_id`.
-4. Correlate NGAP UE spans with the existing F1AP UE correlation state.
+1. Validate NGAP UE correlation in Jaeger against AMF and CU logs.
+2. Confirm `RAN-UE-NGAP-ID` and `AMF-UE-NGAP-ID` binding behavior across attach,
+   PDU session setup, release, and UE rollout experiments.
+3. Correlate NGAP UE spans with the existing F1AP UE correlation state.
 
 This mirrors the F1AP strategy: keep forwarding independent of decode, emit
 useful spans quickly, then deepen the decoder without increasing packet

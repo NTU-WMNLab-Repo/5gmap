@@ -33,3 +33,31 @@ transaction-level fallback key:
 The first version is intentionally attributes-based. Jaeger can search and group
 spans by these tags, while later work can use the same state to create explicit
 OpenTelemetry links or parent-child relationships across protocols.
+
+## NGAP
+
+`ngap.py` tracks UE bindings using scalar fields promoted by the NGAP decoder:
+
+- `ngap.ran.ue.ngap.id`
+- `ngap.amf.ue.ngap.id`
+
+When a UE identifier is present, the correlator emits:
+
+- `ngap.correlation.kind=ue`
+- `ngap.ue.correlation_id`
+- `ngap.ue.binding_state`
+- `ngap.ue.message_count`
+- `ngap.ue.ran_id`
+- `ngap.ue.amf_id`
+
+`InitialUEMessage` usually starts as `ran_only` because the AMF UE NGAP ID has
+not been allocated yet. Later UE-associated messages become `ran_amf_bound` when
+both IDs have been observed.
+
+When no UE identifier is present, it emits:
+
+- `ngap.correlation.kind=none`
+
+`UEContextReleaseComplete` keeps the same UE correlation attributes on its span
+and then removes the binding from memory, so later reused NGAP IDs do not
+inherit the old UE context.
