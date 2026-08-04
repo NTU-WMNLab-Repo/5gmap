@@ -7,11 +7,12 @@ relays SCTP traffic between the CU-CP and AMF, forwards the original packet
 before tracing work, and emits one OpenTelemetry span per observed NGAP SCTP
 message.
 
-NGAP decoding is intentionally lightweight in this first version. Spans identify
-the protocol as `ngap`, record direction, SCTP metadata, payload size,
-forwarding duration, queue delay, decoder duration, top-level PDU type,
-procedure code, procedure name, and message name. Full APER IE extraction and
-NGAP UE correlation are future work.
+NGAP decoding uses pycrate APER decode by default, with the lightweight
+top-level classifier kept as a fallback. Spans identify the protocol as `ngap`,
+record direction, SCTP metadata, payload size, forwarding duration, queue delay,
+decoder duration, top-level PDU type, procedure code, procedure name, message
+name, IE summaries, and selected NGAP identifiers. NGAP UE correlation is future
+work.
 
 Direction labels are protocol-specific:
 
@@ -45,6 +46,13 @@ The proxy's `AMF_HOST` points to the real AMF service or pod IP.
 | `AMF_CONNECT_RETRIES` | `60` | AMF connection retry count at startup. |
 | `AMF_CONNECT_RETRY_SECONDS` | `2` | Seconds between AMF connection retries. |
 | `TRACE_QUEUE_SIZE` | `10000` | Async decode/tracing queue depth. |
+| `NGAP_ENABLE_PYCRATE` | `1` | Enable pycrate APER decode. Set `0` to use lightweight decode only. |
+| `NGAP_PYCRATE_MODULE` | `pycrate_asn1dir.NGAP` | pycrate NGAP module to import. |
+| `NGAP_PYCRATE_OBJECT` | `NGAP_PDU_Descriptions.NGAP_PDU` | pycrate NGAP root object. |
+| `ASN1_COPY_ROOT` | `0` | Deep-copy the pycrate root object per decode. Usually unnecessary with the single worker. |
+| `ASN1_INCLUDE_VALUE` | `0` | Include a truncated `asn1.value` debug attribute. Keep disabled for normal runs. |
+| `ASN1_VALUE_REPR_LIMIT` | `2048` | Maximum size of `asn1.value` or `asn1.show` attributes. |
+| `ASN1_INCLUDE_SHOW` | `0` | Include pycrate `show()` output for short debugging captures. |
 
 ## Container
 

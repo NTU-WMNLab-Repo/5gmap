@@ -25,3 +25,15 @@ docker.io/genechen0203/ngap-sctp-proxy:latest
 ```
 
 Override it at deployment time with `RAN_PROXY_NGAP_IMAGE`.
+
+The manifest enables NGAP pycrate APER decode by default:
+
+```text
+NGAP_ENABLE_PYCRATE=1
+NGAP_PYCRATE_MODULE=pycrate_asn1dir.NGAP
+NGAP_PYCRATE_OBJECT=NGAP_PDU_Descriptions.NGAP_PDU
+ASN1_INCLUDE_VALUE=0
+```
+
+`ASN1_INCLUDE_VALUE` is disabled for normal runs so Jaeger receives promoted
+control-plane attributes without storing the full decoded ASN.1 value.

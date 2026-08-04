@@ -142,18 +142,23 @@ attribute or decode nested RRC/NAS payloads.
 ## NGAP Proxy Status
 
 The NGAP proxy skeleton forwards N2 SCTP traffic unchanged and emits spans using
-the same async tracing path as F1AP. NGAP payloads currently use lightweight
-top-level classification:
+the same async tracing path as F1AP. NGAP payloads currently use pycrate APER
+decode by default, with lightweight top-level classification as a fallback:
 
-- `decoder.strategy = lightweight`;
-- `ngap.decode.status = classified`;
+- `decoder.strategy = pycrate` when APER decode succeeds;
+- `decoder.strategy = lightweight` when pycrate is disabled or fails;
+- `ngap.decode.status = decoded` when pycrate succeeds;
+- `ngap.decode.status = classified` when the lightweight fallback is used;
 - `ngap.pdu.type`, `ngap.procedure.code`, `ngap.procedure.name`, and
   `ngap.message.name` identify observed NGAP messages such as `NGSetupRequest`,
   `InitialUEMessage`, `DownlinkNASTransport`, and `UplinkNASTransport`;
 - `ngap.pdu.selector` and `ngap.pdu.first_octet` record the top-level APER
-  selector used by the lightweight decoder.
+  selector used by the lightweight decoder;
+- `ngap.ie.ids`, `ngap.ie.names`, and promoted fields such as
+  `ngap.ran.ue.ngap.id` and `ngap.amf.ue.ngap.id` are added when pycrate
+  exposes them.
 
-Full NGAP APER IE extraction and NGAP UE correlation are future work.
+NGAP UE correlation is future work.
 
 ## References
 

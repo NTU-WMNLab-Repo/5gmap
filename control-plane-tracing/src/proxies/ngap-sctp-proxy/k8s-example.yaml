@@ -61,6 +61,20 @@ spec:
               value: "2"
             - name: TRACE_QUEUE_SIZE
               value: "10000"
+            - name: NGAP_ENABLE_PYCRATE
+              value: "1"
+            - name: NGAP_PYCRATE_MODULE
+              value: "pycrate_asn1dir.NGAP"
+            - name: NGAP_PYCRATE_OBJECT
+              value: "NGAP_PDU_Descriptions.NGAP_PDU"
+            - name: ASN1_COPY_ROOT
+              value: "0"
+            - name: ASN1_INCLUDE_VALUE
+              value: "0"
+            - name: ASN1_VALUE_REPR_LIMIT
+              value: "2048"
+            - name: ASN1_INCLUDE_SHOW
+              value: "0"
           ports:
             - containerPort: __NGAP_PORT__
               protocol: SCTP
