@@ -1,0 +1,15 @@
+﻿NAME                               READY   STATUS    RESTARTS   AGE     IP            NODE            NOMINATED NODE   READINESS GATES
+f1proxy10-68b76c6487-bwnfd         1/1     Running   0          10m     10.42.1.99    192.168.1.68    <none>           <none>
+mysql-69c4c947fc-k9dmf             1/1     Running   0          14m     10.42.2.190   192.168.1.240   <none>           <none>
+ngapproxy10-5dd8596cf-s22vk        1/1     Running   0          12m     10.42.1.97    192.168.1.68    <none>           <none>
+oai-amf10-847c8b5599-wm2nt         3/3     Running   0          12m     10.42.2.195   192.168.1.240   <none>           <none>
+oai-ausf10-d7c485c68-5bxcq         3/3     Running   0          13m     10.42.2.194   192.168.1.240   <none>           <none>
+oai-dnn10-767ddc7f4b-cnpcq         1/1     Running   0          9m10s   10.42.2.198   192.168.1.240   <none>           <none>
+oai-gnb-cu10-7cc59cb9b4-xm2mp      2/2     Running   0          11m     10.42.1.98    192.168.1.68    <none>           <none>
+oai-gnb-du10-5cf7896486-8s5lq      2/2     Running   0          10m     10.42.1.100   192.168.1.68    <none>           <none>
+oai-nr-ue10-7d9db977bb-zhc8s       2/2     Running   0          6m10s   10.42.1.104   192.168.1.68    <none>           <none>
+oai-nrf10-5f87f6cb87-t4mbx         3/3     Running   0          13m     10.42.2.191   192.168.1.240   <none>           <none>
+oai-smf10-b87f44b99-hrqv2          3/3     Running   0          12m     10.42.2.196   192.168.1.240   <none>           <none>
+oai-spgwu-tiny10-6579fd59b-rhxlf   2/2     Running   0          12m     10.42.2.197   192.168.1.240   <none>           <none>
+oai-udm10-fd7f5fddd-9gtht          3/3     Running   0          13m     10.42.2.193   192.168.1.240   <none>           <none>
+oai-udr10-58798fbb58-5g7qz         3/3     Running   0          13m     10.42.2.192   192.168.1.240   <none>           <none>

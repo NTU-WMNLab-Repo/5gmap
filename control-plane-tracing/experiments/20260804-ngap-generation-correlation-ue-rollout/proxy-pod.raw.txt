@@ -1,0 +1,1 @@
+﻿ngapproxy10-5dd8596cf-s22vk   docker-pullable://genechen0203/ngap-sctp-proxy@sha256:d7f8e0683c584128b5214f38b8ac566f11e54d0a51034635e7d32d3cc3b36e12   0
