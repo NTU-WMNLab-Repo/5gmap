@@ -46,15 +46,21 @@ run 3: 2026-08-04T14:50:32.875Z
 
 - `jaeger-ngapproxy-traces.raw.json`: raw Jaeger API output for `ngapproxy10`,
   using a start time of `1785854706793000` Unix microseconds.
+- `jaeger-f1proxy-traces.raw.json`: raw Jaeger API output for `f1proxy10`,
+  captured from retained Jaeger data over the same experiment window for
+  offline cross-protocol correlation checks.
 - `ngapproxy-log.raw.txt`: raw NGAP proxy log from the capture window.
 - `cu-log.raw.txt`: raw CU log from the capture window.
 - `amf-log.raw.txt`: raw AMF log from the capture window.
 - `proxy-pod.raw.txt`: raw NGAP proxy pod image and restart-count snapshot.
 - `oai-pods.raw.txt`: raw OAI pod snapshot.
 
-F1AP raw traces and logs were not stored for this experiment because the check
-was focused on NGAP generation-scoped correlation. The OAI pod snapshot still
-showed the F1AP proxy pod running with zero restarts during the same window.
+This experiment was originally focused on NGAP generation-scoped correlation.
+The F1AP Jaeger raw trace was added later because the retained Jaeger data still
+covered the same capture window, making it useful evidence for offline
+cross-protocol UE lifecycle correlation. F1AP proxy logs were still not stored
+for this experiment. The OAI pod snapshot showed the F1AP proxy pod running with
+zero restarts during the same window.
 
 The NGAP proxy pod snapshot showed the container running with zero restarts:
 
@@ -310,3 +316,19 @@ The next step is to use these generation-scoped NGAP UE contexts as one side of
 cross-protocol correlation with F1AP UE contexts. The likely bridge is CU UE ID
 and timing around `InitialUEMessage`, `InitialULRRCMessageTransfer`, and
 `UEContextSetupRequest`.
+
+The later F1AP Jaeger raw capture for the same time window produced four F1AP
+UE lifecycles matching the four NGAP generations:
+
+| F1AP Correlation ID | DU UE ID | CU UE ID | C-RNTI | Release |
+| --- | ---: | ---: | --- | --- |
+| `f1ap-ue-du-30295` | 30295 | 1 | `0x7657` | yes |
+| `f1ap-ue-du-4153` | 4153 | 1 | `0x1039` | yes |
+| `f1ap-ue-du-17432` | 17432 | 1 | `0x4418` | yes |
+| `f1ap-ue-du-11658` | 11658 | 1 | `0x2d8a` | no |
+
+Running the offline cross-protocol analyzer against
+`jaeger-f1proxy-traces.raw.json` and `jaeger-ngapproxy-traces.raw.json` matched
+all four F1AP lifecycles to the four NGAP generation-scoped lifecycles with
+high confidence. The first three matches had both F1AP and NGAP release-complete
+events; the fourth match remained active on both protocols at the capture end.
