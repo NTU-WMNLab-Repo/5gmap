@@ -335,3 +335,21 @@ docker buildx build --platform linux/amd64 \
   -t "$IMAGE" \
   --push .
 ```
+
+## Project Deployment
+
+The main deployment scripts keep proxy insertion and online correlation as two
+separate choices. Deploy both protocol proxies and the shared correlator with:
+
+```sh
+RanProxy=1 CrossProtocolCorrelate=1 ./script/run.sh
+```
+
+`CrossProtocolCorrelate=0` is the default. In that mode the correlator is not
+deployed, and the F1AP and NGAP manifests receive
+`ONLINE_CORRELATION_ENABLED=0` with an empty endpoint. Setting
+`CrossProtocolCorrelate=1` without `RanProxy=1` is rejected because there would
+be no proxy clients producing correlation events.
+
+When an existing correlator Deployment is reused, `deploy.sh` restarts it to
+clear the in-memory lifecycle tables before the new RAN deployment begins.

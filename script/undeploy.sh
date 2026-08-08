@@ -37,6 +37,9 @@ for ((offset=0; offset<total; offset++)); do
     helm_uninstall_if_exists "gnb$u" "$NAMESPACE"
 done
 
+kubectl delete deployment control-plane-correlator -n "$NAMESPACE" --ignore-not-found=true
+kubectl delete service control-plane-correlator -n "$NAMESPACE" --ignore-not-found=true
+
 for ((s=10; s<=slice_end; s++)); do
     helm_uninstall_if_exists "nrf$s" "$NAMESPACE"
     helm_uninstall_if_exists "udr$s" "$NAMESPACE"

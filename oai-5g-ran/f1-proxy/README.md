@@ -15,8 +15,9 @@ scripts when the F1AP proxy is enabled.
 - `oai-f1ap-proxy.yaml`: Service and Deployment template for one F1-C SCTP proxy.
 
 The deployment script renders placeholders such as `__PROXY_NAME__`,
-`__CU_HOST__`, `__F1C_PORT__`, `__OTEL_ENDPOINT__`, and `__RAN_LOC__` before
-applying the manifest.
+`__CU_HOST__`, `__F1C_PORT__`, `__OTEL_ENDPOINT__`,
+`__ONLINE_CORRELATION_ENABLED__`, `__ONLINE_CORRELATION_ENDPOINT__`, and
+`__RAN_LOC__` before applying the manifest.
 
 ## Common Runtime Settings
 
@@ -31,6 +32,9 @@ defaults. The most commonly adjusted values are:
 | `OTEL_SERVICE_NAME` | rendered | Service name shown in Jaeger. |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | rendered | OTLP endpoint used by the proxy. |
 | `TRACE_QUEUE_SIZE` | `10000` | Async decode/tracing queue depth. |
+| `ONLINE_CORRELATION_ENABLED` | rendered | `1` only when `CrossProtocolCorrelate=1`; otherwise `0`. |
+| `ONLINE_CORRELATION_ENDPOINT` | rendered | Shared correlator URL when enabled; otherwise empty. |
+| `ONLINE_TRACE_BUFFER_MS` | `1000` | Max local wait for a shared cross-protocol trace ID. |
 | `F1AP_ENABLE_CORRELATION` | `1` | Add UE-context and transaction correlation attributes to spans. |
 | `F1AP_CORRELATION_MAX_CONTEXTS` | `10000` | Maximum tracked UE bindings before old contexts are evicted. |
 | `F1AP_ENABLE_PYCRATE` | `1` | Enable full pycrate APER decode. |

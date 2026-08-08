@@ -16,6 +16,7 @@ NUM_SLICES="${NUM_SLICES:-1}"
 RUN_MODE="${RUN_MODE:-rfsim}"
 DEPLOY_UE="${DEPLOY_UE:-${DeployUE:-1}}"
 RAN_PROXY="${RAN_PROXY:-${RanProxy:-0}}"
+CROSS_PROTOCOL_CORRELATE="${CROSS_PROTOCOL_CORRELATE:-${CrossProtocolCorrelate:-0}}"
 
 positional_args=()
 while [ "$#" -gt 0 ]; do
@@ -55,6 +56,18 @@ while [ "$#" -gt 0 ]; do
         RanProxy=*|ranProxy=*|ran_proxy=*)
             RAN_PROXY="${1#*=}"
             ;;
+        --CrossProtocolCorrelate|--cross_protocol_correlate|--cross-protocol-correlate)
+            opt="$1"
+            shift
+            [ "$#" -gt 0 ] || die "Missing value for $opt"
+            CROSS_PROTOCOL_CORRELATE="$1"
+            ;;
+        --CrossProtocolCorrelate=*|--cross_protocol_correlate=*|--cross-protocol-correlate=*)
+            CROSS_PROTOCOL_CORRELATE="${1#*=}"
+            ;;
+        CrossProtocolCorrelate=*|crossProtocolCorrelate=*|cross_protocol_correlate=*)
+            CROSS_PROTOCOL_CORRELATE="${1#*=}"
+            ;;
         --*)
             die "Unknown argument: $1"
             ;;
@@ -65,13 +78,14 @@ while [ "$#" -gt 0 ]; do
     shift
 done
 
-[ "${#positional_args[@]}" -le 6 ] || die "Too many positional arguments"
+[ "${#positional_args[@]}" -le 7 ] || die "Too many positional arguments"
 if [ "${#positional_args[@]}" -ge 1 ]; then USECASE="${positional_args[0]}"; fi
 if [ "${#positional_args[@]}" -ge 2 ]; then NUM_USERS="${positional_args[1]}"; fi
 if [ "${#positional_args[@]}" -ge 3 ]; then NUM_SLICES="${positional_args[2]}"; fi
 if [ "${#positional_args[@]}" -ge 4 ]; then RUN_MODE="${positional_args[3]}"; fi
 if [ "${#positional_args[@]}" -ge 5 ]; then DEPLOY_UE="${positional_args[4]}"; fi
 if [ "${#positional_args[@]}" -ge 6 ]; then RAN_PROXY="${positional_args[5]}"; fi
+if [ "${#positional_args[@]}" -ge 7 ]; then CROSS_PROTOCOL_CORRELATE="${positional_args[6]}"; fi
 
 NAMESPACE="${NAMESPACE:-oai}"
 OPMODE="${OPMODE:-OTEL}"
@@ -91,6 +105,11 @@ RAN_PROXY_TEMPLATE_SOURCE="$ROOT_DIR/control-plane-tracing/src/proxies/f1ap-sctp
 RAN_PROXY_NGAP_DIR="$RAN_DIR/ngap-proxy"
 RAN_PROXY_NGAP_MANIFEST="${RAN_PROXY_NGAP_MANIFEST:-$RAN_PROXY_NGAP_DIR/oai-ngap-proxy.yaml}"
 RAN_PROXY_NGAP_TEMPLATE_SOURCE="$ROOT_DIR/control-plane-tracing/src/proxies/ngap-sctp-proxy/k8s-example.yaml"
+CROSS_PROTOCOL_CORRELATOR_IMAGE="${CROSS_PROTOCOL_CORRELATOR_IMAGE:-docker.io/genechen0203/control-plane-correlator:latest}"
+CROSS_PROTOCOL_CORRELATOR_ENDPOINT="${CROSS_PROTOCOL_CORRELATOR_ENDPOINT:-http://control-plane-correlator:8080}"
+CROSS_PROTOCOL_CORRELATOR_DIR="$RAN_DIR/control-plane-correlator"
+CROSS_PROTOCOL_CORRELATOR_MANIFEST="${CROSS_PROTOCOL_CORRELATOR_MANIFEST:-$CROSS_PROTOCOL_CORRELATOR_DIR/oai-control-plane-correlator.yaml}"
+CROSS_PROTOCOL_CORRELATOR_TEMPLATE_SOURCE="$ROOT_DIR/control-plane-tracing/src/correlator/online/k8s-example.yaml"
 
 NRF_LOC="${NRF_LOC:-az}"
 UDR_LOC="${UDR_LOC:-az}"
@@ -128,6 +147,18 @@ case "$RAN_PROXY" in
         ;;
 esac
 
+case "$CROSS_PROTOCOL_CORRELATE" in
+    0|1)
+        ;;
+    *)
+        die "Unsupported CrossProtocolCorrelate '$CROSS_PROTOCOL_CORRELATE'. Supported values: 0, 1"
+        ;;
+esac
+
+if [ "$CROSS_PROTOCOL_CORRELATE" = "1" ] && [ "$RAN_PROXY" != "1" ]; then
+    die "CrossProtocolCorrelate=1 requires RanProxy=1"
+fi
+
 ran_usrp_type() {
     case "$1" in
         rfsim) echo "rfsim" ;;
@@ -135,11 +166,55 @@ ran_usrp_type() {
     esac
 }
 
+deploy_cross_protocol_correlator() {
+    local deployment_exists=0
+    local rendered_manifest
+
+    info "Deploying experimental online cross-protocol correlator"
+
+    mkdir -p "$CROSS_PROTOCOL_CORRELATOR_DIR"
+    if [ ! -f "$CROSS_PROTOCOL_CORRELATOR_MANIFEST" ]; then
+        info "Creating correlator manifest from $CROSS_PROTOCOL_CORRELATOR_TEMPLATE_SOURCE"
+        cp "$CROSS_PROTOCOL_CORRELATOR_TEMPLATE_SOURCE" "$CROSS_PROTOCOL_CORRELATOR_MANIFEST"
+    fi
+
+    rendered_manifest="$(mktemp)"
+    cp "$CROSS_PROTOCOL_CORRELATOR_MANIFEST" "$rendered_manifest"
+    set_yaml_value "$rendered_manifest" image "$CROSS_PROTOCOL_CORRELATOR_IMAGE"
+    set_yaml_value "$rendered_manifest" imagePullPolicy "Always"
+
+    if kubectl get deployment control-plane-correlator -n "$NAMESPACE" >/dev/null 2>&1; then
+        deployment_exists=1
+    fi
+
+    kubectl apply -n "$NAMESPACE" -f "$rendered_manifest"
+    rm -f "$rendered_manifest"
+
+    if [ "$deployment_exists" = "1" ]; then
+        info "Restarting the correlator to clear state from the previous deployment run"
+        kubectl rollout restart deployment/control-plane-correlator -n "$NAMESPACE"
+        kubectl rollout status deployment/control-plane-correlator -n "$NAMESPACE" --timeout=300s
+    fi
+
+    wait_for_pod "$NAMESPACE" "control-plane-correlator" 300 10
+}
+
+remove_cross_protocol_correlator() {
+    info "CrossProtocolCorrelate=0; ensuring the online correlator is not deployed"
+    kubectl delete deployment control-plane-correlator -n "$NAMESPACE" --ignore-not-found=true
+    kubectl delete service control-plane-correlator -n "$NAMESPACE" --ignore-not-found=true
+}
+
 deploy_ran_proxy_user() {
     local u="$1"
     local cu_ip="$2"
     local proxy_name="f1proxy$u"
+    local online_endpoint=""
     local rendered_manifest
+
+    if [ "$CROSS_PROTOCOL_CORRELATE" = "1" ]; then
+        online_endpoint="$CROSS_PROTOCOL_CORRELATOR_ENDPOINT"
+    fi
 
     info "Deploying experimental F1AP tracing proxy $proxy_name for CU $cu_ip"
 
@@ -159,6 +234,8 @@ deploy_ran_proxy_user() {
         -e "s|__RAN_LOC__|$RAN_LOC|g" \
         -e "s|__OTEL_ENDPOINT__|$RAN_PROXY_OTEL_ENDPOINT|g" \
         -e "s|__OTEL_INSECURE__|$RAN_PROXY_OTEL_INSECURE|g" \
+        -e "s|__ONLINE_CORRELATION_ENABLED__|$CROSS_PROTOCOL_CORRELATE|g" \
+        -e "s|__ONLINE_CORRELATION_ENDPOINT__|$online_endpoint|g" \
         "$rendered_manifest"
 
     set_yaml_value "$rendered_manifest" image "$RAN_PROXY_F1AP_IMAGE"
@@ -174,7 +251,12 @@ deploy_ngap_proxy_user() {
     local u="$1"
     local amf_ip="$2"
     local proxy_name="ngapproxy$u"
+    local online_endpoint=""
     local rendered_manifest
+
+    if [ "$CROSS_PROTOCOL_CORRELATE" = "1" ]; then
+        online_endpoint="$CROSS_PROTOCOL_CORRELATOR_ENDPOINT"
+    fi
 
     info "Deploying experimental NGAP tracing proxy $proxy_name for AMF $amf_ip"
 
@@ -194,6 +276,8 @@ deploy_ngap_proxy_user() {
         -e "s|__RAN_LOC__|$RAN_LOC|g" \
         -e "s|__OTEL_ENDPOINT__|$RAN_PROXY_OTEL_ENDPOINT|g" \
         -e "s|__OTEL_INSECURE__|$RAN_PROXY_OTEL_INSECURE|g" \
+        -e "s|__ONLINE_CORRELATION_ENABLED__|$CROSS_PROTOCOL_CORRELATE|g" \
+        -e "s|__ONLINE_CORRELATION_ENDPOINT__|$online_endpoint|g" \
         "$rendered_manifest"
 
     set_yaml_value "$rendered_manifest" image "$RAN_PROXY_NGAP_IMAGE"
@@ -486,6 +570,12 @@ deploy_oai_ran_user() {
 }
 
 install_mysql_if_needed
+
+if [ "$CROSS_PROTOCOL_CORRELATE" = "1" ]; then
+    deploy_cross_protocol_correlator
+else
+    remove_cross_protocol_correlator
+fi
 
 slice_end=$((NUM_SLICES + 9))
 u=10

@@ -15,6 +15,7 @@ AUTO_CLEANUP="${AUTO_CLEANUP:-0}"
 RUN_MODE="${RUN_MODE:-rfsim}"
 DEPLOY_UE="${DEPLOY_UE:-${DeployUE:-1}}"
 RAN_PROXY="${RAN_PROXY:-${RanProxy:-0}}"
+CROSS_PROTOCOL_CORRELATE="${CROSS_PROTOCOL_CORRELATE:-${CrossProtocolCorrelate:-0}}"
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -53,6 +54,18 @@ while [ "$#" -gt 0 ]; do
         RanProxy=*|ranProxy=*|ran_proxy=*)
             RAN_PROXY="${1#*=}"
             ;;
+        --CrossProtocolCorrelate|--cross_protocol_correlate|--cross-protocol-correlate)
+            opt="$1"
+            shift
+            [ "$#" -gt 0 ] || die "Missing value for $opt"
+            CROSS_PROTOCOL_CORRELATE="$1"
+            ;;
+        --CrossProtocolCorrelate=*|--cross_protocol_correlate=*|--cross-protocol-correlate=*)
+            CROSS_PROTOCOL_CORRELATE="${1#*=}"
+            ;;
+        CrossProtocolCorrelate=*|crossProtocolCorrelate=*|cross_protocol_correlate=*)
+            CROSS_PROTOCOL_CORRELATE="${1#*=}"
+            ;;
         *)
             die "Unknown argument: $1"
             ;;
@@ -84,8 +97,20 @@ case "$RAN_PROXY" in
         ;;
 esac
 
+case "$CROSS_PROTOCOL_CORRELATE" in
+    0|1)
+        ;;
+    *)
+        die "Unsupported CrossProtocolCorrelate '$CROSS_PROTOCOL_CORRELATE'. Supported values: 0, 1"
+        ;;
+esac
+
+if [ "$CROSS_PROTOCOL_CORRELATE" = "1" ] && [ "$RAN_PROXY" != "1" ]; then
+    die "CrossProtocolCorrelate=1 requires RanProxy=1"
+fi
+
 info "Starting 5GMAP with OAI RAN"
-info "usecase=${USECASE}, users=${NUM_USERS}, slices=${NUM_SLICES}, iterations=${NUM_ITERATIONS}, test_type=${TEST_TYPE}, run_mode=${RUN_MODE}, DeployUE=${DEPLOY_UE}, RanProxy=${RAN_PROXY}"
+info "usecase=${USECASE}, users=${NUM_USERS}, slices=${NUM_SLICES}, iterations=${NUM_ITERATIONS}, test_type=${TEST_TYPE}, run_mode=${RUN_MODE}, DeployUE=${DEPLOY_UE}, RanProxy=${RAN_PROXY}, CrossProtocolCorrelate=${CROSS_PROTOCOL_CORRELATE}"
 
 "$SCRIPT_DIR/deploy.sh" \
     "$USECASE" \
@@ -93,7 +118,8 @@ info "usecase=${USECASE}, users=${NUM_USERS}, slices=${NUM_SLICES}, iterations=$
     "$NUM_SLICES" \
     "$RUN_MODE" \
     "$DEPLOY_UE" \
-    "$RAN_PROXY"
+    "$RAN_PROXY" \
+    "$CROSS_PROTOCOL_CORRELATE"
 
 if [ "$DEPLOY_UE" = "1" ]; then
     "$SCRIPT_DIR/start_traffic.sh" \

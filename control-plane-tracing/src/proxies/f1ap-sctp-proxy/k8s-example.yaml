@@ -57,6 +57,18 @@ spec:
               value: "2"
             - name: TRACE_QUEUE_SIZE
               value: "10000"
+            - name: ONLINE_CORRELATION_ENABLED
+              value: "__ONLINE_CORRELATION_ENABLED__"
+            - name: ONLINE_CORRELATION_ENDPOINT
+              value: "__ONLINE_CORRELATION_ENDPOINT__"
+            - name: ONLINE_CORRELATION_TIMEOUT_MS
+              value: "100"
+            - name: ONLINE_CORRELATION_FAIL_OPEN
+              value: "1"
+            - name: ONLINE_TRACE_BUFFER_MS
+              value: "1000"
+            - name: ONLINE_TRACE_BUFFER_MAX_EVENTS
+              value: "256"
             - name: F1AP_ENABLE_CORRELATION
               value: "1"
             - name: F1AP_CORRELATION_MAX_CONTEXTS

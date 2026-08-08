@@ -16,18 +16,37 @@ control-plane paths:
 RanProxy=1 ./script/run.sh
 ```
 
+Cross-protocol correlation is controlled separately and is disabled by
+default. Enable it only together with the RAN proxies:
+
+```bash
+RanProxy=1 CrossProtocolCorrelate=1 ./script/run.sh
+```
+
 Equivalent CLI forms:
 
 ```bash
 ./script/run.sh --RanProxy 1
-./script/deploy.sh zoomv3 1 1 rfsim 1 1
+./script/run.sh --RanProxy 1 --CrossProtocolCorrelate 1
+./script/deploy.sh zoomv3 1 1 rfsim 1 1 1
 ./script/deploy.sh zoomv3 1 1 --RanProxy 1
+./script/deploy.sh zoomv3 1 1 --RanProxy 1 --CrossProtocolCorrelate 1
 ```
 
 When `RanProxy=1`, `deploy.sh` deploys one `ngapproxy<user>` and one
 `f1proxy<user>` per RAN user. It points the CU AMF target to `ngapproxy<user>`
 and the DU F1-C target to `f1proxy<user>`. When `RanProxy=0`, the CU connects
 directly to the AMF and the DU connects directly to the CU as before.
+
+When `CrossProtocolCorrelate=1`, `deploy.sh` also deploys one shared
+`control-plane-correlator` and enables its client in every F1AP and NGAP proxy.
+UE-related spans are then eligible to share one cross-protocol trace ID. When
+`CrossProtocolCorrelate=0`, the correlator is removed and both proxy manifests
+are rendered with `ONLINE_CORRELATION_ENABLED=0` and an empty endpoint, which
+preserves the previous protocol-local tracing behavior.
+
+`CrossProtocolCorrelate=1` requires `RanProxy=1`; the scripts reject the
+otherwise unusable combination.
 
 Useful image variables:
 
@@ -38,11 +57,13 @@ RAN_PROXY_F1C_PORT       Default: 38472
 RAN_PROXY_NGAP_PORT      Default: 38412
 RAN_PROXY_OTEL_ENDPOINT  Default: http://opentelemetry-collector.otel.svc.cluster.local:4317
 RAN_PROXY_OTEL_INSECURE  Default: true
+CROSS_PROTOCOL_CORRELATOR_IMAGE     Default: docker.io/genechen0203/control-plane-correlator:latest
+CROSS_PROTOCOL_CORRELATOR_ENDPOINT  Default: http://control-plane-correlator:8080
 ```
 
-`undeploy.sh` always attempts to remove `f1proxy<user>` and `ngapproxy<user>`
-resources, so it is safe to run cleanup after either `RanProxy=0` or
-`RanProxy=1`.
+`undeploy.sh` always attempts to remove `f1proxy<user>`, `ngapproxy<user>`, and
+the shared `control-plane-correlator` resources, so it is safe to run cleanup
+after either flag combination.
 
 # 5GMAP Script 使用說明
 
@@ -252,7 +273,7 @@ AUTO_CLEANUP=1 DELETE_MYSQL=1 ./script/run.sh --runmode rfsim --DeployUE 1
 參數順序是：
 
 ```text
-deploy.sh <USECASE> <NUM_USERS> <NUM_SLICES> [RUN_MODE] [DeployUE]
+deploy.sh <USECASE> <NUM_USERS> <NUM_SLICES> [RUN_MODE] [DeployUE] [RanProxy] [CrossProtocolCorrelate]
 ```
 
 例如只部署 USRP B210/B200 模式：

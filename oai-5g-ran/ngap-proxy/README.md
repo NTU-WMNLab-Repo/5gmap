@@ -15,8 +15,9 @@ scripts when the RAN proxy option is enabled.
   proxy.
 
 The deployment script renders placeholders such as `__PROXY_NAME__`,
-`__AMF_HOST__`, `__NGAP_PORT__`, `__OTEL_ENDPOINT__`, and `__RAN_LOC__` before
-applying the manifest.
+`__AMF_HOST__`, `__NGAP_PORT__`, `__OTEL_ENDPOINT__`,
+`__ONLINE_CORRELATION_ENABLED__`, `__ONLINE_CORRELATION_ENDPOINT__`, and
+`__RAN_LOC__` before applying the manifest.
 
 The default image is:
 
@@ -36,6 +37,11 @@ NGAP_PYCRATE_MODULE=pycrate_asn1dir.NGAP
 NGAP_PYCRATE_OBJECT=NGAP_PDU_Descriptions.NGAP_PDU
 ASN1_INCLUDE_VALUE=0
 ```
+
+Online cross-protocol correlation is rendered separately by the deployment
+script. `CrossProtocolCorrelate=1` sets `ONLINE_CORRELATION_ENABLED=1` and the
+shared correlator endpoint. The default `0` setting disables the client and
+keeps NGAP spans in their previous protocol-local traces.
 
 `ASN1_INCLUDE_VALUE` is disabled for normal runs so Jaeger receives promoted
 control-plane attributes without storing the full decoded ASN.1 value.
