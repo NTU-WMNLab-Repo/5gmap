@@ -61,6 +61,12 @@ For OAI DU deployments, both the high-level CU host value and the generated
 | `TRACE_QUEUE_SIZE` | `10000` | Async decode/tracing queue depth. |
 | `F1AP_ENABLE_CORRELATION` | `1` | Add UE-context and transaction correlation attributes to spans. |
 | `F1AP_CORRELATION_MAX_CONTEXTS` | `10000` | Maximum tracked UE bindings before old contexts are evicted. |
+| `ONLINE_CORRELATION_ENABLED` | `1` | Enable online cross-protocol correlation when `ONLINE_CORRELATION_ENDPOINT` is set. |
+| `ONLINE_CORRELATION_ENDPOINT` | unset | Optional online correlator base URL. Leave unset to keep the current per-span trace behavior. |
+| `ONLINE_CORRELATION_TIMEOUT_MS` | `100` | HTTP timeout from the trace worker to the online correlator. |
+| `ONLINE_CORRELATION_FAIL_OPEN` | `1` | Export spans without an online trace ID if the correlator is unavailable. |
+| `ONLINE_TRACE_BUFFER_MS` | `1000` | UE-related span export buffer timeout while waiting for cross-protocol evidence. |
+| `ONLINE_TRACE_BUFFER_MAX_EVENTS` | `256` | Max processed UE spans buffered by this proxy worker. |
 | `F1AP_ENABLE_PYCRATE` | `1` | Enable pycrate APER decode. Set to `0` for lightweight-only decode. |
 | `F1AP_PYCRATE_MODULE` | `pycrate_asn1dir.F1AP` | pycrate F1AP module name. |
 | `F1AP_PYCRATE_OBJECT` | `F1AP_PDU_Descriptions.F1AP_PDU` | pycrate F1AP root object path. |

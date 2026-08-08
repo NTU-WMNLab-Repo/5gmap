@@ -12,6 +12,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from correlator.f1ap import F1apCorrelator  # noqa: E402
+from correlator.online.client import OnlineCorrelatorClient  # noqa: E402
 from protocols.f1ap.decoder import F1apDecoder  # noqa: E402
 from proxies.sctp.async_trace_worker import AsyncTraceWorker  # noqa: E402
 from proxies.sctp.relay import SctpRelay, SctpRelayConfig  # noqa: E402
@@ -63,6 +64,7 @@ def run_proxy() -> None:
     cfg = load_config()
     decoder = F1apDecoder()
     correlator = F1apCorrelator.from_env()
+    online_correlator = OnlineCorrelatorClient.from_env(cfg.service_name)
 
     worker = AsyncTraceWorker(
         service_name=cfg.service_name,
@@ -70,6 +72,7 @@ def run_proxy() -> None:
         decoder=decoder,
         queue_size=cfg.trace_queue_size,
         correlator=correlator,
+        online_correlator=online_correlator,
     )
     worker.start()
 

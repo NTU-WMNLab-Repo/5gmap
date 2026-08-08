@@ -48,6 +48,12 @@ The proxy's `AMF_HOST` points to the real AMF service or pod IP.
 | `TRACE_QUEUE_SIZE` | `10000` | Async decode/tracing queue depth. |
 | `NGAP_ENABLE_CORRELATION` | `1` | Enable NGAP UE correlation attributes. |
 | `NGAP_CORRELATION_MAX_CONTEXTS` | `10000` | Maximum in-memory NGAP UE bindings. |
+| `ONLINE_CORRELATION_ENABLED` | `1` | Enable online cross-protocol correlation when `ONLINE_CORRELATION_ENDPOINT` is set. |
+| `ONLINE_CORRELATION_ENDPOINT` | unset | Optional online correlator base URL. Leave unset to keep the current per-span trace behavior. |
+| `ONLINE_CORRELATION_TIMEOUT_MS` | `100` | HTTP timeout from the trace worker to the online correlator. |
+| `ONLINE_CORRELATION_FAIL_OPEN` | `1` | Export spans without an online trace ID if the correlator is unavailable. |
+| `ONLINE_TRACE_BUFFER_MS` | `1000` | UE-related span export buffer timeout while waiting for cross-protocol evidence. |
+| `ONLINE_TRACE_BUFFER_MAX_EVENTS` | `256` | Max processed UE spans buffered by this proxy worker. |
 | `NGAP_ENABLE_PYCRATE` | `1` | Enable pycrate APER decode. Set `0` to use lightweight decode only. |
 | `NGAP_PYCRATE_MODULE` | `pycrate_asn1dir.NGAP` | pycrate NGAP module to import. |
 | `NGAP_PYCRATE_OBJECT` | `NGAP_PDU_Descriptions.NGAP_PDU` | pycrate NGAP root object. |
