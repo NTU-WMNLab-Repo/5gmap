@@ -4,6 +4,14 @@ Correlators consume decoded control-plane messages from the async trace worker
 and return extra span attributes. They run after packet forwarding, so
 correlation cost is trace-worker cost, not forwarding-path latency.
 
+## Online Cross-Protocol Correlation
+
+`online/` contains the first online F1AP/NGAP UE lifecycle correlator service.
+It assigns a shared trace ID for the same UE lifecycle across proxy pods while
+leaving full span export in the protocol proxies. See `online/README.md` for the
+HTTP API, internal state tables, lifecycle states, timeout behavior, and proxy
+buffering flow.
+
 ## F1AP
 
 `f1ap.py` tracks UE bindings using scalar fields promoted by the F1AP decoder:
