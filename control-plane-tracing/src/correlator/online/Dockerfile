@@ -6,4 +6,4 @@ COPY correlator ./correlator
 
 EXPOSE 8080
 
-CMD ["python", "-u", "correlator/online/server.py"]
+CMD ["python", "-u", "-m", "correlator.online.server"]
