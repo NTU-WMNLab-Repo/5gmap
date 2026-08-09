@@ -1,0 +1,16 @@
+NAME                                        READY   STATUS    RESTARTS   AGE   IP            NODE            NOMINATED NODE   READINESS GATES
+control-plane-correlator-59965dfb98-bdzfl   1/1     Running   0          23m   10.42.2.213   192.168.1.240   <none>           <none>
+f1proxy10-6dd4dc845f-8kvdp                  1/1     Running   0          20m   10.42.1.109   192.168.1.68    <none>           <none>
+mysql-69c4c947fc-wlhgp                      1/1     Running   0          24m   10.42.2.212   192.168.1.240   <none>           <none>
+ngapproxy10-69655d5677-96xml                1/1     Running   0          21m   10.42.1.107   192.168.1.68    <none>           <none>
+oai-amf10-847c8b5599-5bsw2                  3/3     Running   0          22m   10.42.2.218   192.168.1.240   <none>           <none>
+oai-ausf10-d7c485c68-hw5gk                  3/3     Running   0          22m   10.42.2.217   192.168.1.240   <none>           <none>
+oai-dnn10-767ddc7f4b-qzv2d                  1/1     Running   0          18m   10.42.2.221   192.168.1.240   <none>           <none>
+oai-gnb-cu10-7cc59cb9b4-sx54z               2/2     Running   0          21m   10.42.1.108   192.168.1.68    <none>           <none>
+oai-gnb-du10-5cf7896486-7lvvx               2/2     Running   0          20m   10.42.1.110   192.168.1.68    <none>           <none>
+oai-nr-ue10-86955c7cff-twpbn                2/2     Running   0          15m   10.42.1.114   192.168.1.68    <none>           <none>
+oai-nrf10-5f87f6cb87-55pls                  3/3     Running   0          23m   10.42.2.214   192.168.1.240   <none>           <none>
+oai-smf10-b87f44b99-txhxp                   3/3     Running   0          22m   10.42.2.219   192.168.1.240   <none>           <none>
+oai-spgwu-tiny10-6579fd59b-5dc6w            2/2     Running   0          21m   10.42.2.220   192.168.1.240   <none>           <none>
+oai-udm10-fd7f5fddd-vs9nw                   3/3     Running   0          22m   10.42.2.216   192.168.1.240   <none>           <none>
+oai-udr10-58798fbb58-r68bl                  3/3     Running   0          22m   10.42.2.215   192.168.1.240   <none>           <none>
