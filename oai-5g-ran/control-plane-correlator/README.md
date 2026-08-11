@@ -15,6 +15,11 @@ The deployment script renders the image from
 `control-plane-correlator` service, and configures every F1AP and NGAP proxy to
 call `http://control-plane-correlator:8080` by default.
 
+The manifest also configures OTLP export for the correlator's `UE lifecycle`
+root spans. The root exports immediately after a cross-protocol match, so F1AP
+and NGAP proxy spans use a visible shared parent. A later release exports a
+`UE lifecycle summary` child span with the final lifecycle state.
+
 If the Deployment already exists, `deploy.sh` restarts it after applying the
 manifest so each deployment run starts with an empty in-memory correlation
 state.

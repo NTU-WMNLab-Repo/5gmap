@@ -6,15 +6,21 @@ The online correlator is a lightweight HTTP state service for assigning one
 OpenTelemetry trace ID to the same UE control-plane lifecycle across F1AP and
 NGAP proxy pods.
 
-It does not forward packets, decode ASN.1, export spans, or store full decoded
-payloads. The F1AP and NGAP proxies still export the complete spans themselves.
-The correlator only receives a compact UE-correlation envelope and returns the
-trace identity that the proxy should use before exporting the span.
+It does not forward packets, decode ASN.1, or store full decoded payloads. The
+F1AP and NGAP proxies still export the complete protocol spans themselves. The
+correlator receives only a compact UE-correlation envelope, creates one
+OpenTelemetry `UE lifecycle` root span after a cross-protocol match, and
+returns that real root span identity to the proxies.
 
-The first version does not export a synthetic UE lifecycle root span. Proxies
-use the returned trace ID and parent span ID as a remote parent context so F1AP
-and NGAP spans appear in the same Jaeger trace. A later version can add an
-explicit root span if the trace tree needs a visible lifecycle parent.
+The root span keeps the Jaeger trace tree valid: F1AP and NGAP spans use it as
+a remote parent. It ends and exports immediately when binding succeeds, so the
+root is visible before a UE release. When both observed protocols emit
+`UEContextReleaseComplete`, the correlator exports a `UE lifecycle summary`
+child span with final state, close reason, and observed duration. The root
+duration covers first observation through binding; the summary carries the
+complete observed UE lifecycle duration.
+Protocol-local pending spans receive no synthetic parent and remain ordinary
+local root spans if matching never completes.
 
 This service belongs under `src/correlator/online/` because it is shared
 cross-protocol correlation state. Protocol-local correlators remain in
@@ -73,8 +79,8 @@ Return body:
 
 ```json
 {
-  "trace_id": "128-bit lowercase hex trace ID",
-  "parent_span_id": "64-bit lowercase hex parent span ID",
+  "trace_id": "128-bit lowercase hex trace ID or null while pending",
+  "parent_span_id": "actual UE lifecycle root span ID or null while pending",
   "ue_correlation_id": "ue-online-00000001",
   "state": "pending",
   "confidence": "local",
@@ -152,8 +158,9 @@ Keyed by `ue-online-NNNNNNNN`.
 
 Stored fields:
 
-- canonical `trace_id`;
-- synthetic `parent_span_id` used by proxies as a remote parent context;
+- canonical `trace_id` after cross-protocol match;
+- actual immediately exported `UE lifecycle` root span ID used by proxies as a
+  remote parent context;
 - lifecycle state;
 - linked F1AP local lifecycle keys;
 - linked NGAP local lifecycle keys;
@@ -218,8 +225,8 @@ Flow:
 4. If no UE ID/correlation attribute exists, export span immediately.
 5. If UE-related and online correlation is enabled, send compact envelope to
    /v1/events.
-6. If correlator returns matched/closing/closed, export span with returned
-   trace_id.
+6. If correlator returns matched/closing/closed, export span as a child of the
+   returned `UE lifecycle` root span.
 7. If correlator returns pending, keep the processed span in the local proxy
    buffer until either:
    - a later event resolves the lifecycle to matched/closing/closed;
@@ -241,10 +248,10 @@ is not enough to safely join F1AP and NGAP.
 
 Trace behavior:
 
-- correlator allocates a trace ID;
+- correlator does not allocate a shared trace ID or synthetic parent yet;
 - proxy may buffer UE-related spans briefly;
-- if buffer timeout expires, the span is exported as a local-only UE trace with
-  `ue.online.state=pending`.
+- if buffer timeout expires, the span is exported as a normal local root span
+  with `ue.online.state=pending`.
 
 ### `matched`
 
@@ -252,7 +259,10 @@ F1AP and NGAP lifecycles are linked with cross-protocol evidence.
 
 Trace behavior:
 
-- F1AP and NGAP proxies export subsequent UE spans using the same trace ID;
+- correlator starts one real `UE lifecycle` root span at the first observed UE
+  timestamp and ends/exports it when binding succeeds;
+- F1AP and NGAP proxies export subsequent UE spans under that same root and
+  trace ID;
 - buffered spans are resolved and exported using that trace ID when possible.
 
 ### `closing`
@@ -263,7 +273,8 @@ linked protocol has not yet emitted release complete.
 Trace behavior:
 
 - keep using the same trace ID;
-- wait for the other protocol release or timeout.
+- wait for the other protocol release; a matched lifecycle is not closed just
+  because the UE is temporarily quiet.
 
 ### `closed`
 
@@ -273,6 +284,9 @@ single-protocol lifecycle reached release before any cross-protocol match.
 Trace behavior:
 
 - later reused IDs should create a new lifecycle and a new trace ID;
+- for a previously matched lifecycle, correlator exports a `UE lifecycle
+  summary` child span at the last observed packet timestamp, with the final
+  state, close reason, and total observed duration;
 - closed state is retained until eviction.
 
 ### `forced_closed`
@@ -281,7 +295,8 @@ State was closed without a complete normal release sequence.
 
 Forced-close reasons:
 
-- `idle_timeout`: no new event before `ONLINE_CORRELATION_IDLE_TIMEOUT_MS`;
+- `idle_timeout`: an unmatched `pending` lifecycle receives no new event before
+  `ONLINE_CORRELATION_IDLE_TIMEOUT_MS`;
 - `id_reuse`: a closed lifecycle key is reused for a new lifecycle;
 - future association/CU restart handling can use the same state.
 
@@ -300,8 +315,11 @@ Service:
 | `ONLINE_CORRELATOR_PORT` | `8080` | HTTP listen port. |
 | `ONLINE_CORRELATION_INITIAL_GAP_MS` | `1000` | Max F1AP InitialULRRC to NGAP InitialUE gap for strong match evidence. |
 | `ONLINE_CORRELATION_RELEASE_GAP_MS` | `5000` | Release-complete alignment window. |
-| `ONLINE_CORRELATION_IDLE_TIMEOUT_MS` | `60000` | Idle forced-close timeout. |
+| `ONLINE_CORRELATION_IDLE_TIMEOUT_MS` | `60000` | Idle forced-close timeout for unmatched `pending` lifecycles only. |
 | `ONLINE_CORRELATION_MAX_LIFECYCLES` | `10000` | Max retained global lifecycles before eviction. |
+| `OTEL_SERVICE_NAME` | `control-plane-correlator` | Service name on `UE lifecycle` root spans. |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | cluster collector endpoint | OTLP endpoint for lifecycle root spans. |
+| `OTEL_EXPORTER_OTLP_INSECURE` | `true` | Use insecure OTLP gRPC inside the cluster. |
 
 Proxy client:
 

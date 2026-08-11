@@ -5,15 +5,19 @@ import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
+from correlator.online.lifecycle_trace import LifecycleTraceEmitter
 from correlator.online.state import OnlineCorrelatorState
 
 
-def load_state_from_env() -> OnlineCorrelatorState:
+def load_state_from_env(
+    lifecycle_tracer: LifecycleTraceEmitter | None = None,
+) -> OnlineCorrelatorState:
     return OnlineCorrelatorState(
         initial_gap_ms=float(os.getenv("ONLINE_CORRELATION_INITIAL_GAP_MS", "1000")),
         release_gap_ms=float(os.getenv("ONLINE_CORRELATION_RELEASE_GAP_MS", "5000")),
         idle_timeout_ms=float(os.getenv("ONLINE_CORRELATION_IDLE_TIMEOUT_MS", "60000")),
         max_lifecycles=int(os.getenv("ONLINE_CORRELATION_MAX_LIFECYCLES", "10000")),
+        lifecycle_tracer=lifecycle_tracer,
     )
 
 
@@ -77,7 +81,10 @@ def run() -> None:
     configure_logging()
     host = os.getenv("ONLINE_CORRELATOR_HOST", "0.0.0.0")
     port = int(os.getenv("ONLINE_CORRELATOR_PORT", "8080"))
-    CorrelatorHandler.state = load_state_from_env()
+    lifecycle_tracer = LifecycleTraceEmitter(
+        os.getenv("OTEL_SERVICE_NAME", "control-plane-correlator")
+    )
+    CorrelatorHandler.state = load_state_from_env(lifecycle_tracer)
     server = ThreadingHTTPServer((host, port), CorrelatorHandler)
     logging.info("Online correlator listening on %s:%d", host, port)
     server.serve_forever()

@@ -1,9 +1,11 @@
-import secrets
 import threading
 import time
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
+
+if TYPE_CHECKING:
+    from correlator.online.lifecycle_trace import LifecycleTraceEmitter
 
 
 F1AP = "f1ap"
@@ -56,8 +58,8 @@ class ProtocolLifecycle:
 @dataclass
 class GlobalLifecycle:
     ue_correlation_id: str
-    trace_id: str
-    parent_span_id: str
+    trace_id: Optional[str]
+    parent_span_id: Optional[str]
     state: str
     first_seen_ns: int
     last_seen_ns: int
@@ -87,11 +89,13 @@ class OnlineCorrelatorState:
         release_gap_ms: float = 5000.0,
         idle_timeout_ms: float = 60000.0,
         max_lifecycles: int = 10000,
+        lifecycle_tracer: Optional["LifecycleTraceEmitter"] = None,
     ) -> None:
         self.initial_gap_ns = int(initial_gap_ms * 1_000_000)
         self.release_gap_ns = int(release_gap_ms * 1_000_000)
         self.idle_timeout_ns = int(idle_timeout_ms * 1_000_000)
         self.max_lifecycles = max_lifecycles
+        self.lifecycle_tracer = lifecycle_tracer
         self._lock = threading.Lock()
         self._next_global = 1
         self._protocols: dict[str, dict[str, ProtocolLifecycle]] = {
@@ -125,6 +129,7 @@ class OnlineCorrelatorState:
 
             self._update_global_from_protocol(global_lifecycle, lifecycle)
             self._refresh_global_state(global_lifecycle)
+            self._sync_lifecycle_trace(global_lifecycle)
             self._evict_if_needed()
             return self._response(global_lifecycle, lifecycle)
 
@@ -147,6 +152,7 @@ class OnlineCorrelatorState:
                 return self._none_response("unknown_global_lifecycle")
 
             self._refresh_global_state(global_lifecycle)
+            self._sync_lifecycle_trace(global_lifecycle)
             return self._response(global_lifecycle, lifecycle)
 
     def snapshot(self) -> dict[str, Any]:
@@ -357,8 +363,8 @@ class OnlineCorrelatorState:
         self._next_global += 1
         lifecycle = GlobalLifecycle(
             ue_correlation_id=ue_correlation_id,
-            trace_id=secrets.token_hex(16),
-            parent_span_id=nonzero_span_id(),
+            trace_id=None,
+            parent_span_id=None,
             state=STATE_PENDING,
             first_seen_ns=event_time_ns,
             last_seen_ns=event_time_ns,
@@ -366,18 +372,45 @@ class OnlineCorrelatorState:
         self._globals[ue_correlation_id] = lifecycle
         return lifecycle
 
+    def _sync_lifecycle_trace(self, global_lifecycle: GlobalLifecycle) -> None:
+        if not global_lifecycle.f1ap_keys or not global_lifecycle.ngap_keys:
+            return
+        if self.lifecycle_tracer is None:
+            return
+
+        if global_lifecycle.trace_id is None or global_lifecycle.parent_span_id is None:
+            identity = self.lifecycle_tracer.start(
+                global_lifecycle.ue_correlation_id,
+                global_lifecycle.first_seen_ns,
+                global_lifecycle.last_seen_ns,
+                global_lifecycle.linked_protocols(),
+            )
+            global_lifecycle.trace_id = identity.trace_id
+            global_lifecycle.parent_span_id = identity.span_id
+
+        if global_lifecycle.state in {STATE_CLOSED, STATE_FORCED_CLOSED}:
+            self.lifecycle_tracer.finish(
+                global_lifecycle.ue_correlation_id,
+                global_lifecycle.state,
+                global_lifecycle.close_reason,
+                global_lifecycle.linked_protocols(),
+                global_lifecycle.first_seen_ns,
+                global_lifecycle.last_seen_ns,
+            )
+
     def _force_close_global(self, global_id: str, reason: str) -> None:
         lifecycle = self._globals.get(global_id)
         if lifecycle is None:
             return
         lifecycle.state = STATE_FORCED_CLOSED
         lifecycle.close_reason = reason
+        self._sync_lifecycle_trace(lifecycle)
 
     def _expire_idle(self, now_ns: int) -> None:
         if self.idle_timeout_ns <= 0:
             return
         for global_lifecycle in self._globals.values():
-            if global_lifecycle.state in {STATE_CLOSED, STATE_FORCED_CLOSED}:
+            if global_lifecycle.state != STATE_PENDING:
                 continue
             if now_ns - global_lifecycle.last_seen_ns > self.idle_timeout_ns:
                 global_lifecycle.state = STATE_FORCED_CLOSED
@@ -398,6 +431,10 @@ class OnlineCorrelatorState:
             self._remove_global(victim)
 
     def _remove_global(self, global_lifecycle: GlobalLifecycle) -> None:
+        if global_lifecycle.state not in {STATE_CLOSED, STATE_FORCED_CLOSED}:
+            self._force_close_global(global_lifecycle.ue_correlation_id, "evicted")
+        else:
+            self._sync_lifecycle_trace(global_lifecycle)
         for key in global_lifecycle.f1ap_keys:
             self._protocols[F1AP].pop(key, None)
             self._remove_active_alias(F1AP, key)
@@ -563,13 +600,6 @@ def parse_int(value: Any) -> Optional[int]:
         except ValueError:
             return None
     return None
-
-
-def nonzero_span_id() -> str:
-    while True:
-        value = secrets.token_hex(8)
-        if value != "0000000000000000":
-            return value
 
 
 def lifecycles_overlap(left: ProtocolLifecycle, right: ProtocolLifecycle) -> bool:
