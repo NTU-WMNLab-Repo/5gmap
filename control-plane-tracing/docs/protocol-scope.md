@@ -20,14 +20,6 @@
 - Useful identifiers: CU UE F1AP ID, DU UE F1AP ID, transaction/procedure,
   tunnel endpoint information carried by control messages.
 
-## E1AP
-
-- Interface: CU-CP to CU-UP.
-- Transport: SCTP.
-- Encoding: ASN.1 PER.
-- Trace approach: similar to F1AP, but focused on bearer/session setup between
-  control and user-plane CU components.
-
 ## PFCP
 
 - Interface: SMF to UPF.
@@ -37,6 +29,15 @@
   and TEIDs assigned inside session establishment/modification messages.
 - Avoid vendor/private IE injection unless there is a specific interoperability
   experiment.
+
+## E1AP
+
+- Decision: out of scope for the current deployment.
+- Reason: this OAI RAN version deploys its CU functionality as one combined
+  component, not separate CU-CP and CU-UP components. There is therefore no
+  exposed CU-CP to CU-UP E1 SCTP association for a transparent proxy to
+  intercept.
+- Revisit only when the deployment exposes separate CU-CP and CU-UP endpoints.
 
 ## GTP-U
 

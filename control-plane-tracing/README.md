@@ -29,9 +29,13 @@ In scope:
 
 - NGAP over SCTP;
 - F1AP/F1-C over SCTP;
-- E1AP over SCTP;
 - PFCP over UDP;
 - control messages that create, modify, release, or bind UE/session context.
+
+E1AP is out of scope for this deployment. The currently deployed OAI RAN uses
+a combined CU implementation rather than separately deployed CU-CP and CU-UP
+components, so it has no external E1 interface that a proxy can observe. E1AP
+can be reconsidered only with a deployment that exposes CU-CP to CU-UP SCTP.
 
 Out of scope for now:
 
@@ -63,7 +67,6 @@ control-plane-tracing/
     protocols/
       ngap/
       f1ap/
-      e1ap/
       pfcp/
     proxies/
       sctp/

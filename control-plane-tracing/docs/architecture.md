@@ -10,7 +10,7 @@ The current sidecar in `src/` is HTTP-oriented:
 - its init container redirects TCP service traffic to the proxy.
 
 That model is a good fit for 5GC SBA APIs, but it does not directly apply to
-NGAP, F1AP, E1AP, PFCP, or lower-layer RAN traffic.
+NGAP, F1AP, PFCP, or lower-layer RAN traffic.
 
 ## Proposed Control-Plane Model
 
@@ -36,7 +36,7 @@ control-plane identifiers:
 - node pair and interface;
 - procedure code / message type;
 - RAN UE NGAP ID and AMF UE NGAP ID;
-- CU/DU/E1AP UE identifiers;
+- CU/DU UE identifiers;
 - PDU Session ID;
 - SEID / F-SEID from PFCP;
 - TEID values that are assigned by control messages;
@@ -53,4 +53,3 @@ and attributes instead of forcing a misleading parent-child tree.
    decoding.
 3. Add a shared correlator API.
 4. Add NGAP and PFCP after the F1-C path is stable.
-
