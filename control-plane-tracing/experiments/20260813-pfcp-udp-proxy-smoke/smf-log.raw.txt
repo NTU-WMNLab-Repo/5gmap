@@ -1,0 +1,303 @@
+2026-08-13T15:26:49.069923730Z [2026-08-13T15:26:49.069688] [smf] [smf_app] [debug] Resolving an FQDN/IP Addr for an UPF node
+2026-08-13T15:26:49.069972395Z [2026-08-13T15:26:49.069719] [smf] [smf_app] [warn ] Failed to receive PFCP Association Response, Retrying .....!!
+2026-08-13T15:26:49.069985948Z [2026-08-13T15:26:49.069724] [smf] [smf_app] [debug] Start a PFCP Association procedure with an UPF
+2026-08-13T15:26:49.070027207Z [2026-08-13T15:26:49.069729] [smf] [smf_app] [debug] Resolving an FQDN/IP Addr for an UPF node
+2026-08-13T15:26:49.070036460Z [2026-08-13T15:26:49.069732] [smf] [smf_app] [info ] TODO purge sessions of this node
+2026-08-13T15:26:49.071712910Z [2026-08-13T15:26:49.071695] [smf] [smf_n4 ] [info ] handle_receive(53 bytes)
+2026-08-13T15:26:49.071738686Z [2026-08-13T15:26:49.071724] [smf] [smf_n4 ] [debug] handle_receive_pfcp_msg msg type 6 length 49
+2026-08-13T15:26:49.071739727Z [2026-08-13T15:26:49.071727] [smf] [smf_n4 ] [info ] Received N4 ASSOCIATION SETUP RESPONSE from an UPF
+2026-08-13T15:26:49.071740659Z [2026-08-13T15:26:49.071730] [smf] [smf_n4 ] [info ] Received N4 ASSOCIATION SETUP RESPONSE
+2026-08-13T15:26:49.071741570Z [2026-08-13T15:26:49.071731] [smf] [smf_app] [debug] Resolving an FQDN/IP Addr for an UPF node
+2026-08-13T15:26:49.071742488Z [2026-08-13T15:26:49.071732] [smf] [smf_app] [debug] FQDN oai-spgwu-tiny10-svc
+2026-08-13T15:26:49.072990741Z [2026-08-13T15:26:49.072899] [smf] [smf_app] [debug] Resolved a DNS (name oai-spgwu-tiny10-svc, protocol http): Ip Addr 10.42.2.250, port 80
+2026-08-13T15:26:49.073029681Z [2026-08-13T15:26:49.072916] [smf] [smf_app] [debug] Resolve FQDN oai-spgwu-tiny10-svc, IP Addr 10.42.2.250
+2026-08-13T15:26:49.073037390Z [2026-08-13T15:26:49.072924] [smf] [smf_app] [info ] Node ID Type FQDN: oai-spgwu-tiny10-svc
+2026-08-13T15:26:49.073716708Z [2026-08-13T15:26:49.073580] [smf] [smf_app] [debug] Resolved a DNS (name oai-spgwu-tiny10-svc, protocol http): Ip Addr 10.42.2.250, port 80
+2026-08-13T15:26:49.073755471Z [2026-08-13T15:26:49.073597] [smf] [smf_app] [info ] Cannot connect UPF to other nodes in the graph as it has no profile, just add the node
+2026-08-13T15:26:49.073762406Z [2026-08-13T15:26:49.073601] [smf] [smf_app] [info ] Assume that the UPF has a N3 and a N6 interface.
+2026-08-13T15:26:49.073767793Z [2026-08-13T15:26:49.073614] [smf] [smf_app] [debug] Successfully added UPF node: , (2818764968)
+2026-08-13T15:26:49.073772641Z [2026-08-13T15:26:49.073628] [smf] [smf_app] [debug] Successfully added UPF graph edge for : N3()
+2026-08-13T15:26:49.073778185Z [2026-08-13T15:26:49.073637] [smf] [smf_app] [debug] Successfully added UPF graph edge for : N6()
+2026-08-13T15:26:49.073783367Z [2026-08-13T15:26:49.073648] [smf] [smf_app] [debug] UPF graph 
+2026-08-13T15:26:49.073788198Z [2026-08-13T15:26:49.073653] [smf] [smf_app] [debug] * 12617947335247458472 --> N3(), N6(), 
+2026-08-13T15:26:49.073794036Z 
+2026-08-13T15:26:49.073798387Z [2026-08-13T15:26:49.073659] [smf] [smf_app] [debug] NF instance info
+2026-08-13T15:26:49.073803179Z [2026-08-13T15:26:49.073663] [smf] [smf_app] [debug] 	Instance ID: 
+2026-08-13T15:26:49.073808030Z [2026-08-13T15:26:49.073667] [smf] [smf_app] [debug] 	Instance name: 
+2026-08-13T15:26:49.073812984Z [2026-08-13T15:26:49.073670] [smf] [smf_app] [debug] 	Instance type: UPF
+2026-08-13T15:26:49.073818317Z [2026-08-13T15:26:49.073674] [smf] [smf_app] [debug] 	Status: 
+2026-08-13T15:26:49.073846944Z [2026-08-13T15:26:49.073678] [smf] [smf_app] [debug] 	HeartBeat timer: 0
+2026-08-13T15:26:49.073852382Z [2026-08-13T15:26:49.073682] [smf] [smf_app] [debug] 	Priority: 0
+2026-08-13T15:26:49.073857426Z [2026-08-13T15:26:49.073685] [smf] [smf_app] [debug] 	Capacity: 0
+2026-08-13T15:26:50.069804829Z [2026-08-13T15:26:50.069633] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 10
+2026-08-13T15:26:51.069973555Z [2026-08-13T15:26:51.069832] [smf] [smf_app] [debug] Resolving an FQDN/IP Addr for an UPF node
+2026-08-13T15:26:51.070016796Z [2026-08-13T15:26:51.069862] [smf] [smf_app] [warn ] Failed to receive PFCP Association Response, Retrying .....!!
+2026-08-13T15:26:51.070023002Z [2026-08-13T15:26:51.069867] [smf] [smf_app] [debug] Start a PFCP Association procedure with an UPF
+2026-08-13T15:26:51.070027357Z [2026-08-13T15:26:51.069871] [smf] [smf_app] [debug] Resolving an FQDN/IP Addr for an UPF node
+2026-08-13T15:26:51.070033385Z [2026-08-13T15:26:51.069874] [smf] [smf_app] [info ] TODO purge sessions of this node
+2026-08-13T15:26:51.071467661Z [2026-08-13T15:26:51.071253] [smf] [smf_n4 ] [info ] handle_receive(53 bytes)
+2026-08-13T15:26:51.071517364Z [2026-08-13T15:26:51.071292] [smf] [smf_n4 ] [debug] handle_receive_pfcp_msg msg type 6 length 49
+2026-08-13T15:26:51.071527871Z [2026-08-13T15:26:51.071298] [smf] [smf_n4 ] [info ] Received N4 ASSOCIATION SETUP RESPONSE from an UPF
+2026-08-13T15:26:51.071583209Z [2026-08-13T15:26:51.071307] [smf] [smf_n4 ] [info ] Received N4 ASSOCIATION SETUP RESPONSE
+2026-08-13T15:26:51.071620930Z [2026-08-13T15:26:51.071314] [smf] [smf_app] [debug] Resolving an FQDN/IP Addr for an UPF node
+2026-08-13T15:26:51.071628438Z [2026-08-13T15:26:51.071318] [smf] [smf_app] [debug] FQDN oai-spgwu-tiny10-svc
+2026-08-13T15:26:51.072915600Z [2026-08-13T15:26:51.072745] [smf] [smf_app] [debug] Resolved a DNS (name oai-spgwu-tiny10-svc, protocol http): Ip Addr 10.42.2.250, port 80
+2026-08-13T15:26:51.073000761Z [2026-08-13T15:26:51.072764] [smf] [smf_app] [debug] Resolve FQDN oai-spgwu-tiny10-svc, IP Addr 10.42.2.250
+2026-08-13T15:26:52.070020185Z [2026-08-13T15:26:52.069798] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 12
+2026-08-13T15:26:53.070158101Z [2026-08-13T15:26:53.069973] [smf] [smf_app] [debug] Resolving an FQDN/IP Addr for an UPF node
+2026-08-13T15:26:53.070182348Z [2026-08-13T15:26:53.069992] [smf] [smf_app] [warn ] Failed to receive PFCP Association Response, Retrying .....!!
+2026-08-13T15:26:53.070186596Z [2026-08-13T15:26:53.069994] [smf] [smf_app] [debug] Start a PFCP Association procedure with an UPF
+2026-08-13T15:26:53.070189770Z [2026-08-13T15:26:53.069996] [smf] [smf_app] [debug] Resolving an FQDN/IP Addr for an UPF node
+2026-08-13T15:26:53.070192964Z [2026-08-13T15:26:53.069997] [smf] [smf_app] [info ] TODO purge sessions of this node
+2026-08-13T15:26:53.070899333Z [2026-08-13T15:26:53.070861] [smf] [smf_n4 ] [info ] handle_receive(53 bytes)
+2026-08-13T15:26:53.070930055Z [2026-08-13T15:26:53.070889] [smf] [smf_n4 ] [debug] handle_receive_pfcp_msg msg type 6 length 49
+2026-08-13T15:26:53.070960239Z [2026-08-13T15:26:53.070893] [smf] [smf_n4 ] [info ] Received N4 ASSOCIATION SETUP RESPONSE from an UPF
+2026-08-13T15:26:53.070963283Z [2026-08-13T15:26:53.070899] [smf] [smf_n4 ] [info ] Received N4 ASSOCIATION SETUP RESPONSE
+2026-08-13T15:26:53.070965549Z [2026-08-13T15:26:53.070902] [smf] [smf_app] [debug] Resolving an FQDN/IP Addr for an UPF node
+2026-08-13T15:26:53.070970304Z [2026-08-13T15:26:53.070905] [smf] [smf_app] [debug] FQDN oai-spgwu-tiny10-svc
+2026-08-13T15:26:53.071726327Z [2026-08-13T15:26:53.071701] [smf] [smf_app] [debug] Resolved a DNS (name oai-spgwu-tiny10-svc, protocol http): Ip Addr 10.42.2.250, port 80
+2026-08-13T15:26:53.071730892Z [2026-08-13T15:26:53.071709] [smf] [smf_app] [debug] Resolve FQDN oai-spgwu-tiny10-svc, IP Addr 10.42.2.250
+2026-08-13T15:26:54.070372837Z [2026-08-13T15:26:54.070100] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 14
+2026-08-13T15:26:55.070232415Z [2026-08-13T15:26:55.070094] [smf] [smf_app] [debug] Resolving an FQDN/IP Addr for an UPF node
+2026-08-13T15:26:55.070270725Z [2026-08-13T15:26:55.070124] [smf] [smf_app] [warn ] Failed to receive PFCP Association Response, Retrying .....!!
+2026-08-13T15:26:55.070276072Z [2026-08-13T15:26:55.070129] [smf] [smf_app] [debug] Start a PFCP Association procedure with an UPF
+2026-08-13T15:26:55.070280157Z [2026-08-13T15:26:55.070133] [smf] [smf_app] [debug] Resolving an FQDN/IP Addr for an UPF node
+2026-08-13T15:26:55.070284524Z [2026-08-13T15:26:55.070137] [smf] [smf_app] [info ] TODO purge sessions of this node
+2026-08-13T15:26:55.072926845Z [2026-08-13T15:26:55.072855] [smf] [smf_n4 ] [info ] handle_receive(53 bytes)
+2026-08-13T15:26:55.072959333Z [2026-08-13T15:26:55.072893] [smf] [smf_n4 ] [debug] handle_receive_pfcp_msg msg type 6 length 49
+2026-08-13T15:26:55.072968533Z [2026-08-13T15:26:55.072899] [smf] [smf_n4 ] [info ] Received N4 ASSOCIATION SETUP RESPONSE from an UPF
+2026-08-13T15:26:55.072976538Z [2026-08-13T15:26:55.072909] [smf] [smf_n4 ] [info ] Received N4 ASSOCIATION SETUP RESPONSE
+2026-08-13T15:26:55.072986953Z [2026-08-13T15:26:55.072915] [smf] [smf_app] [debug] Resolving an FQDN/IP Addr for an UPF node
+2026-08-13T15:26:55.072991406Z [2026-08-13T15:26:55.072919] [smf] [smf_app] [debug] FQDN oai-spgwu-tiny10-svc
+2026-08-13T15:26:55.073683271Z [2026-08-13T15:26:55.073612] [smf] [smf_app] [debug] Resolved a DNS (name oai-spgwu-tiny10-svc, protocol http): Ip Addr 10.42.2.250, port 80
+2026-08-13T15:26:55.073702684Z [2026-08-13T15:26:55.073643] [smf] [smf_app] [debug] Resolve FQDN oai-spgwu-tiny10-svc, IP Addr 10.42.2.250
+2026-08-13T15:26:56.070520981Z [2026-08-13T15:26:56.070277] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 17
+2026-08-13T15:26:57.070498694Z [2026-08-13T15:26:57.070236] [smf] [smf_app] [debug] Resolving an FQDN/IP Addr for an UPF node
+2026-08-13T15:26:57.070537409Z [2026-08-13T15:26:57.070265] [smf] [smf_app] [warn ] Failed to receive PFCP Association Response, Retrying .....!!
+2026-08-13T15:26:57.080511344Z [2026-08-13T15:26:57.080332] [smf] [smf_app] [debug] Register SMF with NRF
+2026-08-13T15:26:57.080522098Z [2026-08-13T15:26:57.080364] [smf] [smf_app] [debug] NF instance info
+2026-08-13T15:26:57.080543500Z [2026-08-13T15:26:57.080368] [smf] [smf_app] [debug] 	Instance ID: d1e17136-961b-4d8c-9f2a-c9c4aa97feec
+2026-08-13T15:26:57.080548282Z [2026-08-13T15:26:57.080370] [smf] [smf_app] [debug] 	Instance name: OAI-SMF
+2026-08-13T15:26:57.080552094Z [2026-08-13T15:26:57.080372] [smf] [smf_app] [debug] 	Instance type: SMF
+2026-08-13T15:26:57.080555788Z [2026-08-13T15:26:57.080375] [smf] [smf_app] [debug] 	Status: REGISTERED
+2026-08-13T15:26:57.080559140Z [2026-08-13T15:26:57.080378] [smf] [smf_app] [debug] 	HeartBeat timer: 50
+2026-08-13T15:26:57.080563248Z [2026-08-13T15:26:57.080381] [smf] [smf_app] [debug] 	Priority: 1
+2026-08-13T15:26:57.080566792Z [2026-08-13T15:26:57.080383] [smf] [smf_app] [debug] 	Capacity: 100
+2026-08-13T15:26:57.080570421Z [2026-08-13T15:26:57.080385] [smf] [smf_app] [debug] 	SNSSAI:
+2026-08-13T15:26:57.080574208Z [2026-08-13T15:26:57.080388] [smf] [smf_app] [debug] 		 SST 210, SD 123 (0x7b)
+2026-08-13T15:26:57.080577985Z [2026-08-13T15:26:57.080391] [smf] [smf_app] [debug] 		 SST 1, SD 16777215 (0xffffff)
+2026-08-13T15:26:57.080581491Z [2026-08-13T15:26:57.080393] [smf] [smf_app] [debug] 	IPv4 Addr:
+2026-08-13T15:26:57.080585085Z [2026-08-13T15:26:57.080397] [smf] [smf_app] [debug] 		 10.42.2.249
+2026-08-13T15:26:57.080588796Z [2026-08-13T15:26:57.080399] [smf] [smf_app] [debug] 	NF Service
+2026-08-13T15:26:57.080593486Z [2026-08-13T15:26:57.080426] [smf] [smf_app] [debug] 		Service Instance ID: nsmf-pdusession, Service name: nsmf-pdusession, Version (apiVersionInUri: v1, apiFullVersion: 1.0.0 ), Scheme: http, Service status: REGISTERED,  IpEndPoints: Ipv4 Address: 10.42.2.249, TransportProtocol: TCP, Port: 80
+2026-08-13T15:26:57.080599169Z [2026-08-13T15:26:57.080445] [smf] [smf_app] [debug] 	SMF Info:
+2026-08-13T15:26:57.080602739Z [2026-08-13T15:26:57.080448] [smf] [smf_app] [debug] 		Parameters supported by the SMF:
+2026-08-13T15:26:57.080606357Z [2026-08-13T15:26:57.080451] [smf] [smf_app] [debug] 			SNSSAI (SST 210, SD 123 (0x7b))
+2026-08-13T15:26:57.080609954Z [2026-08-13T15:26:57.080454] [smf] [smf_app] [debug] 			DNN oai
+2026-08-13T15:26:57.080613456Z [2026-08-13T15:26:57.080456] [smf] [smf_app] [debug] 		Parameters supported by the SMF:
+2026-08-13T15:26:57.080616975Z [2026-08-13T15:26:57.080459] [smf] [smf_app] [debug] 			SNSSAI (SST 1, SD 16777215 (0xffffff))
+2026-08-13T15:26:57.080620671Z [2026-08-13T15:26:57.080461] [smf] [smf_app] [debug] 			DNN ims
+2026-08-13T15:26:57.080625257Z [2026-08-13T15:26:57.080464] [smf] [smf_app] [debug] Send ITTI msg to N11 task to trigger the registration request to NRF
+2026-08-13T15:26:57.080817156Z [2026-08-13T15:26:57.080607] [smf] [smf_sbi] [debug] Send NF Instance Registration to NRF (HTTP version 1)
+2026-08-13T15:26:57.081069015Z [2026-08-13T15:26:57.080898] [smf] [smf_app] [debug] SMF profile to json:
+2026-08-13T15:26:57.081084572Z  {"capacity":100,"custom_info":null,"heartBeatTimer":50,"ipv4Addresses":["10.42.2.249"],"nfInstanceId":"d1e17136-961b-4d8c-9f2a-c9c4aa97feec","nfInstanceName":"OAI-SMF","nfServices":[{"ipEndPoints":[{"ipv4Address":"10.42.2.249","port":80,"transport":"TCP"}],"nfServiceStatus":"REGISTERED","scheme":"http","serviceInstanceId":"nsmf-pdusession","serviceName":"nsmf-pdusession","versions":[{"apiFullVersion":"1.0.0","apiVersionInUri":"v1"}]}],"nfStatus":"REGISTERED","nfType":"SMF","priority":1,"sNssais":[{"sd":"123","sst":210},{"sd":"16777215","sst":1}],"smfInfo":{"sNssaiSmfInfoList":[{"dnnSmfInfoList":[{"dnn":"oai"}],"sNssai":{"sd":"123","sst":210}},{"dnnSmfInfoList":[{"dnn":"ims"}],"sNssai":{"sd":"16777215","sst":1}}]}}
+2026-08-13T15:26:57.081142882Z [2026-08-13T15:26:57.080922] [smf] [smf_sbi] [debug] Send NF Instance Registration to NRF, NRF URL 10.42.2.244:80/nnrf-nfm/v1/nf-instances/d1e17136-961b-4d8c-9f2a-c9c4aa97feec
+2026-08-13T15:26:57.081153134Z [2026-08-13T15:26:57.080952] [smf] [smf_sbi] [debug] Send NF Instance Registration to NRF, msg body: 
+2026-08-13T15:26:57.081161438Z  {"capacity":100,"custom_info":null,"heartBeatTimer":50,"ipv4Addresses":["10.42.2.249"],"nfInstanceId":"d1e17136-961b-4d8c-9f2a-c9c4aa97feec","nfInstanceName":"OAI-SMF","nfServices":[{"ipEndPoints":[{"ipv4Address":"10.42.2.249","port":80,"transport":"TCP"}],"nfServiceStatus":"REGISTERED","scheme":"http","serviceInstanceId":"nsmf-pdusession","serviceName":"nsmf-pdusession","versions":[{"apiFullVersion":"1.0.0","apiVersionInUri":"v1"}]}],"nfStatus":"REGISTERED","nfType":"SMF","priority":1,"sNssais":[{"sd":"123","sst":210},{"sd":"16777215","sst":1}],"smfInfo":{"sNssaiSmfInfoList":[{"dnnSmfInfoList":[{"dnn":"oai"}],"sNssai":{"sd":"123","sst":210}},{"dnnSmfInfoList":[{"dnn":"ims"}],"sNssai":{"sd":"16777215","sst":1}}]}}
+2026-08-13T15:26:57.081182369Z [2026-08-13T15:26:57.080981] [smf] [smf_sbi] [debug] Promise ID generated 11
+2026-08-13T15:26:57.087197780Z [2026-08-13T15:26:57.087080] [smf] [smf_app] [debug] Got response with HTTP code  201!
+2026-08-13T15:26:57.087229293Z [2026-08-13T15:26:57.087102] [smf] [smf_app] [debug] Prepare to make promise id 11 ready!
+2026-08-13T15:26:57.087239028Z [2026-08-13T15:26:57.087108] [smf] [smf_app] [debug] Trigger process response: Set promise with ID 11 to ready
+2026-08-13T15:26:57.087246178Z [2026-08-13T15:26:57.087137] [smf] [smf_sbi] [debug] Got result for promise ID 11
+2026-08-13T15:26:57.087251722Z [2026-08-13T15:26:57.087143] [smf] [smf_sbi] [debug] Response data {"capacity":100,"heartBeatTimer":10,"ipv4Addresses":["10.42.2.249"],"json_data":null,"nfInstanceId":"d1e17136-961b-4d8c-9f2a-c9c4aa97feec","nfInstanceName":"OAI-SMF","nfServices":[{"ipEndPoints":[{"ipv4Address":"10.42.2.249","port":80,"transport":""}],"nfServiceStatus":"REGISTERED","scheme":"http","serviceInstanceId":"nsmf-pdusession","serviceName":"nsmf-pdusession","versions":[{"apiFullVersion":"1.0.0","apiVersionInUri":"v1"}]}],"nfStatus":"REGISTERED","nfType":"SMF","priority":1,"sNssais":[{"sd":"123","sst":210},{"sd":"16777215","sst":1}],"smfInfo":{"sNssaiSmfInfoList":[{"dnnSmfInfoList":[{"dnn":"oai"}],"sNssai":{"sd":"123","sst":210}},{"dnnSmfInfoList":[{"dnn":"ims"}],"sNssai":{"sd":"16777215","sst":1}}]}}
+2026-08-13T15:26:57.087273172Z [2026-08-13T15:26:57.087152] [smf] [smf_sbi] [debug] NF Instance Registration, response from NRF, HTTP Code: 201
+2026-08-13T15:26:57.087334200Z [2026-08-13T15:26:57.087259] [smf] [smf_sbi] [debug] NF Instance Registration, response from NRF, json data: 
+2026-08-13T15:26:57.087341005Z  {"capacity":100,"heartBeatTimer":10,"ipv4Addresses":["10.42.2.249"],"json_data":null,"nfInstanceId":"d1e17136-961b-4d8c-9f2a-c9c4aa97feec","nfInstanceName":"OAI-SMF","nfServices":[{"ipEndPoints":[{"ipv4Address":"10.42.2.249","port":80,"transport":""}],"nfServiceStatus":"REGISTERED","scheme":"http","serviceInstanceId":"nsmf-pdusession","serviceName":"nsmf-pdusession","versions":[{"apiFullVersion":"1.0.0","apiVersionInUri":"v1"}]}],"nfStatus":"REGISTERED","nfType":"SMF","priority":1,"sNssais":[{"sd":"123","sst":210},{"sd":"16777215","sst":1}],"smfInfo":{"sNssaiSmfInfoList":[{"dnnSmfInfoList":[{"dnn":"oai"}],"sNssai":{"sd":"123","sst":210}},{"dnnSmfInfoList":[{"dnn":"ims"}],"sNssai":{"sd":"16777215","sst":1}}]}}
+2026-08-13T15:26:57.087357243Z [2026-08-13T15:26:57.087270] [smf] [smf_app] [debug] Registered SMF profile (from NRF)
+2026-08-13T15:26:57.087427161Z [2026-08-13T15:26:57.087371] [smf] [smf_app] [debug] NF instance info
+2026-08-13T15:26:57.087454033Z [2026-08-13T15:26:57.087376] [smf] [smf_app] [debug] 	Instance ID: d1e17136-961b-4d8c-9f2a-c9c4aa97feec
+2026-08-13T15:26:57.087460221Z [2026-08-13T15:26:57.087380] [smf] [smf_app] [debug] 	Instance name: OAI-SMF
+2026-08-13T15:26:57.087465600Z [2026-08-13T15:26:57.087384] [smf] [smf_app] [debug] 	Instance type: SMF
+2026-08-13T15:26:57.087470797Z [2026-08-13T15:26:57.087387] [smf] [smf_app] [debug] 	Status: REGISTERED
+2026-08-13T15:26:57.087475495Z [2026-08-13T15:26:57.087392] [smf] [smf_app] [debug] 	HeartBeat timer: 10
+2026-08-13T15:26:57.087480549Z [2026-08-13T15:26:57.087397] [smf] [smf_app] [debug] 	Priority: 1
+2026-08-13T15:26:57.087486037Z [2026-08-13T15:26:57.087401] [smf] [smf_app] [debug] 	Capacity: 100
+2026-08-13T15:26:57.087491038Z [2026-08-13T15:26:57.087404] [smf] [smf_app] [debug] 	SNSSAI:
+2026-08-13T15:26:57.087495877Z [2026-08-13T15:26:57.087409] [smf] [smf_app] [debug] 		 SST 210, SD 123 (0x7b)
+2026-08-13T15:26:57.087501254Z [2026-08-13T15:26:57.087413] [smf] [smf_app] [debug] 		 SST 1, SD 16777215 (0xffffff)
+2026-08-13T15:26:57.087509262Z [2026-08-13T15:26:57.087417] [smf] [smf_app] [debug] 	IPv4 Addr:
+2026-08-13T15:26:57.087514067Z [2026-08-13T15:26:57.087423] [smf] [smf_app] [debug] 		 10.42.2.249
+2026-08-13T15:26:57.087519025Z [2026-08-13T15:26:57.087427] [smf] [smf_app] [debug] 	SMF Info:
+2026-08-13T15:26:57.087523690Z [2026-08-13T15:26:57.087442] [smf] [smf_app] [debug] 		Parameters supported by the SMF:
+2026-08-13T15:26:57.087528743Z [2026-08-13T15:26:57.087451] [smf] [smf_app] [debug] 			SNSSAI (SST 210, SD 123 (0x7b))
+2026-08-13T15:26:57.087533834Z [2026-08-13T15:26:57.087455] [smf] [smf_app] [debug] 			DNN oai
+2026-08-13T15:26:57.087538678Z [2026-08-13T15:26:57.087459] [smf] [smf_app] [debug] 		Parameters supported by the SMF:
+2026-08-13T15:26:57.087543994Z [2026-08-13T15:26:57.087463] [smf] [smf_app] [debug] 			SNSSAI (SST 1, SD 16777215 (0xffffff))
+2026-08-13T15:26:57.087567699Z [2026-08-13T15:26:57.087466] [smf] [smf_app] [debug] 			DNN ims
+2026-08-13T15:26:57.087575077Z [2026-08-13T15:26:57.087513] [smf] [smf_app] [debug] Delete SMF Profile instance...
+2026-08-13T15:26:57.087580018Z [2026-08-13T15:26:57.087526] [smf] [smf_app] [debug] Handle NF Instance Registration response
+2026-08-13T15:26:57.087815435Z [2026-08-13T15:26:57.087661] [smf] [smf_app] [debug] Set value of NRF Heartbeat timer to 10
+2026-08-13T15:26:57.087840628Z [2026-08-13T15:26:57.087694] [smf] [smf_app] [debug] Delete SMF Profile instance...
+2026-08-13T15:26:58.070515676Z [2026-08-13T15:26:58.070257] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 20
+2026-08-13T15:27:00.070737892Z [2026-08-13T15:27:00.070489] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 23
+2026-08-13T15:27:05.074067569Z [2026-08-13T15:27:05.073840] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 24
+2026-08-13T15:27:05.074121881Z [2026-08-13T15:27:05.073872] [s…89919 tokens truncated…path":"/nfStatus","value":"REGISTERED"}]
+2026-08-13T15:39:57.104999714Z [2026-08-13T15:39:57.104913] [smf] [smf_sbi] [debug] Send NF Update to NRF, NRF URL 10.42.2.244:80/nnrf-nfm/v1/nf-instances/d1e17136-961b-4d8c-9f2a-c9c4aa97feec
+2026-08-13T15:39:57.105005292Z [2026-08-13T15:39:57.104921] [smf] [smf_sbi] [debug] Promise ID generated 193
+2026-08-13T15:39:57.108103257Z [2026-08-13T15:39:57.107944] [smf] [smf_app] [debug] Got response with HTTP code  204!
+2026-08-13T15:39:57.108142810Z [2026-08-13T15:39:57.107953] [smf] [smf_app] [debug] Prepare to make promise id 193 ready!
+2026-08-13T15:39:57.108149833Z [2026-08-13T15:39:57.107957] [smf] [smf_app] [debug] Trigger process response: Set promise with ID 193 to ready
+2026-08-13T15:39:57.108155484Z [2026-08-13T15:39:57.107978] [smf] [smf_sbi] [debug] Got result for promise ID 193
+2026-08-13T15:39:57.108160281Z [2026-08-13T15:39:57.107982] [smf] [smf_sbi] [debug] Response data 
+2026-08-13T15:39:57.108165429Z [2026-08-13T15:39:57.107986] [smf] [smf_sbi] [debug] NF Instance Registration, response from NRF, HTTP Code: 204
+2026-08-13T15:39:57.108170211Z [2026-08-13T15:39:57.107991] [smf] [smf_sbi] [debug] NF Update, got successful response from NRF
+2026-08-13T15:39:57.108175007Z [2026-08-13T15:39:57.108017] [smf] [smf_app] [debug] NF Update NF response
+2026-08-13T15:39:57.108179679Z [2026-08-13T15:39:57.108028] [smf] [smf_app] [debug] Set NRF Heartbeat timer (10)
+2026-08-13T15:40:00.127620377Z [2026-08-13T15:40:00.127463] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 435
+2026-08-13T15:40:05.128119570Z [2026-08-13T15:40:05.127913] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 436
+2026-08-13T15:40:05.128173376Z [2026-08-13T15:40:05.127942] [smf] [smf_n4 ] [info ] PFCP HEARTBEAT PROCEDURE hash 2818764968 starting
+2026-08-13T15:40:05.128566487Z [2026-08-13T15:40:05.128402] [smf] [smf_n4 ] [info ] handle_receive(16 bytes)
+2026-08-13T15:40:05.128576136Z [2026-08-13T15:40:05.128470] [smf] [smf_n4 ] [debug] handle_receive_pfcp_msg msg type 2 length 12
+2026-08-13T15:40:07.105240839Z [2026-08-13T15:40:07.105028] [smf] [smf_app] [info ] TIME-OUT event timer id 437
+2026-08-13T15:40:07.105311298Z [2026-08-13T15:40:07.105060] [smf] [smf_app] [debug] Send ITTI msg to N11 task to trigger NRF Heartbeat
+2026-08-13T15:40:07.105319468Z [2026-08-13T15:40:07.105079] [smf] [smf_app] [debug] Set a timer to the next Heart-beat (10)
+2026-08-13T15:40:07.105324866Z [2026-08-13T15:40:07.105109] [smf] [smf_sbi] [debug] Send NF Update to NRF (HTTP version 1)
+2026-08-13T15:40:07.105330140Z [2026-08-13T15:40:07.105173] [smf] [smf_sbi] [debug] Send NF Update to NRF, Msg body [{"op":"replace","path":"/nfStatus","value":"REGISTERED"}]
+2026-08-13T15:40:07.105337906Z [2026-08-13T15:40:07.105191] [smf] [smf_sbi] [debug] Send NF Update to NRF, NRF URL 10.42.2.244:80/nnrf-nfm/v1/nf-instances/d1e17136-961b-4d8c-9f2a-c9c4aa97feec
+2026-08-13T15:40:07.105343590Z [2026-08-13T15:40:07.105201] [smf] [smf_sbi] [debug] Promise ID generated 195
+2026-08-13T15:40:07.108243768Z [2026-08-13T15:40:07.108125] [smf] [smf_app] [debug] Got response with HTTP code  204!
+2026-08-13T15:40:07.108285776Z [2026-08-13T15:40:07.108138] [smf] [smf_app] [debug] Prepare to make promise id 195 ready!
+2026-08-13T15:40:07.108295974Z [2026-08-13T15:40:07.108142] [smf] [smf_app] [debug] Trigger process response: Set promise with ID 195 to ready
+2026-08-13T15:40:07.108303442Z [2026-08-13T15:40:07.108163] [smf] [smf_sbi] [debug] Got result for promise ID 195
+2026-08-13T15:40:07.108310109Z [2026-08-13T15:40:07.108169] [smf] [smf_sbi] [debug] Response data 
+2026-08-13T15:40:07.108316762Z [2026-08-13T15:40:07.108173] [smf] [smf_sbi] [debug] NF Instance Registration, response from NRF, HTTP Code: 204
+2026-08-13T15:40:07.108323738Z [2026-08-13T15:40:07.108178] [smf] [smf_sbi] [debug] NF Update, got successful response from NRF
+2026-08-13T15:40:07.108339194Z [2026-08-13T15:40:07.108209] [smf] [smf_app] [debug] NF Update NF response
+2026-08-13T15:40:07.108346896Z [2026-08-13T15:40:07.108229] [smf] [smf_app] [debug] Set NRF Heartbeat timer (10)
+2026-08-13T15:40:10.128517834Z [2026-08-13T15:40:10.128202] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 440
+2026-08-13T15:40:15.128901250Z [2026-08-13T15:40:15.128687] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 441
+2026-08-13T15:40:15.128971004Z [2026-08-13T15:40:15.128720] [smf] [smf_n4 ] [info ] PFCP HEARTBEAT PROCEDURE hash 2818764968 starting
+2026-08-13T15:40:15.129296502Z [2026-08-13T15:40:15.129122] [smf] [smf_n4 ] [info ] handle_receive(16 bytes)
+2026-08-13T15:40:15.129336480Z [2026-08-13T15:40:15.129165] [smf] [smf_n4 ] [debug] handle_receive_pfcp_msg msg type 2 length 12
+2026-08-13T15:40:17.105343438Z [2026-08-13T15:40:17.105211] [smf] [smf_app] [info ] TIME-OUT event timer id 442
+2026-08-13T15:40:17.105387803Z [2026-08-13T15:40:17.105243] [smf] [smf_app] [debug] Send ITTI msg to N11 task to trigger NRF Heartbeat
+2026-08-13T15:40:17.105396814Z [2026-08-13T15:40:17.105266] [smf] [smf_app] [debug] Set a timer to the next Heart-beat (10)
+2026-08-13T15:40:17.105403704Z [2026-08-13T15:40:17.105296] [smf] [smf_sbi] [debug] Send NF Update to NRF (HTTP version 1)
+2026-08-13T15:40:17.105565810Z [2026-08-13T15:40:17.105352] [smf] [smf_sbi] [debug] Send NF Update to NRF, Msg body [{"op":"replace","path":"/nfStatus","value":"REGISTERED"}]
+2026-08-13T15:40:17.105643123Z [2026-08-13T15:40:17.105366] [smf] [smf_sbi] [debug] Send NF Update to NRF, NRF URL 10.42.2.244:80/nnrf-nfm/v1/nf-instances/d1e17136-961b-4d8c-9f2a-c9c4aa97feec
+2026-08-13T15:40:17.105651739Z [2026-08-13T15:40:17.105375] [smf] [smf_sbi] [debug] Promise ID generated 197
+2026-08-13T15:40:17.108849786Z [2026-08-13T15:40:17.108785] [smf] [smf_app] [debug] Got response with HTTP code  204!
+2026-08-13T15:40:17.108860147Z [2026-08-13T15:40:17.108807] [smf] [smf_app] [debug] Prepare to make promise id 197 ready!
+2026-08-13T15:40:17.108868259Z [2026-08-13T15:40:17.108813] [smf] [smf_app] [debug] Trigger process response: Set promise with ID 197 to ready
+2026-08-13T15:40:17.108883485Z [2026-08-13T15:40:17.108835] [smf] [smf_sbi] [debug] Got result for promise ID 197
+2026-08-13T15:40:17.108890388Z [2026-08-13T15:40:17.108841] [smf] [smf_sbi] [debug] Response data 
+2026-08-13T15:40:17.108897303Z [2026-08-13T15:40:17.108845] [smf] [smf_sbi] [debug] NF Instance Registration, response from NRF, HTTP Code: 204
+2026-08-13T15:40:17.108905002Z [2026-08-13T15:40:17.108848] [smf] [smf_sbi] [debug] NF Update, got successful response from NRF
+2026-08-13T15:40:17.108938393Z [2026-08-13T15:40:17.108886] [smf] [smf_app] [debug] NF Update NF response
+2026-08-13T15:40:17.108948423Z [2026-08-13T15:40:17.108907] [smf] [smf_app] [debug] Set NRF Heartbeat timer (10)
+2026-08-13T15:40:20.129270557Z [2026-08-13T15:40:20.129053] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 445
+2026-08-13T15:40:25.129873165Z [2026-08-13T15:40:25.129477] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 446
+2026-08-13T15:40:25.129926633Z [2026-08-13T15:40:25.129614] [smf] [smf_n4 ] [info ] PFCP HEARTBEAT PROCEDURE hash 2818764968 starting
+2026-08-13T15:40:25.130290355Z [2026-08-13T15:40:25.130099] [smf] [smf_n4 ] [info ] handle_receive(16 bytes)
+2026-08-13T15:40:25.130346105Z [2026-08-13T15:40:25.130133] [smf] [smf_n4 ] [debug] handle_receive_pfcp_msg msg type 2 length 12
+2026-08-13T15:40:27.105634473Z [2026-08-13T15:40:27.105401] [smf] [smf_app] [info ] TIME-OUT event timer id 447
+2026-08-13T15:40:27.105700135Z [2026-08-13T15:40:27.105428] [smf] [smf_app] [debug] Send ITTI msg to N11 task to trigger NRF Heartbeat
+2026-08-13T15:40:27.105713145Z [2026-08-13T15:40:27.105462] [smf] [smf_app] [debug] Set a timer to the next Heart-beat (10)
+2026-08-13T15:40:27.105730337Z [2026-08-13T15:40:27.105553] [smf] [smf_sbi] [debug] Send NF Update to NRF (HTTP version 1)
+2026-08-13T15:40:27.105741340Z [2026-08-13T15:40:27.105616] [smf] [smf_sbi] [debug] Send NF Update to NRF, Msg body [{"op":"replace","path":"/nfStatus","value":"REGISTERED"}]
+2026-08-13T15:40:27.105754415Z [2026-08-13T15:40:27.105628] [smf] [smf_sbi] [debug] Send NF Update to NRF, NRF URL 10.42.2.244:80/nnrf-nfm/v1/nf-instances/d1e17136-961b-4d8c-9f2a-c9c4aa97feec
+2026-08-13T15:40:27.105765151Z [2026-08-13T15:40:27.105637] [smf] [smf_sbi] [debug] Promise ID generated 199
+2026-08-13T15:40:27.108914837Z [2026-08-13T15:40:27.108711] [smf] [smf_app] [debug] Got response with HTTP code  204!
+2026-08-13T15:40:27.108986268Z [2026-08-13T15:40:27.108735] [smf] [smf_app] [debug] Prepare to make promise id 199 ready!
+2026-08-13T15:40:27.108997600Z [2026-08-13T15:40:27.108741] [smf] [smf_app] [debug] Trigger process response: Set promise with ID 199 to ready
+2026-08-13T15:40:27.109006096Z [2026-08-13T15:40:27.108766] [smf] [smf_sbi] [debug] Got result for promise ID 199
+2026-08-13T15:40:27.109013019Z [2026-08-13T15:40:27.108774] [smf] [smf_sbi] [debug] Response data 
+2026-08-13T15:40:27.109019642Z [2026-08-13T15:40:27.108778] [smf] [smf_sbi] [debug] NF Instance Registration, response from NRF, HTTP Code: 204
+2026-08-13T15:40:27.109026509Z [2026-08-13T15:40:27.108782] [smf] [smf_sbi] [debug] NF Update, got successful response from NRF
+2026-08-13T15:40:27.109033167Z [2026-08-13T15:40:27.108810] [smf] [smf_app] [debug] NF Update NF response
+2026-08-13T15:40:27.109039683Z [2026-08-13T15:40:27.108834] [smf] [smf_app] [debug] Set NRF Heartbeat timer (10)
+2026-08-13T15:40:30.130096236Z [2026-08-13T15:40:30.129872] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 450
+2026-08-13T15:40:35.130612133Z [2026-08-13T15:40:35.130293] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 451
+2026-08-13T15:40:35.130665520Z [2026-08-13T15:40:35.130320] [smf] [smf_n4 ] [info ] PFCP HEARTBEAT PROCEDURE hash 2818764968 starting
+2026-08-13T15:40:35.130990222Z [2026-08-13T15:40:35.130821] [smf] [smf_n4 ] [info ] handle_receive(16 bytes)
+2026-08-13T15:40:35.131002056Z [2026-08-13T15:40:35.130864] [smf] [smf_n4 ] [debug] handle_receive_pfcp_msg msg type 2 length 12
+2026-08-13T15:40:37.105874013Z [2026-08-13T15:40:37.105640] [smf] [smf_app] [info ] TIME-OUT event timer id 452
+2026-08-13T15:40:37.105921269Z [2026-08-13T15:40:37.105666] [smf] [smf_app] [debug] Send ITTI msg to N11 task to trigger NRF Heartbeat
+2026-08-13T15:40:37.105930835Z [2026-08-13T15:40:37.105685] [smf] [smf_app] [debug] Set a timer to the next Heart-beat (10)
+2026-08-13T15:40:37.106028634Z [2026-08-13T15:40:37.105772] [smf] [smf_sbi] [debug] Send NF Update to NRF (HTTP version 1)
+2026-08-13T15:40:37.106087795Z [2026-08-13T15:40:37.105838] [smf] [smf_sbi] [debug] Send NF Update to NRF, Msg body [{"op":"replace","path":"/nfStatus","value":"REGISTERED"}]
+2026-08-13T15:40:37.106104879Z [2026-08-13T15:40:37.105854] [smf] [smf_sbi] [debug] Send NF Update to NRF, NRF URL 10.42.2.244:80/nnrf-nfm/v1/nf-instances/d1e17136-961b-4d8c-9f2a-c9c4aa97feec
+2026-08-13T15:40:37.106116654Z [2026-08-13T15:40:37.105864] [smf] [smf_sbi] [debug] Promise ID generated 201
+2026-08-13T15:40:37.109501793Z [2026-08-13T15:40:37.109414] [smf] [smf_app] [debug] Got response with HTTP code  204!
+2026-08-13T15:40:37.109515806Z [2026-08-13T15:40:37.109454] [smf] [smf_app] [debug] Prepare to make promise id 201 ready!
+2026-08-13T15:40:37.109522990Z [2026-08-13T15:40:37.109461] [smf] [smf_app] [debug] Trigger process response: Set promise with ID 201 to ready
+2026-08-13T15:40:37.109536859Z [2026-08-13T15:40:37.109487] [smf] [smf_sbi] [debug] Got result for promise ID 201
+2026-08-13T15:40:37.109578845Z [2026-08-13T15:40:37.109493] [smf] [smf_sbi] [debug] Response data 
+2026-08-13T15:40:37.109584059Z [2026-08-13T15:40:37.109497] [smf] [smf_sbi] [debug] NF Instance Registration, response from NRF, HTTP Code: 204
+2026-08-13T15:40:37.109589011Z [2026-08-13T15:40:37.109500] [smf] [smf_sbi] [debug] NF Update, got successful response from NRF
+2026-08-13T15:40:37.109663849Z [2026-08-13T15:40:37.109602] [smf] [smf_app] [debug] NF Update NF response
+2026-08-13T15:40:37.109672456Z [2026-08-13T15:40:37.109629] [smf] [smf_app] [debug] Set NRF Heartbeat timer (10)
+2026-08-13T15:40:40.130849681Z [2026-08-13T15:40:40.130625] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 455
+2026-08-13T15:40:45.131227882Z [2026-08-13T15:40:45.131019] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 456
+2026-08-13T15:40:45.131281192Z [2026-08-13T15:40:45.131047] [smf] [smf_n4 ] [info ] PFCP HEARTBEAT PROCEDURE hash 2818764968 starting
+2026-08-13T15:40:45.131798191Z [2026-08-13T15:40:45.131627] [smf] [smf_n4 ] [info ] handle_receive(16 bytes)
+2026-08-13T15:40:45.131811740Z [2026-08-13T15:40:45.131667] [smf] [smf_n4 ] [debug] handle_receive_pfcp_msg msg type 2 length 12
+2026-08-13T15:40:47.106102651Z [2026-08-13T15:40:47.105807] [smf] [smf_app] [info ] TIME-OUT event timer id 457
+2026-08-13T15:40:47.106151567Z [2026-08-13T15:40:47.105836] [smf] [smf_app] [debug] Send ITTI msg to N11 task to trigger NRF Heartbeat
+2026-08-13T15:40:47.106161399Z [2026-08-13T15:40:47.105855] [smf] [smf_app] [debug] Set a timer to the next Heart-beat (10)
+2026-08-13T15:40:47.106168152Z [2026-08-13T15:40:47.105881] [smf] [smf_sbi] [debug] Send NF Update to NRF (HTTP version 1)
+2026-08-13T15:40:47.106174959Z [2026-08-13T15:40:47.105935] [smf] [smf_sbi] [debug] Send NF Update to NRF, Msg body [{"op":"replace","path":"/nfStatus","value":"REGISTERED"}]
+2026-08-13T15:40:47.106184968Z [2026-08-13T15:40:47.105948] [smf] [smf_sbi] [debug] Send NF Update to NRF, NRF URL 10.42.2.244:80/nnrf-nfm/v1/nf-instances/d1e17136-961b-4d8c-9f2a-c9c4aa97feec
+2026-08-13T15:40:47.106192489Z [2026-08-13T15:40:47.105957] [smf] [smf_sbi] [debug] Promise ID generated 203
+2026-08-13T15:40:47.109730196Z [2026-08-13T15:40:47.109578] [smf] [smf_app] [debug] Got response with HTTP code  204!
+2026-08-13T15:40:47.109774798Z [2026-08-13T15:40:47.109603] [smf] [smf_app] [debug] Prepare to make promise id 203 ready!
+2026-08-13T15:40:47.109789604Z [2026-08-13T15:40:47.109609] [smf] [smf_app] [debug] Trigger process response: Set promise with ID 203 to ready
+2026-08-13T15:40:47.109800403Z [2026-08-13T15:40:47.109635] [smf] [smf_sbi] [debug] Got result for promise ID 203
+2026-08-13T15:40:47.109810564Z [2026-08-13T15:40:47.109643] [smf] [smf_sbi] [debug] Response data 
+2026-08-13T15:40:47.109820717Z [2026-08-13T15:40:47.109646] [smf] [smf_sbi] [debug] NF Instance Registration, response from NRF, HTTP Code: 204
+2026-08-13T15:40:47.109831086Z [2026-08-13T15:40:47.109651] [smf] [smf_sbi] [debug] NF Update, got successful response from NRF
+2026-08-13T15:40:47.109876573Z [2026-08-13T15:40:47.109676] [smf] [smf_app] [debug] NF Update NF response
+2026-08-13T15:40:47.109940705Z [2026-08-13T15:40:47.109701] [smf] [smf_app] [debug] Set NRF Heartbeat timer (10)
+2026-08-13T15:40:50.131590978Z [2026-08-13T15:40:50.131282] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 460
+2026-08-13T15:40:55.132033653Z [2026-08-13T15:40:55.131892] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 461
+2026-08-13T15:40:55.132092924Z [2026-08-13T15:40:55.131923] [smf] [smf_n4 ] [info ] PFCP HEARTBEAT PROCEDURE hash 2818764968 starting
+2026-08-13T15:40:55.132447216Z [2026-08-13T15:40:55.132370] [smf] [smf_n4 ] [info ] handle_receive(16 bytes)
+2026-08-13T15:40:55.132458770Z [2026-08-13T15:40:55.132405] [smf] [smf_n4 ] [debug] handle_receive_pfcp_msg msg type 2 length 12
+2026-08-13T15:40:57.106304952Z [2026-08-13T15:40:57.106063] [smf] [smf_app] [info ] TIME-OUT event timer id 462
+2026-08-13T15:40:57.106355224Z [2026-08-13T15:40:57.106088] [smf] [smf_app] [debug] Send ITTI msg to N11 task to trigger NRF Heartbeat
+2026-08-13T15:40:57.106364169Z [2026-08-13T15:40:57.106106] [smf] [smf_app] [debug] Set a timer to the next Heart-beat (10)
+2026-08-13T15:40:57.106371242Z [2026-08-13T15:40:57.106145] [smf] [smf_sbi] [debug] Send NF Update to NRF (HTTP version 1)
+2026-08-13T15:40:57.106377929Z [2026-08-13T15:40:57.106203] [smf] [smf_sbi] [debug] Send NF Update to NRF, Msg body [{"op":"replace","path":"/nfStatus","value":"REGISTERED"}]
+2026-08-13T15:40:57.106386764Z [2026-08-13T15:40:57.106219] [smf] [smf_sbi] [debug] Send NF Update to NRF, NRF URL 10.42.2.244:80/nnrf-nfm/v1/nf-instances/d1e17136-961b-4d8c-9f2a-c9c4aa97feec
+2026-08-13T15:40:57.106394224Z [2026-08-13T15:40:57.106229] [smf] [smf_sbi] [debug] Promise ID generated 205
+2026-08-13T15:40:57.111571794Z [2026-08-13T15:40:57.111358] [smf] [smf_app] [debug] Got response with HTTP code  204!
+2026-08-13T15:40:57.111610523Z [2026-08-13T15:40:57.111376] [smf] [smf_app] [debug] Prepare to make promise id 205 ready!
+2026-08-13T15:40:57.111619779Z [2026-08-13T15:40:57.111382] [smf] [smf_app] [debug] Trigger process response: Set promise with ID 205 to ready
+2026-08-13T15:40:57.111627263Z [2026-08-13T15:40:57.111407] [smf] [smf_sbi] [debug] Got result for promise ID 205
+2026-08-13T15:40:57.111633984Z [2026-08-13T15:40:57.111411] [smf] [smf_sbi] [debug] Response data 
+2026-08-13T15:40:57.111640570Z [2026-08-13T15:40:57.111414] [smf] [smf_sbi] [debug] NF Instance Registration, response from NRF, HTTP Code: 204
+2026-08-13T15:40:57.111647801Z [2026-08-13T15:40:57.111418] [smf] [smf_sbi] [debug] NF Update, got successful response from NRF
+2026-08-13T15:40:57.111654714Z [2026-08-13T15:40:57.111461] [smf] [smf_app] [debug] NF Update NF response
+2026-08-13T15:40:57.111661533Z [2026-08-13T15:40:57.111474] [smf] [smf_app] [debug] Set NRF Heartbeat timer (10)
+2026-08-13T15:41:00.132414486Z [2026-08-13T15:41:00.132136] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 465
+2026-08-13T15:41:05.132864109Z [2026-08-13T15:41:05.132618] [smf] [smf_n4 ] [info ] TIME-OUT event timer id 466
+2026-08-13T15:41:05.132926550Z [2026-08-13T15:41:05.132641] [smf] [smf_n4 ] [info ] PFCP HEARTBEAT PROCEDURE hash 2818764968 starting
+2026-08-13T15:41:05.133380328Z [2026-08-13T15:41:05.133148] [smf] [smf_n4 ] [info ] handle_receive(16 bytes)
+2026-08-13T15:41:05.133400701Z [2026-08-13T15:41:05.133190] [smf] [smf_n4 ] [debug] handle_receive_pfcp_msg msg type 2 length 12
+2026-08-13T15:41:07.106409391Z [2026-08-13T15:41:07.106257] [smf] [smf_app] [info ] TIME-OUT event timer id 467
+2026-08-13T15:41:07.106474564Z [2026-08-13T15:41:07.106281] [smf] [smf_app] [debug] Send ITTI msg to N11 task to trigger NRF Heartbeat
+2026-08-13T15:41:07.106485402Z [2026-08-13T15:41:07.106299] [smf] [smf_app] [debug] Set a timer to the next Heart-beat (10)
+2026-08-13T15:41:07.106490827Z [2026-08-13T15:41:07.106341] [smf] [smf_sbi] [debug] Send NF Update to NRF (HTTP version 1)
+2026-08-13T15:41:07.106502247Z [2026-08-13T15:41:07.106403] [smf] [smf_sbi] [debug] Send NF Update to NRF, Msg body [{"op":"replace","path":"/nfStatus","value":"REGISTERED"}]
+2026-08-13T15:41:07.106509970Z [2026-08-13T15:41:07.106418] [smf] [smf_sbi] [debug] Send NF Update to NRF, NRF URL 10.42.2.244:80/nnrf-nfm/v1/nf-instances/d1e17136-961b-4d8c-9f2a-c9c4aa97feec
+2026-08-13T15:41:07.106515900Z [2026-08-13T15:41:07.106427] [smf] [smf_sbi] [debug] Promise ID generated 207
+2026-08-13T15:41:07.110810386Z [2026-08-13T15:41:07.110608] [smf] [smf_app] [debug] Got response with HTTP code  204!
+2026-08-13T15:41:07.110848633Z [2026-08-13T15:41:07.110636] [smf] [smf_app] [debug] Prepare to make promise id 207 ready!
+2026-08-13T15:41:07.110858622Z [2026-08-13T15:41:07.110643] [smf] [smf_app] [debug] Trigger process response: Set promise with ID 207 to ready
+2026-08-13T15:41:07.110871773Z [2026-08-13T15:41:07.110671] [smf] [smf_sbi] [debug] Got result for promise ID 207
+2026-08-13T15:41:07.110878821Z [2026-08-13T15:41:07.110679] [smf] [smf_sbi] [debug] Response data 
+2026-08-13T15:41:07.110885503Z [2026-08-13T15:41:07.110684] [smf] [smf_sbi] [debug] NF Instance Registration, response from NRF, HTTP Code: 204
+2026-08-13T15:41:07.110892511Z [2026-08-13T15:41:07.110689] [smf] [smf_sbi] [debug] NF Update, got successful response from NRF
+2026-08-13T15:41:07.110899118Z [2026-08-13T15:41:07.110720] [smf] [smf_app] [debug] NF Update NF response
+2026-08-13T15:41:07.110905960Z [2026-08-13T15:41:07.110735] [smf] [smf_app] [debug] Set NRF Heartbeat timer (10)
+
