@@ -24,7 +24,9 @@
 
 - Interface: SMF to UPF.
 - Transport: UDP.
-- Trace approach: parse PFCP control messages only.
+- Current implementation: transparent UDP relay with raw-datagram spans only.
+- Next trace approach: parse PFCP header and control messages, then correlate
+  transactions by sequence number and session context by SEID/F-SEID.
 - Useful identifiers: SEID, F-SEID, sequence number, Node ID, PDR/FAR/QER IDs,
   and TEIDs assigned inside session establishment/modification messages.
 - Avoid vendor/private IE injection unless there is a specific interoperability

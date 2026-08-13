@@ -71,11 +71,12 @@ control-plane-tracing/
     proxies/
       sctp/
       udp/
+      pfcp-udp-proxy/
   experiments/
     README.md
 ```
 
-## Current Prototype
+## Current Prototypes
 
 The first runnable prototype is:
 
@@ -87,6 +88,16 @@ It is an experimental F1-C SCTP proxy. In this repository's RAN deployment it
 listens on SCTP port `38472`, forwards messages unchanged to the real CU, and
 exports spans to the OpenTelemetry collector when
 `OTEL_EXPORTER_OTLP_ENDPOINT` is configured.
+
+The PFCP prototype is:
+
+```text
+src/proxies/pfcp-udp-proxy/
+```
+
+It is an experimental N4/PFCP UDP relay between SMF and UPF. Its first version
+exports raw forwarding spans only. It deliberately does not decode PFCP fields
+or use PFCP data for cross-protocol correlation yet.
 
 ## Environment Reminder
 

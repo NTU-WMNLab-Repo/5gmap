@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: __PROXY_NAME__
+spec:
+  type: ClusterIP
+  selector:
+    app: __PROXY_NAME__
+  ports:
+    - name: pfcp-udp
+      protocol: UDP
+      port: __PFCP_PORT__
+      targetPort: __PFCP_PORT__
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: __PROXY_NAME__
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: __PROXY_NAME__
+  template:
+    metadata:
+      labels:
+        app: __PROXY_NAME__
+    spec:
+      containers:
+        - name: proxy
+          image: docker.io/genechen0203/pfcp-udp-proxy:latest
+          imagePullPolicy: Always
+          command:
+            - python3
+            - -u
+            - proxies/pfcp-udp-proxy/pfcp_udp_proxy.py
+          env:
+            - name: UPF_HOST
+              value: "__UPF_HOST__"
+            - name: UPF_PORT
+              value: "__PFCP_PORT__"
+            - name: SMF_HOST
+              value: "__SMF_HOST__"
+            - name: SMF_PORT
+              value: "__PFCP_PORT__"
+            - name: LISTEN_HOST
+              value: "0.0.0.0"
+            - name: LISTEN_PORT
+              value: "__PFCP_PORT__"
+            - name: OTEL_SERVICE_NAME
+              value: "__PROXY_NAME__"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "__OTEL_ENDPOINT__"
+            - name: OTEL_EXPORTER_OTLP_INSECURE
+              value: "__OTEL_INSECURE__"
+            - name: LOG_LEVEL
+              value: "INFO"
+            - name: LOG_HEX_BYTES
+              value: "32"
+            - name: TRACE_QUEUE_SIZE
+              value: "10000"
+            - name: PFCP_MAX_DATAGRAM_BYTES
+              value: "65535"
+            - name: PFCP_DNS_REFRESH_SECONDS
+              value: "5"
+          ports:
+            - containerPort: __PFCP_PORT__
+              protocol: UDP
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      nodeSelector:
+        deplocation: __CORE_LOC__

@@ -12,10 +12,15 @@ control-plane-tracing/src/
     sctp/
       relay.py
       async_trace_worker.py
+    udp/
+      relay.py
+      async_trace_worker.py
     f1ap-sctp-proxy/
       f1ap_sctp_proxy.py
     ngap-sctp-proxy/
       ngap_sctp_proxy.py
+    pfcp-udp-proxy/
+      pfcp_udp_proxy.py
   protocols/
     decoded_message.py
     asn1_per/
@@ -30,6 +35,10 @@ control-plane-tracing/src/
 
 - `proxies/sctp/relay.py` handles generic SCTP forwarding.
 - `proxies/sctp/async_trace_worker.py` handles async decode and span emission.
+- `proxies/udp/relay.py` handles generic UDP forwarding for control-plane
+  protocols that are not packet-stream data-plane traffic.
+- `proxies/udp/async_trace_worker.py` emits raw UDP spans asynchronously when
+  a protocol decoder is intentionally not enabled.
 - `correlator/f1ap.py` keeps lightweight F1AP UE-context correlation state and
   emits span attributes for Jaeger filtering.
 - `correlator/ngap.py` keeps lightweight NGAP UE-context correlation state and
@@ -44,9 +53,15 @@ control-plane-tracing/src/
   config, SCTP relay, F1AP decoder, correlator, and the tracing worker together.
 - `proxies/ngap-sctp-proxy/ngap_sctp_proxy.py` wires config, SCTP relay, the
   NGAP decoder, correlator, and the tracing worker together.
+- `proxies/pfcp-udp-proxy/pfcp_udp_proxy.py` wires config, the UDP relay, and
+  the raw tracing worker together for the first PFCP deployment test.
 
 The SCTP relay does not wait for F1AP decoding. It forwards the original bytes
 first, then enqueues a copied payload for the tracing worker.
+
+The PFCP UDP relay follows the same timing rule: it forwards the original
+datagram first, then enqueues only metadata for the raw span worker. No PFCP
+payload is decoded or exported in the first version.
 
 ## Forwarding And Decode Timing
 
@@ -157,6 +172,15 @@ decode by default, with lightweight top-level classification as a fallback:
 - `ngap.ie.ids`, `ngap.ie.names`, and promoted fields such as
   `ngap.ran.ue.ngap.id` and `ngap.amf.ue.ngap.id` are added when pycrate
   exposes them.
+
+## PFCP Proxy Status
+
+The PFCP proxy is a UDP forwarding skeleton. It emits one raw span per
+SMF-to-UPF or UPF-to-SMF datagram with direction, UDP endpoint metadata, payload
+size, forwarding duration, queue delay, and dropped-event count. It does not
+decode the PFCP header or IEs, and it does not send PFCP events to the online UE
+correlator. The next phase can add header fields before attempting PFCP
+transaction or NGAP-to-PFCP correlation.
 
 ## NGAP Correlation
 
