@@ -511,7 +511,13 @@ deploy_core_slice() {
 
     sed -i "22s/.*/name: oai-spgwu-tiny$s/" "$CORE_DIR/oai-spgwu-tiny/Chart.yaml"
     set_yaml_value "$CORE_DIR/oai-spgwu-tiny/values.yaml" nrfFqdn "\"oai-nrf$s-svc\""
-    set_yaml_value "$CORE_DIR/oai-spgwu-tiny/values.yaml" fqdn "\"oai-spgwu-tiny$s-svc\""
+    if [ "$RAN_PROXY" = "1" ]; then
+        # The UPF advertises this Node ID in PFCP Association Setup Response.
+        # Keep the SMF's response-driven endpoint on the proxy path.
+        set_yaml_value "$CORE_DIR/oai-spgwu-tiny/values.yaml" fqdn "\"pfcpproxy$s\""
+    else
+        set_yaml_value "$CORE_DIR/oai-spgwu-tiny/values.yaml" fqdn "\"oai-spgwu-tiny$s-svc\""
+    fi
     set_yaml_value "$CORE_DIR/oai-spgwu-tiny/values.yaml" nssaiSst0 "\"2$s\""
     set_yaml_value "$CORE_DIR/oai-spgwu-tiny/values.yaml" deplocation "$UPF_LOC"
     sed -i "/oai-spgwu-tiny-sa/c\  name: \"oai-spgwu-tiny$s-sa\"" "$CORE_DIR/oai-spgwu-tiny/values.yaml"

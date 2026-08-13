@@ -38,13 +38,16 @@ When `RanProxy=1`, `deploy.sh` deploys one `ngapproxy<user>` and one
 `f1proxy<user>` per RAN user, plus one `pfcpproxy<slice>` per core slice. It
 points the CU AMF target to `ngapproxy<user>`, the DU F1-C target to
 `f1proxy<user>`, and renders the SMF's static UPF endpoint as the
-`pfcpproxy<slice>` ClusterIP/FQDN. The PFCP proxy forwards to the real
+`pfcpproxy<slice>` ClusterIP/FQDN. It also makes the UPF advertise
+`pfcpproxy<slice>` as its PFCP Node ID FQDN, so response-driven PFCP traffic
+continues through the proxy. The PFCP proxy forwards to the real
 `oai-spgwu-tiny<slice>-svc` endpoint.
 
 When `RanProxy=0`, the CU connects directly to the AMF, the DU connects
 directly to the CU, `pfcpproxy<slice>` is removed, SMF UPF discovery is
-re-enabled, and its static UPF endpoint is cleared. This restores the original
-direct SMF-UPF PFCP path.
+re-enabled, its static UPF endpoint is cleared, and the UPF Node ID FQDN is
+restored to `oai-spgwu-tiny<slice>-svc`. This restores the original direct
+SMF-UPF PFCP path.
 
 The F1AP and NGAP proxy Deployments use `RAN_LOC`. PFCP is a core-side proxy,
 so `pfcpproxy<slice>` uses `CORE_LOC`, which defaults to `az`.

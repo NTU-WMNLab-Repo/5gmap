@@ -9,8 +9,8 @@ one raw OpenTelemetry span per forwarded datagram.
 It intentionally does **not** decode PFCP yet. Therefore it does not export a
 PFCP message type, sequence number, SEID, F-SEID, PDR, FAR, TEID, transaction
 correlation, or a UE/cross-protocol trace relationship. The first deployment
-goal is only to prove that changing the discovered UPF FQDN to the proxy keeps
-the SMF-UPF PFCP path functional.
+goal is to keep the complete SMF-UPF PFCP path through the relay without
+rewriting a PFCP datagram.
 
 ## Traffic Path
 
@@ -27,11 +27,15 @@ observed.
 
 With `RanProxy=1`, the deployment script temporarily sets the SMF's static
 UPF endpoint to the `pfcpproxy<slice>` ClusterIP and disables SMF UPF discovery.
-This avoids depending on whether a particular NRF/UPF version returns a FQDN or
-a Pod IP for UPF selection. The proxy's `UPF_HOST` still targets the real
-`oai-spgwu-tiny<slice>-svc` endpoint. With `RanProxy=0`, the script removes the
-proxy, clears the static endpoint, and re-enables the original SMF discovery
-mode.
+It also configures the UPF to advertise `pfcpproxy<slice>` as its
+`UPF_FQDN_5G` Node ID. OAI SMF learns that FQDN from PFCP Association Setup
+Response and resolves it before later heartbeat and session procedures, so this
+keeps response-driven traffic on the proxy path without payload rewriting.
+
+The proxy's `UPF_HOST` remains the real `oai-spgwu-tiny<slice>-svc` headless
+service. With `RanProxy=0`, the script removes the proxy, clears the SMF static
+endpoint, re-enables original SMF UPF discovery, and restores the UPF-advertised
+FQDN to `oai-spgwu-tiny<slice>-svc`.
 
 ## Span Semantics
 
