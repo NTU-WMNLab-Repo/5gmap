@@ -78,6 +78,8 @@ config:
   nrfFqdn: "oai-nrf10-svc"
   udmFqdn: "oai-udm10-svc"
   amfFqdn: "oai-amf10-svc"
+  upfIpv4Address: ""
+  upfFqdn0: ""
   # slicing parameter defining one slice is mandatory, if you want to have multiple just copy the below structure and add 1,2 or 3. 
   # You can define maximum 4 slices from here in case of more please change the configuration file. 
   dnnNi0: "oai"

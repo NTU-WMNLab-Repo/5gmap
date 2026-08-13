@@ -1,16 +1,17 @@
 ## Experimental RanProxy Flag
 
-**Warning: `RanProxy=1` is experimental. The current RAN proxies are test
-prototypes for F1AP/F1-C and NGAP/N2 tracing. They forward control messages
-unchanged and export spans, but robust NGAP ASN.1 PER decoding,
-cross-procedure/cross-protocol correlation, multi-DU behavior, and production
-hardening are not finished yet.**
+**Warning: `RanProxy=1` is experimental. It enables the F1AP/F1-C, NGAP/N2,
+and PFCP tracing proxies. They forward control messages unchanged and export
+spans, but production hardening and complete procedure-level correlation are
+not finished yet. The PFCP proxy currently emits raw UDP datagram spans only;
+it does not decode PFCP or correlate PFCP transactions.**
 
-Use `RanProxy=1` to insert experimental SCTP tracing proxies into the RAN
-control-plane paths:
+Use `RanProxy=1` to insert experimental tracing proxies into the control-plane
+paths:
 
 - `f1proxy<user>` between each DU and CU for F1AP/F1-C.
 - `ngapproxy<user>` between each CU and AMF for NGAP/N2.
+- `pfcpproxy<slice>` between each SMF and UPF for PFCP/N4.
 
 ```bash
 RanProxy=1 ./script/run.sh
@@ -34,9 +35,19 @@ Equivalent CLI forms:
 ```
 
 When `RanProxy=1`, `deploy.sh` deploys one `ngapproxy<user>` and one
-`f1proxy<user>` per RAN user. It points the CU AMF target to `ngapproxy<user>`
-and the DU F1-C target to `f1proxy<user>`. When `RanProxy=0`, the CU connects
-directly to the AMF and the DU connects directly to the CU as before.
+`f1proxy<user>` per RAN user, plus one `pfcpproxy<slice>` per core slice. It
+points the CU AMF target to `ngapproxy<user>`, the DU F1-C target to
+`f1proxy<user>`, and renders the SMF's static UPF endpoint as the
+`pfcpproxy<slice>` ClusterIP/FQDN. The PFCP proxy forwards to the real
+`oai-spgwu-tiny<slice>-svc` endpoint.
+
+When `RanProxy=0`, the CU connects directly to the AMF, the DU connects
+directly to the CU, `pfcpproxy<slice>` is removed, SMF UPF discovery is
+re-enabled, and its static UPF endpoint is cleared. This restores the original
+direct SMF-UPF PFCP path.
+
+The F1AP and NGAP proxy Deployments use `RAN_LOC`. PFCP is a core-side proxy,
+so `pfcpproxy<slice>` uses `CORE_LOC`, which defaults to `az`.
 
 When `CrossProtocolCorrelate=1`, `deploy.sh` also deploys one shared
 `control-plane-correlator` and enables its client in every F1AP and NGAP proxy.
@@ -53,17 +64,20 @@ Useful image variables:
 ```text
 RAN_PROXY_F1AP_IMAGE     Default: docker.io/genechen0203/f1ap-sctp-proxy:latest
 RAN_PROXY_NGAP_IMAGE     Default: docker.io/genechen0203/ngap-sctp-proxy:latest
+RAN_PROXY_PFCP_IMAGE     Default: docker.io/genechen0203/pfcp-udp-proxy:latest
 RAN_PROXY_F1C_PORT       Default: 38472
 RAN_PROXY_NGAP_PORT      Default: 38412
+RAN_PROXY_PFCP_PORT      Default: 8805
 RAN_PROXY_OTEL_ENDPOINT  Default: http://opentelemetry-collector.otel.svc.cluster.local:4317
 RAN_PROXY_OTEL_INSECURE  Default: true
+CORE_LOC                 Default: az; node selector for PFCP proxy deployments
 CROSS_PROTOCOL_CORRELATOR_IMAGE     Default: docker.io/genechen0203/control-plane-correlator:latest
 CROSS_PROTOCOL_CORRELATOR_ENDPOINT  Default: http://control-plane-correlator:8080
 ```
 
-`undeploy.sh` always attempts to remove `f1proxy<user>`, `ngapproxy<user>`, and
-the shared `control-plane-correlator` resources, so it is safe to run cleanup
-after either flag combination.
+`undeploy.sh` always attempts to remove `f1proxy<user>`, `ngapproxy<user>`,
+`pfcpproxy<slice>`, and the shared `control-plane-correlator` resources, so it
+is safe to run cleanup after either flag combination.
 
 # 5GMAP Script 使用說明
 

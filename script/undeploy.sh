@@ -48,6 +48,8 @@ for ((s=10; s<=slice_end; s++)); do
     helm_uninstall_if_exists "amf$s" "$NAMESPACE"
     helm_uninstall_if_exists "smf$s" "$NAMESPACE"
     helm_uninstall_if_exists "upf$s" "$NAMESPACE"
+    kubectl delete deployment "pfcpproxy$s" -n "$NAMESPACE" --ignore-not-found=true
+    kubectl delete service "pfcpproxy$s" -n "$NAMESPACE" --ignore-not-found=true
 done
 
 if [ "$DELETE_MYSQL" = "1" ]; then

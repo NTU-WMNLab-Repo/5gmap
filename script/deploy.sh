@@ -105,6 +105,11 @@ RAN_PROXY_TEMPLATE_SOURCE="$ROOT_DIR/control-plane-tracing/src/proxies/f1ap-sctp
 RAN_PROXY_NGAP_DIR="$RAN_DIR/ngap-proxy"
 RAN_PROXY_NGAP_MANIFEST="${RAN_PROXY_NGAP_MANIFEST:-$RAN_PROXY_NGAP_DIR/oai-ngap-proxy.yaml}"
 RAN_PROXY_NGAP_TEMPLATE_SOURCE="$ROOT_DIR/control-plane-tracing/src/proxies/ngap-sctp-proxy/k8s-example.yaml"
+RAN_PROXY_PFCP_IMAGE="${RAN_PROXY_PFCP_IMAGE:-docker.io/genechen0203/pfcp-udp-proxy:latest}"
+RAN_PROXY_PFCP_PORT="${RAN_PROXY_PFCP_PORT:-8805}"
+RAN_PROXY_PFCP_DIR="$CORE_DIR/pfcp-proxy"
+RAN_PROXY_PFCP_MANIFEST="${RAN_PROXY_PFCP_MANIFEST:-$RAN_PROXY_PFCP_DIR/oai-pfcp-udp-proxy.yaml}"
+RAN_PROXY_PFCP_TEMPLATE_SOURCE="$ROOT_DIR/control-plane-tracing/src/proxies/pfcp-udp-proxy/k8s-example.yaml"
 CROSS_PROTOCOL_CORRELATOR_IMAGE="${CROSS_PROTOCOL_CORRELATOR_IMAGE:-docker.io/genechen0203/control-plane-correlator:latest}"
 CROSS_PROTOCOL_CORRELATOR_ENDPOINT="${CROSS_PROTOCOL_CORRELATOR_ENDPOINT:-http://control-plane-correlator:8080}"
 CROSS_PROTOCOL_CORRELATOR_DIR="$RAN_DIR/control-plane-correlator"
@@ -120,6 +125,7 @@ SMF_LOC="${SMF_LOC:-az}"
 UPF_LOC="${UPF_LOC:-az}"
 RAN_LOC="${RAN_LOC:-edge}"
 DNN_LOC="${DNN_LOC:-az}"
+CORE_LOC="${CORE_LOC:-az}"
 
 require_commands kubectl helm sed awk grep
 
@@ -289,6 +295,63 @@ deploy_ngap_proxy_user() {
     wait_for_pod "$NAMESPACE" "$proxy_name" 300 10
 }
 
+deploy_pfcp_proxy_slice() {
+    local s="$1"
+    local proxy_name="pfcpproxy$s"
+    local upf_host="oai-spgwu-tiny$s-svc"
+    local smf_host="oai-smf$s-svc"
+    local rendered_manifest
+
+    info "Deploying experimental PFCP tracing proxy $proxy_name for SMF $smf_host and UPF $upf_host"
+
+    mkdir -p "$RAN_PROXY_PFCP_DIR"
+    if [ ! -f "$RAN_PROXY_PFCP_MANIFEST" ]; then
+        info "Creating PFCP proxy manifest from $RAN_PROXY_PFCP_TEMPLATE_SOURCE"
+        cp "$RAN_PROXY_PFCP_TEMPLATE_SOURCE" "$RAN_PROXY_PFCP_MANIFEST"
+    fi
+
+    rendered_manifest="$(mktemp)"
+    cp "$RAN_PROXY_PFCP_MANIFEST" "$rendered_manifest"
+
+    sed -i \
+        -e "s|__PROXY_NAME__|$proxy_name|g" \
+        -e "s|__UPF_HOST__|$upf_host|g" \
+        -e "s|__SMF_HOST__|$smf_host|g" \
+        -e "s|__PFCP_PORT__|$RAN_PROXY_PFCP_PORT|g" \
+        -e "s|__CORE_LOC__|$CORE_LOC|g" \
+        -e "s|__OTEL_ENDPOINT__|$RAN_PROXY_OTEL_ENDPOINT|g" \
+        -e "s|__OTEL_INSECURE__|$RAN_PROXY_OTEL_INSECURE|g" \
+        "$rendered_manifest"
+
+    set_yaml_value "$rendered_manifest" image "$RAN_PROXY_PFCP_IMAGE"
+    set_yaml_value "$rendered_manifest" imagePullPolicy "Always"
+
+    kubectl apply -n "$NAMESPACE" -f "$rendered_manifest"
+    rm -f "$rendered_manifest"
+
+    wait_for_pod "$NAMESPACE" "$proxy_name" 300 10
+}
+
+pfcp_proxy_service_ip() {
+    local s="$1"
+    local proxy_name="pfcpproxy$s"
+    local cluster_ip
+
+    cluster_ip="$(kubectl get service "$proxy_name" -n "$NAMESPACE" -o jsonpath='{.spec.clusterIP}')"
+    if [ -z "$cluster_ip" ] || [ "$cluster_ip" = "None" ]; then
+        die "PFCP proxy service $proxy_name has no ClusterIP"
+    fi
+    printf '%s\n' "$cluster_ip"
+}
+
+remove_pfcp_proxy_slice() {
+    local s="$1"
+    local proxy_name="pfcpproxy$s"
+
+    kubectl delete deployment "$proxy_name" -n "$NAMESPACE" --ignore-not-found=true
+    kubectl delete service "$proxy_name" -n "$NAMESPACE" --ignore-not-found=true
+}
+
 ran_sdr_addrs() {
     case "$1" in
         rfsim) echo "$2" ;;
@@ -364,6 +427,7 @@ deploy_core_slice() {
     local st="$((s + 1))"
     local amf_pod
     local upf_pod
+    local pfcp_proxy_ip=""
 
     configure_proxy_values "$CORE_DIR/oai-nrf" "$s" "$NRF_LOC"
     configure_proxy_values "$CORE_DIR/oai-udr" "$s" "$UDR_LOC"
@@ -373,6 +437,19 @@ deploy_core_slice() {
     configure_proxy_values "$CORE_DIR/oai-smf" "$s" "$SMF_LOC"
 
     info "Deploying core slice $s"
+
+    if [ "$RAN_PROXY" = "1" ]; then
+        deploy_pfcp_proxy_slice "$s"
+        pfcp_proxy_ip="$(pfcp_proxy_service_ip "$s")"
+        set_yaml_value "$CORE_DIR/oai-smf/values.yaml" discoverUpf '"no"'
+        set_yaml_value "$CORE_DIR/oai-smf/values.yaml" upfFqdn0 "\"pfcpproxy$s\""
+        set_yaml_value "$CORE_DIR/oai-smf/values.yaml" upfIpv4Address "\"$pfcp_proxy_ip\""
+    else
+        remove_pfcp_proxy_slice "$s"
+        set_yaml_value "$CORE_DIR/oai-smf/values.yaml" discoverUpf '"yes"'
+        set_yaml_value "$CORE_DIR/oai-smf/values.yaml" upfFqdn0 '""'
+        set_yaml_value "$CORE_DIR/oai-smf/values.yaml" upfIpv4Address '""'
+    fi
 
     sed -i "22s/.*/name: oai-nrf$s/" "$CORE_DIR/oai-nrf/Chart.yaml"
     set_yaml_value "$CORE_DIR/oai-nrf/values.yaml" saname "\"oai-nrf$s-sa\""
