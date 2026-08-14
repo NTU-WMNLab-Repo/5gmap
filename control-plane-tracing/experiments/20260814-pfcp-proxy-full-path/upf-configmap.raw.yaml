@@ -1,0 +1,113 @@
+apiVersion: v1
+data:
+  spgw_u.conf: |
+    SPGW-U =
+    {
+        FQDN = "oai-spgwu-tiny-svc";                    # only needed for 4g
+        INSTANCE                       = 0;             # 0 is the default
+        PID_DIRECTORY                  = "/var/run";    # /var/run is the default
+
+        INTERFACES :
+        {
+            S1U_S12_S4_UP :
+            {
+                # S-GW binded interface for S1-U communication (GTPV1-U) can be ethernet interface, virtual ethernet interface, we don't advise wireless interfaces
+                INTERFACE_NAME         = "eth0";  # STRING, interface name, YOUR NETWORK CONFIG HERE
+                IPV4_ADDRESS           = "read";                                    # STRING, CIDR or "read to let app read interface configured IP address
+                #PORT                   = 2152;                                     # Default is 2152
+                SCHED_PARAMS :
+                {
+                    #CPU_ID       = 2;
+                    SCHED_POLICY = "SCHED_FIFO"; # Values in { SCHED_OTHER, SCHED_IDLE, SCHED_BATCH, SCHED_FIFO, SCHED_RR }
+                    SCHED_PRIORITY = 98;
+                    POOL_SIZE = 1; # NUM THREADS
+                };
+            };
+            SX :
+            {
+                # S/P-GW binded interface for SX communication
+                INTERFACE_NAME         = "eth0"; # STRING, interface name
+                IPV4_ADDRESS           = "read";                        # STRING, CIDR or "read" to let app read interface configured IP address
+                #PORT                   = 8805;                         # Default is 8805
+                SCHED_PARAMS :
+                {
+                    #CPU_ID       = 1;
+                    SCHED_POLICY = "SCHED_FIFO"; # Values in { SCHED_OTHER, SCHED_IDLE, SCHED_BATCH, SCHED_FIFO, SCHED_RR }
+                    SCHED_PRIORITY = 88;
+                    POOL_SIZE = 1; # NUM THREADS
+                };
+            };
+            SGI :
+            {
+               # No config to set, the software will set the SGi interface to the interface used for the default route.
+                INTERFACE_NAME         = "eth0"; # STRING, interface name or "default_gateway"
+                IPV4_ADDRESS           = "read";                         # STRING, CIDR or "read" to let app read interface configured IP address
+                SCHED_PARAMS :
+                {
+                    #CPU_ID       = 3;
+                    SCHED_POLICY = "SCHED_FIFO"; # Values in { SCHED_OTHER, SCHED_IDLE, SCHED_BATCH, SCHED_FIFO, SCHED_RR }
+                    SCHED_PRIORITY = 99;
+                    POOL_SIZE = 1; # NUM THREADS
+                };
+            };
+        };
+
+        SNAT = "yes"; # SNAT Values in {yes, no}
+        PDN_NETWORK_LIST  = (
+                          {NETWORK_IPV4 = "12.1.1.0/24";} # 1 ITEM SUPPORTED ONLY
+                        );
+
+        SPGW-C_LIST = (
+             {IPV4_ADDRESS="127.0.0.1" ;}
+        );
+
+        NON_STANDART_FEATURES :
+        {
+            BYPASS_UL_PFCP_RULES = "no"; # 'no' for standart features, yes for enhancing UL throughput
+        };
+
+        SUPPORT_5G_FEATURES:
+        {
+           # STRING, {"yes", "no"},
+           ENABLE_5G_FEATURES = "yes" # Set to 'yes' to support 5G Features
+           REGISTER_NRF = "yes";  # Set to 'yes' if UPF resgisters to an NRF
+           USE_FQDN_NRF = "yes"; # Set to 'yes' if UPF relies on a DNS/FQDN service to resolve NRF's FQDN
+           UPF_FQDN_5G  = "pfcpproxy10";  #Set FQDN of UPF
+
+           NRF :
+           {
+              IPV4_ADDRESS = "127.0.0.1";  # YOUR NRF CONFIG HERE
+              PORT         = 80;            # YOUR NRF CONFIG HERE (default: 80)
+              HTTP_VERSION = 1;   #Set HTTP version for NRF (1 or 2)Default 1
+              API_VERSION  = "v1";   # YOUR NRF API VERSION HERE
+              FQDN = "oai-nrf10-svc";
+           };
+
+           # Additional info to be sent to NRF for supporting Network Slicing
+           UPF_INFO = (
+              {
+                NSSAI_SST = 210;
+                NSSAI_SD = "123";
+                DNN_LIST = ({DNN = "oai";});
+              }
+              ,{
+                NSSAI_SST = 1;
+                NSSAI_SD = "0xFFFFFF";
+                DNN_LIST = ({DNN = "ims";});
+              }
+           );
+        }
+    };
+kind: ConfigMap
+metadata:
+  annotations:
+    meta.helm.sh/release-name: upf10
+    meta.helm.sh/release-namespace: oai
+  creationTimestamp: "2026-08-13T17:21:14Z"
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  name: oai-spgwu-tiny10-configmap
+  namespace: oai
+  resourceVersion: "2466685"
+  uid: ba465f0b-ed03-4dc8-9377-0645d22c66e8
+

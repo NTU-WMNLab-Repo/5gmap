@@ -1,0 +1,150 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    cni.projectcalico.org/containerID: e4818b6f0a2d12a24c17a9d2eff915dad91a4261d36f66e48efd1b716f64f929
+    cni.projectcalico.org/podIP: 10.42.2.13/32
+    cni.projectcalico.org/podIPs: 10.42.2.13/32
+  creationTimestamp: "2026-08-13T17:19:55Z"
+  generateName: pfcpproxy10-6fbb759f6-
+  labels:
+    app: pfcpproxy10
+    pod-template-hash: 6fbb759f6
+  name: pfcpproxy10-6fbb759f6-hlf5h
+  namespace: oai
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicaSet
+    name: pfcpproxy10-6fbb759f6
+    uid: 8aca82d5-036b-4e41-89dc-6e2a397fd6b0
+  resourceVersion: "2466306"
+  uid: 0f518505-e848-4b3d-8b08-b1f798dee343
+spec:
+  containers:
+  - command:
+    - python3
+    - -u
+    - proxies/pfcp-udp-proxy/pfcp_udp_proxy.py
+    env:
+    - name: UPF_HOST
+      value: oai-spgwu-tiny10-svc
+    - name: UPF_PORT
+      value: "8805"
+    - name: SMF_HOST
+      value: oai-smf10-svc
+    - name: SMF_PORT
+      value: "8805"
+    - name: LISTEN_HOST
+      value: 0.0.0.0
+    - name: LISTEN_PORT
+      value: "8805"
+    - name: OTEL_SERVICE_NAME
+      value: pfcpproxy10
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      value: http://opentelemetry-collector.otel.svc.cluster.local:4317
+    - name: OTEL_EXPORTER_OTLP_INSECURE
+      value: "true"
+    - name: LOG_LEVEL
+      value: INFO
+    - name: LOG_HEX_BYTES
+      value: "32"
+    - name: TRACE_QUEUE_SIZE
+      value: "10000"
+    - name: PFCP_MAX_DATAGRAM_BYTES
+      value: "65535"
+    - name: PFCP_DNS_REFRESH_SECONDS
+      value: "5"
+    image: docker.io/genechen0203/pfcp-udp-proxy:latest
+    imagePullPolicy: Always
+    name: proxy
+    ports:
+    - containerPort: 8805
+      protocol: UDP
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-hlwtz
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: 192.168.1.240
+  nodeSelector:
+    deplocation: az
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - name: kube-api-access-hlwtz
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2026-08-13T17:19:55Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2026-08-13T17:19:58Z"
+    status: "True"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2026-08-13T17:19:58Z"
+    status: "True"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2026-08-13T17:19:55Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: docker://0679abc7b18f6c611db4ba7fd72539b81d460b2e0c41b4de1c0bf44825eb357b
+    image: genechen0203/pfcp-udp-proxy:latest
+    imageID: docker-pullable://genechen0203/pfcp-udp-proxy@sha256:e741a7c486742d9571b93e237f36fb477c35fc6758f06bc23fb15e76cfa30154
+    lastState: {}
+    name: proxy
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2026-08-13T17:19:58Z"
+  hostIP: 192.168.1.240
+  phase: Running
+  podIP: 10.42.2.13
+  podIPs:
+  - ip: 10.42.2.13
+  qosClass: BestEffort
+  startTime: "2026-08-13T17:19:55Z"
+

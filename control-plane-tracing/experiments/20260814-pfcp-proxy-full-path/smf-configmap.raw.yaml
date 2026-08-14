@@ -1,0 +1,84 @@
+apiVersion: v1
+data:
+  smf.conf: "SMF =\n{\n    FQDN          = \"oai-smf\";\n    INSTANCE      = 0;         #
+    0 is the default\n    PID_DIRECTORY = \"/var/run\";  # /var/run is the default\n\n
+    \   INTERFACES :\n    {\n        N4 :\n        {\n            # SMF binded interface
+    for N4 communication (UPF)\n            INTERFACE_NAME = \"eth0\"; # YOUR NETWORK
+    CONFIG HERE\n            IPV4_ADDRESS   = \"read\";\n         };\n\n        SBI
+    :\n        {\n            # SMF binded interface for SBI interface (e.g., communication
+    with AMF, UDM)\n            INTERFACE_NAME = \"eth0\";     # YOUR NETWORK CONFIG
+    HERE\n            IPV4_ADDRESS   = \"read\";\n            PORT           = 80;
+    \      # YOUR NETWORK CONFIG HERE (default: 80)\n            HTTP2_PORT     =
+    8080; # YOUR NETWORK CONFIG HERE\n            API_VERSION    = \"v1\";     # YOUR
+    SMF API VERSION CONFIG HERE\n         };\n\n    };\n\n    # DNN configurations
+    with pool of UE assigned IP addresses\n    # Do not make IP pools overlap\n    #
+    first IPv4 address X.Y.Z.1 is reserved for GTP network device on UPF\n    DNN_LIST
+    = (\n       # PDU_SESSION_TYPE choice in {IPv4, IPv6, IPv4v6}\n       # DNN IP
+    ADDRESS RANGE format is for example: \"12.2.1.2 - 12.2.1.128\"\n      {DNN_NI
+    = \"oai\"; PDU_SESSION_TYPE = \"IPv4\"; IPV4_RANGE = \"12.1.1.2 - 12.1.1.254\";
+    IPV6_PREFIX = \"2001:1:2::/64\"}\n      ,{DNN_NI = \"ims\"; PDU_SESSION_TYPE =
+    \"IPv4v6\"; IPV4_RANGE = \"12.2.1.41 - 12.2.1.254\"; IPV6_PREFIX = \"3001:1:2::/64\"}\n
+    \   );\n\n    # DNS address communicated to UEs\n    DEFAULT_DNS_IPV4_ADDRESS
+    \    = \"8.8.8.8\";      # YOUR DNS CONFIG HERE\n    DEFAULT_DNS_SEC_IPV4_ADDRESS
+    = \"172.21.3.100\";  # YOUR DNS CONFIG HERE\n    # IPV6 tunnels are not supported\n
+    \   DEFAULT_DNS_IPV6_ADDRESS     = \"2001:4860:4860::8888\";            # YOUR
+    DNS CONFIG HERE\n    DEFAULT_DNS_SEC_IPV6_ADDRESS = \"2001:4860:4860::8844\";
+    \           # YOUR DNS CONFIG HERE\n    \n    #Default P-CSCF server \n    DEFAULT_CSCF_IPV4_ADDRESS
+    = \"172.21.6.13\"; \n    DEFAULT_CSCF_IPV6_ADDRESS = \"fe80::7915:f408:1787:db8b\";\n\n
+    \   #Default UE MTU\n    UE_MTU = 1500;\n\n    # SUPPORT FEATURES\n    SUPPORT_FEATURES:\n
+    \   {\n      # STRING, {\"yes\", \"no\"},\n      REGISTER_NRF = \"yes\";  # Set
+    to yes if SMF resgisters to an NRF\n      DISCOVER_UPF = \"no\";  # Set to yes
+    to enable UPF discovery and selection\n      DISCOVER_PCF = \"no\";  # Set to
+    yes to enable PCF discovery and selection\n      FORCE_PUSH_PROTOCOL_CONFIGURATION_OPTIONS
+    = \"no\"; # Non standard feature, normally should be set to \"no\",\n                                                        #
+    but you may need to set to yes for UE that do not explicitly request a PDN address
+    through NAS signalling\n      USE_LOCAL_SUBSCRIPTION_INFO = \"yes\";  # Set to
+    yes if SMF uses local subscription information instead of from an UDM\n      USE_LOCAL_PCC_RULES
+    = \"yes\";  # Set to yes if SMF uses local PCC rules instead of from an PCF\n
+    \     USE_FQDN_DNS = \"yes\";                  # Set to yes if AMF/UDM/NRF/UPF
+    will relying on a DNS to resolve FQDN\n      HTTP_VERSION = 1;                    #
+    Default: 1\n      ENABLE_USAGE_REPORTING = \"no\"   # Set yes if UE USAGE REPORTING
+    is to be done at UPF\n    }\n\n    AMF :\n    {\n      IPV4_ADDRESS = \"127.0.0.1\";
+    \ # YOUR AMF CONFIG HERE\n      PORT         =  80;    # YOUR AMF CONFIG HERE
+    (default: 80)\n      API_VERSION  = \"v1\";   # YOUR AMF API VERSION FOR SBI CONFIG
+    HERE\n      FQDN         = \"oai-amf10-svc\"         # YOUR AMF FQDN CONFIG HERE\n
+    \   };\n\n    UDM :\n    {\n      IPV4_ADDRESS = \"127.0.0.1\";  # YOUR UDM CONFIG
+    HERE\n      PORT         =  80;   # YOUR UDM CONFIG HERE (default: 80)\n      API_VERSION
+    \ = \"v1\";   # YOUR UDM API VERSION FOR SBI CONFIG HERE\n      FQDN         =
+    \"oai-udm10-svc\"           # YOUR UDM FQDN CONFIG HERE\n    };\n\n    NRF :\n
+    \   {\n      IPV4_ADDRESS = \"127.0.0.1\";  # YOUR NRF CONFIG HERE\n      PORT
+    \        =  80;            # YOUR NRF CONFIG HERE (default: 80)\n      API_VERSION
+    \ = \"v1\";   # YOUR NRF API VERSION FOR SBI CONFIG HERE\n      FQDN         =
+    \"oai-nrf10-svc\"           # YOUR NRF FQDN CONFIG HERE\n    };\n\n    PCF :\n
+    \   {\n      IPV4_ADDRESS = \"127.0.0.1\";  # YOUR PCF CONFIG HERE\n      PORT
+    \        =  80;           # YOUR PCF CONFIG HERE (default: 80)\n      API_VERSION
+    \ = \"v1\";   # YOUR PCF API VERSION FOR SBI CONFIG HERE\n      FQDN         =
+    \"localhost\"           # YOUR PCF FQDN CONFIG HERE\n    };\n\n    UPF_LIST =
+    (\n         {IPV4_ADDRESS = \"10.43.215.40\"; \n         FQDN = \"pfcpproxy10\";
+    NWI_LIST = ({DOMAIN_ACCESS  = \"none\",\n         DOMAIN_CORE = \"none\"})}   #
+    YOUR UPF CONFIG HERE\n    );                                                               #
+    NWI_LIST IS OPTIONAL PARAMETER\n\n    LOCAL_CONFIGURATION :\n    {\n      SESSION_MANAGEMENT_SUBSCRIPTION_LIST
+    = (\n         { NSSAI_SST = 210,DNN = \"oai\", DEFAULT_SESSION_TYPE = \"IPv4\",
+    DEFAULT_SSC_MODE = 1,\n           QOS_PROFILE_5QI = 2, QOS_PROFILE_PRIORITY_LEVEL
+    = 1, QOS_PROFILE_ARP_PRIORITY_LEVEL = 15, QOS_PROFILE_ARP_PREEMPTCAP = \"NOT_PREEMPT\",\n
+    \          QOS_PROFILE_ARP_PREEMPTVULN = \"NOT_PREEMPTABLE\", SESSION_AMBR_UL
+    = \"1000Mbps\", SESSION_AMBR_DL = \"1000Mbps\"\n            ,NSSAI_SD = \"123\"\n
+    \          }\n         ,{ NSSAI_SST = 1,DNN = \"ims\", DEFAULT_SESSION_TYPE =
+    \"IPv4v6\", DEFAULT_SSC_MODE = 1,\n           QOS_PROFILE_5QI = 1, QOS_PROFILE_PRIORITY_LEVEL
+    = 1, QOS_PROFILE_ARP_PRIORITY_LEVEL = 15, QOS_PROFILE_ARP_PREEMPTCAP = \"NOT_PREEMPT\",\n
+    \          QOS_PROFILE_ARP_PREEMPTVULN = \"NOT_PREEMPTABLE\", SESSION_AMBR_UL
+    = \"1000Mbps\", SESSION_AMBR_DL = \"1000Mbps\"\n            ,NSSAI_SD = \"0xFFFFFF\"\n
+    \          }\n        );\n    };\n\n};\n"
+kind: ConfigMap
+metadata:
+  annotations:
+    meta.helm.sh/release-name: smf10
+    meta.helm.sh/release-namespace: oai
+  creationTimestamp: "2026-08-13T17:21:03Z"
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  name: oai-smf10-configmap
+  namespace: oai
+  resourceVersion: "2466625"
+  uid: 17b3f404-d586-4b6d-aa9d-457ccd8c1d68
+
