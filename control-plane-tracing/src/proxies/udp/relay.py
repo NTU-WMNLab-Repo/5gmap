@@ -28,6 +28,7 @@ class UdpRelayConfig:
 @dataclass
 class ForwardedDatagram:
     direction: str
+    payload: bytes
     payload_size: int
     recv_time_ns: int
     send_done_time_ns: int
@@ -253,6 +254,7 @@ class UdpRelay:
 
         event = ForwardedDatagram(
             direction=direction,
+            payload=bytes(data),
             payload_size=len(data),
             recv_time_ns=recv_time_ns,
             send_done_time_ns=send_done_time_ns,

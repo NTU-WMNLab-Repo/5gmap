@@ -2,15 +2,19 @@
 
 ## Prototype Status
 
-This first PFCP proxy is a transparent UDP relay between an SMF and a UPF. It
-forwards each original datagram before enqueueing observability work and exports
-one raw OpenTelemetry span per forwarded datagram.
+This PFCP proxy is a transparent UDP relay between an SMF and a UPF. It
+forwards each original datagram before enqueueing observability work, then
+performs PFCP header light decode asynchronously.
 
-It intentionally does **not** decode PFCP yet. Therefore it does not export a
-PFCP message type, sequence number, SEID, F-SEID, PDR, FAR, TEID, transaction
-correlation, or a UE/cross-protocol trace relationship. The first deployment
-goal is to keep the complete SMF-UPF PFCP path through the relay without
-rewriting a PFCP datagram.
+The decoder exports PFCP version, flags, message type and name, message length,
+sequence number, and SEID when present. It does not parse PFCP Information
+Elements, so F-SEID, PDR, FAR, TEID, and UE/session fields inside IEs are not
+exported yet. Request/response transaction correlation and a UE/cross-protocol
+trace relationship are also not implemented yet.
+
+One forwarded UDP datagram normally produces one span. If the datagram contains
+a valid `FO=1` PFCP bundle, the worker emits one span for every embedded PFCP
+message without changing the original datagram before forwarding.
 
 ## Traffic Path
 
@@ -42,18 +46,41 @@ FQDN to `oai-spgwu-tiny<slice>-svc`.
 The span name is one of:
 
 ```text
-PFCP smf_to_upf raw_datagram
-PFCP upf_to_smf raw_datagram
+PFCP smf_to_upf AssociationSetupRequest
+PFCP upf_to_smf AssociationSetupResponse
+PFCP smf_to_upf SessionEstablishmentRequest
 ```
 
-Every raw span includes `network.transport=udp`, `pfcp.direction`, payload
-size, UDP source/destination addresses and ports, `proxy.forward.duration_ms`,
-`tracing.queue_delay_ms`, and `tracing.dropped_events`.
+Every span includes `network.transport=udp`, `pfcp.direction`, UDP
+source/destination addresses and ports, `proxy.forward.duration_ms`,
+`tracing.queue_delay_ms`, and `tracing.dropped_events`. Header-decoded spans
+also include:
 
-The span starts when the proxy receives the datagram and ends when the proxy
-finishes forwarding it. Queue delay is not forwarding overhead because export
-is asynchronous. No datagram payload or decoded field is sent to Jaeger in
-this version.
+```text
+pfcp.version
+pfcp.fo_flag
+pfcp.mp_flag
+pfcp.s_flag
+pfcp.message.type
+pfcp.message.name
+pfcp.message.length
+pfcp.message.size
+pfcp.sequence_number
+pfcp.seid                 # present only when S=1
+pfcp.message.index
+pfcp.datagram.message.count
+pfcp.datagram.bundled
+```
+
+`pfcp.payload.size` is the individual PFCP message size; `pfcp.datagram.size`
+is the original UDP datagram size. For a bundle, every child message span starts
+when the proxy receives the shared UDP datagram and ends when it finishes
+forwarding that datagram. Queue and decoder timing are therefore common
+observability costs, not added forwarding overhead.
+
+No raw datagram payload or decoded IE value is sent to Jaeger. Unknown message
+types still receive header-decoded spans. Malformed header or bundle data is
+reported through `decoder.error` and does not affect forwarding.
 
 ## Environment Variables
 

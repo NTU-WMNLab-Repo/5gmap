@@ -10,7 +10,8 @@ SRC_ROOT = pathlib.Path(__file__).resolve().parents[2]
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
-from proxies.udp.async_trace_worker import AsyncRawTraceWorker  # noqa: E402
+from protocols.pfcp.decoder import PfcpDecoder  # noqa: E402
+from proxies.udp.async_trace_worker import AsyncDatagramTraceWorker  # noqa: E402
 from proxies.udp.relay import UdpRelay, UdpRelayConfig  # noqa: E402
 
 
@@ -57,10 +58,11 @@ def configure_logging() -> None:
 def run_proxy() -> None:
     configure_logging()
     cfg = load_config()
-    worker = AsyncRawTraceWorker(
+    worker = AsyncDatagramTraceWorker(
         service_name=cfg.service_name,
         protocol_name="pfcp",
         queue_size=cfg.trace_queue_size,
+        decoder=PfcpDecoder(),
     )
     worker.start()
 
