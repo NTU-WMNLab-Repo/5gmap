@@ -10,6 +10,7 @@ WORKDIR /app
 COPY proxies/pfcp-udp-proxy/requirements.txt .
 RUN pip3 install --no-cache-dir -r requirements.txt
 
+COPY protocols ./protocols
 COPY proxies ./proxies
 
 CMD ["python3", "-u", "proxies/pfcp-udp-proxy/pfcp_udp_proxy.py"]
