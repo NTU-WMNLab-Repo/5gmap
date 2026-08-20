@@ -12,5 +12,6 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 
 COPY protocols ./protocols
 COPY proxies ./proxies
+COPY correlator ./correlator
 
 CMD ["python3", "-u", "proxies/pfcp-udp-proxy/pfcp_udp_proxy.py"]
