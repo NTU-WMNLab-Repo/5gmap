@@ -4,6 +4,20 @@ Correlators consume decoded control-plane messages from the async trace worker
 and return extra span attributes. They run after packet forwarding, so
 correlation cost is trace-worker cost, not forwarding-path latency.
 
+## PFCP Transaction Correlation
+
+`pfcp_transaction.py` is local state used by the PFCP UDP proxy. It assigns a
+shared trace to a supported PFCP request, its identical retransmissions, and
+its matching response. The transaction root is exported immediately, and a
+terminal summary records `matched`, `timed_out`, or forced-close state without
+holding packet forwarding on the trace worker.
+
+The tracker keeps active request state and a short closed tombstone. A matching
+response normally closes active state; the tombstone retains its trace identity
+only for late duplicate UDP traffic. See [PFCP Transaction Correlation](pfcp-transaction.md)
+for the matching key, state transitions, configurable retention, and TS 29.244
+reliable-delivery basis.
+
 ## Online Cross-Protocol Correlation
 
 `online/` contains the first online F1AP/NGAP UE lifecycle correlator service.

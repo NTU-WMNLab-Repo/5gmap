@@ -45,9 +45,11 @@ class AsyncDatagramTraceWorker:
         protocol_name: str,
         queue_size: int,
         decoder: Optional[Any] = None,
+        transaction_correlator: Optional[Any] = None,
     ) -> None:
         self.protocol_name = protocol_name
         self.decoder = decoder
+        self.transaction_correlator = transaction_correlator
         self.queue: queue.Queue[TraceJob] = queue.Queue(maxsize=queue_size)
         self.tracer = configure_tracer(service_name)
         self.dropped = 0
@@ -68,13 +70,18 @@ class AsyncDatagramTraceWorker:
 
     def _run(self) -> None:
         while True:
-            job = self.queue.get()
+            try:
+                job = self.queue.get(timeout=0.1)
+            except queue.Empty:
+                self._expire_transaction_contexts()
+                continue
             try:
                 self._export(job)
             except Exception:
                 logging.exception("UDP trace worker failed to export event")
             finally:
                 self.queue.task_done()
+                self._expire_transaction_contexts()
 
     def _export(self, job: TraceJob) -> None:
         worker_start_ns = time.monotonic_ns()
@@ -84,11 +91,13 @@ class AsyncDatagramTraceWorker:
         decoder_duration_ms = (decoder_done_ns - worker_start_ns) / 1_000_000.0
 
         for decoded in decoded_messages:
+            transaction_decision = self._observe_transaction(decoded, job.event)
             self._export_message(
                 job=job,
                 decoded=decoded,
                 queue_delay_ms=queue_delay_ms,
                 decoder_duration_ms=decoder_duration_ms,
+                transaction_decision=transaction_decision,
             )
 
     def _decode(self, event: ForwardedDatagram) -> list[Any]:
@@ -111,12 +120,19 @@ class AsyncDatagramTraceWorker:
         decoded: Any,
         queue_delay_ms: float,
         decoder_duration_ms: float,
+        transaction_decision: Optional[Any] = None,
     ) -> None:
         event = job.event
-        span = self.tracer.start_span(
-            f"{self.protocol_name.upper()} {event.direction} {decoded.message_name}",
-            start_time=event.recv_time_ns,
-        )
+        span_name = f"{self.protocol_name.upper()} {event.direction} {decoded.message_name}"
+        parent_context = getattr(transaction_decision, "parent_context", None)
+        if parent_context is None:
+            span = self.tracer.start_span(span_name, start_time=event.recv_time_ns)
+        else:
+            span = self.tracer.start_span(
+                span_name,
+                context=parent_context,
+                start_time=event.recv_time_ns,
+            )
         try:
             span.set_attribute("network.protocol.name", self.protocol_name)
             span.set_attribute("network.transport", "udp")
@@ -150,11 +166,66 @@ class AsyncDatagramTraceWorker:
                 else:
                     span.set_attribute(key, repr(value))
 
+            if transaction_decision is not None:
+                for key, value in transaction_decision.attributes.items():
+                    span.set_attribute(key, value)
+
             if decoded.decode_error:
                 span.set_attribute("decoder.error", decoded.decode_error)
         finally:
             end_time = max(event.send_done_time_ns, event.recv_time_ns + 1)
             span.end(end_time=end_time)
+            self._finish_transaction(transaction_decision, end_time)
+
+    def _observe_transaction(self, decoded: Any, event: ForwardedDatagram) -> Optional[Any]:
+        if self.transaction_correlator is None:
+            return None
+
+        try:
+            return self.transaction_correlator.observe(
+                decoded,
+                event,
+                self._message_payload(decoded, event.payload),
+            )
+        except Exception:
+            logging.exception("UDP transaction correlator failed to observe message")
+            return None
+
+    def _finish_transaction(
+        self,
+        transaction_decision: Optional[Any],
+        end_time_ns: int,
+    ) -> None:
+        if self.transaction_correlator is None:
+            return
+
+        try:
+            self.transaction_correlator.finish(transaction_decision, end_time_ns)
+        except Exception:
+            logging.exception("UDP transaction correlator failed to finish message")
+
+    def _expire_transaction_contexts(self) -> None:
+        if self.transaction_correlator is None:
+            return
+
+        try:
+            self.transaction_correlator.expire()
+        except Exception:
+            logging.exception("UDP transaction correlator failed to expire state")
+
+    def _message_payload(self, decoded: Any, payload: bytes) -> bytes:
+        fields = getattr(decoded, "fields", {})
+        offset = fields.get(f"{self.protocol_name}.message.offset")
+        size = fields.get(f"{self.protocol_name}.message.size")
+        if (
+            isinstance(offset, int)
+            and isinstance(size, int)
+            and offset >= 0
+            and size > 0
+            and offset + size <= len(payload)
+        ):
+            return payload[offset : offset + size]
+        return payload
 
     def _raw_message(self, direction: str) -> Any:
         return SimpleNamespace(

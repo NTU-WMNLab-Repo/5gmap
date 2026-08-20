@@ -8,6 +8,7 @@ This folder contains the control-plane tracing prototype code.
 control-plane-tracing/src/
   correlator/
     f1ap.py
+    pfcp_transaction.py
   proxies/
     sctp/
       relay.py
@@ -45,6 +46,8 @@ control-plane-tracing/src/
   emits span attributes for Jaeger filtering.
 - `correlator/ngap.py` keeps lightweight NGAP UE-context correlation state and
   emits span attributes for Jaeger filtering.
+- `correlator/pfcp_transaction.py` keeps bounded local PFCP request,
+  retransmission, and response trace state for the UDP tracing proxy.
 - `protocols/f1ap/decoder.py` handles F1AP message classification and decode.
 - `protocols/ngap/decoder.py` handles lightweight NGAP top-level message
   classification for the NGAP proxy skeleton.
@@ -58,7 +61,8 @@ control-plane-tracing/src/
 - `proxies/ngap-sctp-proxy/ngap_sctp_proxy.py` wires config, SCTP relay, the
   NGAP decoder, correlator, and the tracing worker together.
 - `proxies/pfcp-udp-proxy/pfcp_udp_proxy.py` wires config, the UDP relay, PFCP
-  header decoder, and asynchronous tracing worker together.
+  header decoder, transaction correlator, and asynchronous tracing worker
+  together.
 
 The SCTP relay does not wait for F1AP decoding. It forwards the original bytes
 first, then enqueues a copied payload for the tracing worker.
@@ -190,9 +194,11 @@ decode in the asynchronous worker. It exports PFCP version, flags, message
 type/name, length, sequence number, and SEID when present. Valid `FO=1`
 bundled datagrams produce one span per embedded PFCP message.
 
-PFCP IE decoding, request/response transaction correlation, retransmission
-detection, shared trace IDs, and NGAP-to-PFCP correlation are not implemented.
-The decoded header fields are retained as the input for those later stages.
+PFCP IE decoding and NGAP-to-PFCP correlation are not implemented. Header-based
+request/response transaction correlation and retransmission detection now use
+the scoped PFCP sequence number and observed UDP tuple to place related packet
+spans under one transaction root. The decoded header fields remain the input for
+later PFCP IE and cross-protocol work.
 
 ## NGAP Correlation
 

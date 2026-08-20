@@ -63,6 +63,12 @@ spec:
               value: "65535"
             - name: PFCP_DNS_REFRESH_SECONDS
               value: "5"
+            - name: PFCP_TRANSACTION_TIMEOUT_MS
+              value: "30000"
+            - name: PFCP_TRANSACTION_CLOSED_RETENTION_MS
+              value: "5000"
+            - name: PFCP_TRANSACTION_MAX_CONTEXTS
+              value: "10000"
           ports:
             - containerPort: __PFCP_PORT__
               protocol: UDP

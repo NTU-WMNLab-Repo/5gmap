@@ -9,8 +9,10 @@ performs PFCP header light decode asynchronously.
 The decoder exports PFCP version, flags, message type and name, message length,
 sequence number, and SEID when present. It does not parse PFCP Information
 Elements, so F-SEID, PDR, FAR, TEID, and UE/session fields inside IEs are not
-exported yet. Request/response transaction correlation and a UE/cross-protocol
-trace relationship are also not implemented yet.
+exported yet. Header-decoded request/response transaction correlation is
+enabled: a request, its identical retransmissions, and its matching response
+share one trace. UE and cross-protocol trace relationships are not implemented
+yet.
 
 One forwarded UDP datagram normally produces one span. If the datagram contains
 a valid `FO=1` PFCP bundle, the worker emits one span for every embedded PFCP
@@ -82,6 +84,21 @@ No raw datagram payload or decoded IE value is sent to Jaeger. Unknown message
 types still receive header-decoded spans. Malformed header or bundle data is
 reported through `decoder.error` and does not affect forwarding.
 
+For supported PFCP request/response pairs, the proxy immediately exports a
+`PFCP <procedure> transaction` root, then makes the packet spans children of
+that root. A matching response exports a `PFCP <procedure> transaction summary`
+child with `pfcp.transaction.observed_duration_ms`. The immediate root is a
+trace anchor, not request/response latency; packet spans still show only the
+receive-to-forwarding duration.
+
+Message spans receive `pfcp.transaction.id`, `pfcp.transaction.state`,
+`pfcp.transaction.role`, `pfcp.transaction.attempt`, and
+`pfcp.transaction.retransmission`. Matching responses also receive
+`pfcp.transaction.response.matched=true`. A short closed tombstone keeps the
+same trace parent for late duplicate UDP messages without retaining an active
+request indefinitely. Detailed matching and timeout behavior is in
+[`../../correlator/pfcp-transaction.md`](../../correlator/pfcp-transaction.md).
+
 ## Environment Variables
 
 | Variable | Default | Description |
@@ -98,6 +115,9 @@ reported through `decoder.error` and does not affect forwarding.
 | `TRACE_QUEUE_SIZE` | `10000` | Async raw-span queue depth. |
 | `PFCP_MAX_DATAGRAM_BYTES` | `65535` | Maximum UDP receive size. |
 | `PFCP_DNS_REFRESH_SECONDS` | `5` | UPF/SMF service DNS refresh interval. |
+| `PFCP_TRANSACTION_TIMEOUT_MS` | `30000` | Idle time after the most recent request or retransmission before the proxy closes active transaction state. |
+| `PFCP_TRANSACTION_CLOSED_RETENTION_MS` | `5000` | Closed-state retention for late duplicate requests or responses. |
+| `PFCP_TRANSACTION_MAX_CONTEXTS` | `10000` | Maximum active transactions and maximum retained closed tombstones; the oldest active state is force-closed. |
 
 ## Container
 

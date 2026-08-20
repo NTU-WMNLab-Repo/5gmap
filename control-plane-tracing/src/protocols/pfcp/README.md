@@ -116,17 +116,39 @@ or malformed `FO` chain receives a `MalformedDatagram` span with
 `decoder.error`. A malformed message remains a tracing concern only and never
 delays or prevents forwarding.
 
-The first version deliberately excludes:
+The current decoder deliberately excludes:
 
 - PFCP IE parsing, including F-SEID, PDR, FAR, UE IP address, and TEID;
-- PFCP request/response transaction correlation and shared trace IDs;
-- retransmission detection and attempt numbering;
 - NGAP/F1AP cross-protocol UE correlation;
 - exporting complete raw PFCP payloads to Jaeger.
 
-IE parsing is a later, separate step. PFCP IEs have their own binary type,
-length, and value format, so it should be introduced only after header parsing
+PFCP request/response transaction correlation and retransmission detection are
+now implemented from the decoded header fields. The worker groups a request,
+identical request retransmissions, and a matching response into one trace using
+the scoped sequence number and observed UDP peers. See
+`../../correlator/pfcp-transaction.md` for state, timeout, trace-shape, and
+attribute details.
+
+IE parsing remains a later, separate step. PFCP IEs have their own binary type,
+length, and value format, so they should be introduced only after header parsing
 has been validated against the raw full-path capture.
+
+## Reliable Delivery And Transaction Retention
+
+TS 29.244 clause 6.4 requires a sender to retain a request until it receives a
+matching response or stops retransmitting. A response uses the same sequence
+number, while retransmitted requests retain the original message content and
+header. The relevant sequence number is unique only among outstanding requests
+for the relevant sender IP address, sender UDP port, and remote PFCP peer; it is
+not a globally unique packet ID.
+
+The same clause defines `T1` and `N1` as implementation-specific. It supplies
+no universal retry timer or retry count that a proxy can hard-code. Therefore
+the proxy uses a configurable inactivity timeout after the most recent request
+or retransmission, plus a short closed-state retention period for late duplicate
+traffic. Those proxy values are not protocol-defined `T1`/`N1` values. Their
+defaults and the rationale for closing on a matching response are documented in
+`../../correlator/pfcp-transaction.md`.
 
 ## Planned Decode Path
 
@@ -135,13 +157,9 @@ Recommended implementation order:
 1. Confirm header fields and message names in a new full-path PFCP experiment.
 2. Capture or generate a real `FO=1` PFCP bundle and verify one span per
    embedded message in Jaeger.
-3. Add request/response transaction correlation using peer scope, sequence
-   number, message type, and SEID where applicable. The worker will then put
-   matching request and response spans into one trace.
-4. Detect PFCP retransmissions as repeated outstanding requests with the same
-   scoped sequence number, preserve an attempt count, and distinguish them from
-   a future sequence-number reuse.
-5. Decide which PFCP IEs are needed for later NGAP-PFCP correlation before
+3. Validate request/response transaction traces against a live retransmission
+   capture, including attempt counts and late duplicate traffic.
+4. Decide which PFCP IEs are needed for later NGAP-PFCP correlation before
    parsing any session payload.
 
 ## Python Decoder Choice
@@ -167,6 +185,10 @@ Neither tool is required for the current header decoder.
 - ETSI publication of 3GPP TS 29.244 v19.5.0, clauses 7.2.1A, 7.2.2, and
   7.3.1 (PFCP message format, header, header usage, and message types):
   https://www.etsi.org/deliver/etsi_ts/129200_129299/129244/19.05.00_60/ts_129244v190500p.pdf
+- ETSI publication of 3GPP TS 29.244 v19.4.0, clause 6.4 (reliable delivery,
+  sequence number scope, retransmission, and implementation-specific `T1` and
+  `N1`):
+  https://www.etsi.org/deliver/etsi_ts/129200_129299/129244/19.04.00_60/ts_129244v190400p.pdf
 - 3GPP TS 29.244 archive:
   https://www.3gpp.org/ftp/Specs/archive/29_series/29.244/
 - Scapy PFCP dissector:

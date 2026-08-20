@@ -10,6 +10,7 @@ SRC_ROOT = pathlib.Path(__file__).resolve().parents[2]
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
+from correlator.pfcp_transaction import PfcpTransactionCorrelator  # noqa: E402
 from protocols.pfcp.decoder import PfcpDecoder  # noqa: E402
 from proxies.udp.async_trace_worker import AsyncDatagramTraceWorker  # noqa: E402
 from proxies.udp.relay import UdpRelay, UdpRelayConfig  # noqa: E402
@@ -31,6 +32,9 @@ class Config:
     trace_queue_size: int
     max_datagram_bytes: int
     dns_refresh_seconds: float
+    transaction_timeout_ms: int
+    transaction_closed_retention_ms: int
+    transaction_max_contexts: int
 
 
 def load_config() -> Config:
@@ -46,6 +50,18 @@ def load_config() -> Config:
         trace_queue_size=int(os.getenv("TRACE_QUEUE_SIZE", "10000")),
         max_datagram_bytes=int(os.getenv("PFCP_MAX_DATAGRAM_BYTES", "65535")),
         dns_refresh_seconds=float(os.getenv("PFCP_DNS_REFRESH_SECONDS", "5")),
+        transaction_timeout_ms=max(
+            1,
+            int(os.getenv("PFCP_TRANSACTION_TIMEOUT_MS", "30000")),
+        ),
+        transaction_closed_retention_ms=max(
+            0,
+            int(os.getenv("PFCP_TRANSACTION_CLOSED_RETENTION_MS", "5000")),
+        ),
+        transaction_max_contexts=max(
+            1,
+            int(os.getenv("PFCP_TRANSACTION_MAX_CONTEXTS", "10000")),
+        ),
     )
 
 
@@ -58,11 +74,18 @@ def configure_logging() -> None:
 def run_proxy() -> None:
     configure_logging()
     cfg = load_config()
+    transaction_correlator = PfcpTransactionCorrelator(
+        service_name=cfg.service_name,
+        timeout_ms=cfg.transaction_timeout_ms,
+        closed_retention_ms=cfg.transaction_closed_retention_ms,
+        max_contexts=cfg.transaction_max_contexts,
+    )
     worker = AsyncDatagramTraceWorker(
         service_name=cfg.service_name,
         protocol_name="pfcp",
         queue_size=cfg.trace_queue_size,
         decoder=PfcpDecoder(),
+        transaction_correlator=transaction_correlator,
     )
     worker.start()
 
