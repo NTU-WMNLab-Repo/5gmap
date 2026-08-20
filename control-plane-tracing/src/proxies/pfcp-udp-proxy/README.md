@@ -4,15 +4,15 @@
 
 This PFCP proxy is a transparent UDP relay between an SMF and a UPF. It
 forwards each original datagram before enqueueing observability work, then
-performs PFCP header light decode asynchronously.
+performs PFCP header and selected-IE light decode asynchronously.
 
 The decoder exports PFCP version, flags, message type and name, message length,
-sequence number, and SEID when present. It does not parse PFCP Information
-Elements, so F-SEID, PDR, FAR, TEID, and UE/session fields inside IEs are not
-exported yet. Header-decoded request/response transaction correlation is
-enabled: a request, its identical retransmissions, and its matching response
-share one trace. UE and cross-protocol trace relationships are not implemented
-yet.
+sequence number, and SEID when present. It also walks bounded PFCP TLVs and
+exports Cause, Node ID, CP/UP F-SEID, PDR/FAR identity and direction, N3
+F-TEID/Outer Header Creation endpoints, UE IP, Network Instance, and S-NSSAI.
+Request/response transaction correlation is enabled: a request, its identical
+retransmissions, and its matching response share one trace. UE and
+cross-protocol trace relationships are not implemented yet.
 
 One forwarded UDP datagram normally produces one span. If the datagram contains
 a valid `FO=1` PFCP bundle, the worker emits one span for every embedded PFCP
@@ -74,15 +74,37 @@ pfcp.datagram.message.count
 pfcp.datagram.bundled
 ```
 
+Selected IE attributes are emitted as numbered records, including:
+
+```text
+pfcp.ie.decode.status
+pfcp.node_id.<index>.*
+pfcp.cause.<index>.*
+pfcp.session.cp_f_seid.*
+pfcp.session.up_f_seid.*
+pfcp.pdr.<index>.*
+pfcp.far.<index>.*
+pfcp.f_teid.<index>.*
+pfcp.outer_header_creation.<index>.*
+pfcp.ue_ip.<index>.*
+pfcp.network_instance.<index>.*
+pfcp.s_nssai.<index>.*
+```
+
+See [`../../protocols/pfcp/README.md`](../../protocols/pfcp/README.md) for the
+exact IE scope, nesting, endpoint-role attributes, and specification basis.
+
 `pfcp.payload.size` is the individual PFCP message size; `pfcp.datagram.size`
 is the original UDP datagram size. For a bundle, every child message span starts
 when the proxy receives the shared UDP datagram and ends when it finishes
 forwarding that datagram. Queue and decoder timing are therefore common
 observability costs, not added forwarding overhead.
 
-No raw datagram payload or decoded IE value is sent to Jaeger. Unknown message
-types still receive header-decoded spans. Malformed header or bundle data is
-reported through `decoder.error` and does not affect forwarding.
+No raw datagram payload or unsupported IE value is sent to Jaeger. Unknown
+message types still receive header-decoded spans. Malformed header or bundle
+data is reported through `decoder.error`; malformed selected IE data is isolated
+under `pfcp.ie.decode.*`. Neither condition affects forwarding, and an IE error
+does not discard valid header fields used by transaction correlation.
 
 For supported PFCP request/response pairs, the proxy immediately exports a
 `PFCP <procedure> transaction` root, then makes the packet spans children of

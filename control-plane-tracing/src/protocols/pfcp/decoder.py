@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import Final, Optional
+from typing import Any, Final, Optional
 
 from protocols.decoded_message import DecodedMessage
+from protocols.pfcp.ie_decoder import PfcpIeDecoder
 
 
 PFCP_VERSION: Final = 1
@@ -10,8 +11,7 @@ PFCP_MIN_NODE_HEADER_BYTES: Final = 8
 PFCP_MIN_SESSION_HEADER_BYTES: Final = 16
 
 
-# TS 29.244 Table 7.3-1. The lightweight decoder intentionally maps only the
-# header message type; it does not inspect message-specific Information Elements.
+# TS 29.244 Table 7.3-1.
 PFCP_MESSAGE_TYPES: Final[dict[int, tuple[str, str, str]]] = {
     1: ("Heartbeat", "HeartbeatRequest", "request"),
     2: ("Heartbeat", "HeartbeatResponse", "response"),
@@ -42,7 +42,10 @@ PFCP_MESSAGE_TYPES: Final[dict[int, tuple[str, str, str]]] = {
 
 
 class PfcpDecoder:
-    """Decode PFCP headers without parsing Information Elements."""
+    """Decode PFCP headers and selected Information Elements."""
+
+    def __init__(self, ie_decoder: Optional[PfcpIeDecoder] = None) -> None:
+        self.ie_decoder = ie_decoder or PfcpIeDecoder()
 
     def decode_datagram(self, payload: bytes, direction: str) -> list[DecodedMessage]:
         if not payload:
@@ -133,8 +136,8 @@ class PfcpDecoder:
         )
         message_size = 4 + message_length
 
-        base_fields: dict[str, bool | int | str] = {
-            "decoder.strategy": "pfcp_header",
+        base_fields: dict[str, Any] = {
+            "decoder.strategy": "pfcp_header_ie",
             "pfcp.decode.enabled": True,
             "pfcp.version": version,
             "pfcp.fo_flag": follow_on,
@@ -206,12 +209,24 @@ class PfcpDecoder:
         base_fields["pfcp.message.class"] = message_class
         if version != PFCP_VERSION:
             base_fields["pfcp.decode.status"] = "unsupported_version"
+            base_fields["pfcp.ie.decode.enabled"] = False
+            base_fields["pfcp.ie.decode.status"] = "skipped_unsupported_version"
             decode_error = f"unsupported PFCP version {version}"
-        elif message_type not in PFCP_MESSAGE_TYPES:
-            base_fields["pfcp.decode.status"] = "unknown_message_type"
-            decode_error = None
         else:
-            base_fields["pfcp.decode.status"] = "header_decoded"
+            ie_start = offset + header_size
+            ie_end = offset + message_size
+            base_fields.update(
+                self.ie_decoder.decode(
+                    payload[ie_start:ie_end],
+                    message_type=message_type,
+                    direction=direction,
+                )
+            )
+            base_fields["pfcp.decode.status"] = (
+                "unknown_message_type"
+                if message_type not in PFCP_MESSAGE_TYPES
+                else "header_decoded"
+            )
             decode_error = None
 
         return (
@@ -246,10 +261,10 @@ class PfcpDecoder:
         message_index: int,
         offset: int,
         error: str,
-        fields: Optional[dict[str, bool | int | str]] = None,
+        fields: Optional[dict[str, Any]] = None,
     ) -> DecodedMessage:
-        message_fields: dict[str, bool | int | str] = {
-            "decoder.strategy": "pfcp_header",
+        message_fields: dict[str, Any] = {
+            "decoder.strategy": "pfcp_header_ie",
             "pfcp.decode.enabled": True,
             "pfcp.decode.status": "malformed",
             "pfcp.message.offset": offset,

@@ -32,6 +32,7 @@ control-plane-tracing/src/
       decoder.py
     pfcp/
       decoder.py
+      ie_decoder.py
 ```
 
 ## Responsibility Split
@@ -51,8 +52,10 @@ control-plane-tracing/src/
 - `protocols/f1ap/decoder.py` handles F1AP message classification and decode.
 - `protocols/ngap/decoder.py` handles lightweight NGAP top-level message
   classification for the NGAP proxy skeleton.
-- `protocols/pfcp/decoder.py` handles PFCP binary-header decoding and expands
-  a valid bundled UDP datagram into one decoded message per PFCP header.
+- `protocols/pfcp/decoder.py` handles PFCP binary-header and bundle decoding.
+- `protocols/pfcp/ie_decoder.py` performs a bounded TLV walk and promotes the
+  selected PFCP session, PDR/FAR, and N3 endpoint fields needed for later
+  correlation.
 - `protocols/decoded_message.py` defines the decoded-message shape shared by
   protocol decoders and the async trace worker.
 - `protocols/asn1_per/pycrate_decoder.py` is the optional pycrate APER adapter.
@@ -61,7 +64,7 @@ control-plane-tracing/src/
 - `proxies/ngap-sctp-proxy/ngap_sctp_proxy.py` wires config, SCTP relay, the
   NGAP decoder, correlator, and the tracing worker together.
 - `proxies/pfcp-udp-proxy/pfcp_udp_proxy.py` wires config, the UDP relay, PFCP
-  header decoder, transaction correlator, and asynchronous tracing worker
+  decoder, transaction correlator, and asynchronous tracing worker
   together.
 
 The SCTP relay does not wait for F1AP decoding. It forwards the original bytes
@@ -69,7 +72,7 @@ first, then enqueues a copied payload for the tracing worker.
 
 The PFCP UDP relay follows the same timing rule: it forwards the original
 datagram first, then enqueues an immutable payload reference and metadata for
-the asynchronous header decoder. PFCP decode and span export cannot delay
+the asynchronous decoder. PFCP header/IE decode and span export cannot delay
 datagram forwarding.
 
 ## Forwarding And Decode Timing
@@ -189,16 +192,18 @@ decode by default, with lightweight top-level classification as a fallback:
 
 ## PFCP Proxy Status
 
-The PFCP proxy forwards original UDP datagrams, then performs header light
-decode in the asynchronous worker. It exports PFCP version, flags, message
-type/name, length, sequence number, and SEID when present. Valid `FO=1`
-bundled datagrams produce one span per embedded PFCP message.
+The PFCP proxy forwards original UDP datagrams, then performs header and
+selected-IE light decode in the asynchronous worker. In addition to PFCP header
+fields, it exports Cause, Node ID, CP/UP F-SEID, grouped PDR/FAR identities,
+direction-specific F-TEID and Outer Header Creation endpoints, UE IP, Network
+Instance, and S-NSSAI. Valid `FO=1` bundled datagrams produce one span per
+embedded PFCP message.
 
-PFCP IE decoding and NGAP-to-PFCP correlation are not implemented. Header-based
-request/response transaction correlation and retransmission detection now use
-the scoped PFCP sequence number and observed UDP tuple to place related packet
-spans under one transaction root. The decoded header fields remain the input for
-later PFCP IE and cross-protocol work.
+Request/response transaction correlation and retransmission detection use the
+scoped PFCP sequence number and observed UDP tuple to place related packet spans
+under one transaction root. Selected IE decoding is evidence for later
+PFCP-session reconstruction and NGAP-to-PFCP correlation; those persistent and
+cross-protocol states are not implemented yet.
 
 ## NGAP Correlation
 
