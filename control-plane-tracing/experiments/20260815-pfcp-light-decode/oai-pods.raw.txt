@@ -1,0 +1,17 @@
+﻿NAME                                       READY   STATUS    RESTARTS   AGE     IP            NODE            NOMINATED NODE   READINESS GATES
+control-plane-correlator-f8fc88d67-w2c5s   1/1     Running   0          9m55s   10.42.2.38    192.168.1.240   <none>           <none>
+f1proxy10-5c78d777b6-kcp65                 1/1     Running   0          7m8s    10.42.1.171   192.168.1.68    <none>           <none>
+mysql-69c4c947fc-nvhn9                     1/1     Running   0          10m     10.42.2.37    192.168.1.240   <none>           <none>
+ngapproxy10-6f7f56d46-ftj7c                1/1     Running   0          8m7s    10.42.1.169   192.168.1.68    <none>           <none>
+oai-amf10-847c8b5599-mr8d9                 3/3     Running   0          8m42s   10.42.2.44    192.168.1.240   <none>           <none>
+oai-ausf10-d7c485c68-sclhv                 3/3     Running   0          8m53s   10.42.2.43    192.168.1.240   <none>           <none>
+oai-dnn10-767ddc7f4b-b96xt                 1/1     Running   0          5m21s   10.42.2.47    192.168.1.240   <none>           <none>
+oai-gnb-cu10-7cc59cb9b4-znrpw              2/2     Running   0          7m56s   10.42.1.170   192.168.1.68    <none>           <none>
+oai-gnb-du10-5cf7896486-7xz75              2/2     Running   0          6m57s   10.42.1.172   192.168.1.68    <none>           <none>
+oai-nr-ue10-5dbbf8f8d8-bwqwc               2/2     Running   0          2m22s   10.42.1.176   192.168.1.68    <none>           <none>
+oai-nrf10-5f87f6cb87-vlnq6                 3/3     Running   0          9m32s   10.42.2.40    192.168.1.240   <none>           <none>
+oai-smf10-b87f44b99-bcb9h                  3/3     Running   0          8m30s   10.42.2.45    192.168.1.240   <none>           <none>
+oai-spgwu-tiny10-6579fd59b-jmfng           2/2     Running   0          8m19s   10.42.2.46    192.168.1.240   <none>           <none>
+oai-udm10-fd7f5fddd-9qc79                  3/3     Running   0          9m5s    10.42.2.42    192.168.1.240   <none>           <none>
+oai-udr10-58798fbb58-4ml5f                 3/3     Running   0          9m16s   10.42.2.41    192.168.1.240   <none>           <none>
+pfcpproxy10-6fbb759f6-fmmkr                1/1     Running   0          9m44s   10.42.2.39    192.168.1.240   <none>           <none>
