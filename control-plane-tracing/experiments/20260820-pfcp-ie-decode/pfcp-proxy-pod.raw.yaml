@@ -1,0 +1,155 @@
+﻿apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    cni.projectcalico.org/containerID: 4828e8304b2654cf6050de5d66e28969fe3f4e4d002a7f94282e1998dbd49fa3
+    cni.projectcalico.org/podIP: 10.42.2.67/32
+    cni.projectcalico.org/podIPs: 10.42.2.67/32
+  creationTimestamp: "2026-08-20T13:08:39Z"
+  generateName: pfcpproxy10-59f47c6878-
+  labels:
+    app: pfcpproxy10
+    pod-template-hash: 59f47c6878
+  name: pfcpproxy10-59f47c6878-c8wdl
+  namespace: oai
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicaSet
+    name: pfcpproxy10-59f47c6878
+    uid: 7eda98b1-4c94-4d27-8ba0-844c7e4b10a3
+  resourceVersion: "3453821"
+  uid: 17847da4-285d-4805-80f2-624f19343a07
+spec:
+  containers:
+  - command:
+    - python3
+    - -u
+    - proxies/pfcp-udp-proxy/pfcp_udp_proxy.py
+    env:
+    - name: UPF_HOST
+      value: oai-spgwu-tiny10-svc
+    - name: UPF_PORT
+      value: "8805"
+    - name: SMF_HOST
+      value: oai-smf10-svc
+    - name: SMF_PORT
+      value: "8805"
+    - name: LISTEN_HOST
+      value: 0.0.0.0
+    - name: LISTEN_PORT
+      value: "8805"
+    - name: OTEL_SERVICE_NAME
+      value: pfcpproxy10
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      value: http://opentelemetry-collector.otel.svc.cluster.local:4317
+    - name: OTEL_EXPORTER_OTLP_INSECURE
+      value: "true"
+    - name: LOG_LEVEL
+      value: INFO
+    - name: LOG_HEX_BYTES
+      value: "32"
+    - name: TRACE_QUEUE_SIZE
+      value: "10000"
+    - name: PFCP_MAX_DATAGRAM_BYTES
+      value: "65535"
+    - name: PFCP_DNS_REFRESH_SECONDS
+      value: "5"
+    - name: PFCP_TRANSACTION_TIMEOUT_MS
+      value: "30000"
+    - name: PFCP_TRANSACTION_CLOSED_RETENTION_MS
+      value: "5000"
+    - name: PFCP_TRANSACTION_MAX_CONTEXTS
+      value: "10000"
+    image: docker.io/genechen0203/pfcp-udp-proxy:latest
+    imagePullPolicy: Always
+    name: proxy
+    ports:
+    - containerPort: 8805
+      protocol: UDP
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-vcknd
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: 192.168.1.240
+  nodeSelector:
+    deplocation: az
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - name: kube-api-access-vcknd
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2026-08-20T13:08:39Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2026-08-20T13:09:00Z"
+    status: "True"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2026-08-20T13:09:00Z"
+    status: "True"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2026-08-20T13:08:39Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: docker://0af02f7f4c03e742bb7b441817f18d00c6a01c3efc0b9ab0eef7d2e0e4dac152
+    image: genechen0203/pfcp-udp-proxy:latest
+    imageID: docker-pullable://genechen0203/pfcp-udp-proxy@sha256:9abf47d311f2d24ce5a881327b2ebc52fc6d8df132f79136f336ab0401b0e304
+    lastState: {}
+    name: proxy
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2026-08-20T13:08:59Z"
+  hostIP: 192.168.1.240
+  phase: Running
+  podIP: 10.42.2.67
+  podIPs:
+  - ip: 10.42.2.67
+  qosClass: BestEffort
+  startTime: "2026-08-20T13:08:39Z"
