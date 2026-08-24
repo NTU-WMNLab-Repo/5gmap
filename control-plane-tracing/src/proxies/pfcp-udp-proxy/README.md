@@ -55,50 +55,47 @@ PFCP smf_to_upf SessionEstablishmentRequest
 
 Every span includes `network.transport=udp`, `pfcp.direction`, UDP
 source/destination addresses and ports, `proxy.forward.duration_ms`,
-`tracing.queue_delay_ms`, and `tracing.dropped_events`. Header-decoded spans
-also include:
+`decoder.queue_delay_ms`, `decoder.duration_ms`, and
+`decoder.dropped_events`. Normal header-decoded spans also include:
 
 ```text
 pfcp.version
-pfcp.fo_flag
-pfcp.mp_flag
-pfcp.s_flag
 pfcp.message.type
 pfcp.message.name
-pfcp.message.length
 pfcp.message.size
 pfcp.sequence_number
 pfcp.seid                 # present only when S=1
-pfcp.message.index
-pfcp.datagram.message.count
-pfcp.datagram.bundled
 ```
 
-Selected IE attributes are emitted as numbered records, including:
+`pfcp.fo_flag` and `pfcp.mp_flag` appear only when set. Message offset/index
+and datagram size/count/bundle fields appear for a valid `FO=1` bundle; decode
+status and error fields appear only for a non-default parsing state.
+The proxy uses the `pfcp.message.*` and `decoder.*` forms rather than parallel
+`pfcp.procedure.*`, `pfcp.pdu.type`, `pfcp.payload.size`, or `tracing.*` tags.
+
+Selected IE attributes are emitted as numbered records without duplicate
+generic aliases, including:
 
 ```text
-pfcp.ie.decode.status
 pfcp.node_id.<index>.*
 pfcp.cause.<index>.*
-pfcp.session.cp_f_seid.*
-pfcp.session.up_f_seid.*
+pfcp.session.cp_f_seid.<index>.*
+pfcp.session.up_f_seid.<index>.*
 pfcp.pdr.<index>.*
 pfcp.far.<index>.*
-pfcp.f_teid.<index>.*
-pfcp.outer_header_creation.<index>.*
-pfcp.ue_ip.<index>.*
-pfcp.network_instance.<index>.*
+pfcp.unscoped.*
 pfcp.s_nssai.<index>.*
 ```
 
 See [`../../protocols/pfcp/README.md`](../../protocols/pfcp/README.md) for the
 exact IE scope, nesting, endpoint-role attributes, and specification basis.
 
-`pfcp.payload.size` is the individual PFCP message size; `pfcp.datagram.size`
-is the original UDP datagram size. For a bundle, every child message span starts
-when the proxy receives the shared UDP datagram and ends when it finishes
-forwarding that datagram. Queue and decoder timing are therefore common
-observability costs, not added forwarding overhead.
+`pfcp.message.size` is the canonical individual PFCP message size.
+`pfcp.datagram.size` is additionally emitted for a bundle or malformed datagram,
+where it can differ. For a bundle, every child message span starts when the
+proxy receives the shared UDP datagram and ends when it finishes forwarding that
+datagram. Queue and decoder timing are therefore common observability costs,
+not added forwarding overhead.
 
 No raw datagram payload or unsupported IE value is sent to Jaeger. Unknown
 message types still receive header-decoded spans. Malformed header or bundle

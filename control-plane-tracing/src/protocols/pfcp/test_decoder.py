@@ -56,10 +56,13 @@ class PfcpDecoderTest(unittest.TestCase):
         self.assertEqual(message.pdu_type, "request")
         self.assertEqual(message.procedure_code, 5)
         self.assertEqual(message.fields["pfcp.sequence_number"], 0x010203)
-        self.assertFalse(message.fields["pfcp.s_flag"])
         self.assertEqual(message.fields["pfcp.message.size"], 8)
-        self.assertEqual(message.fields["pfcp.decode.status"], "header_decoded")
         self.assertEqual(message.fields["pfcp.ie.decode.status"], "no_ies")
+        self.assertNotIn("pfcp.s_flag", message.fields)
+        self.assertNotIn("pfcp.message.length", message.fields)
+        self.assertNotIn("pfcp.message.offset", message.fields)
+        self.assertNotIn("pfcp.message.index", message.fields)
+        self.assertNotIn("pfcp.datagram.size", message.fields)
 
     def test_allows_zero_seid_for_session_establishment(self) -> None:
         decoded = self.decoder.decode_datagram(session_message(50, 7, 0), "smf_to_upf")
@@ -67,9 +70,8 @@ class PfcpDecoderTest(unittest.TestCase):
         self.assertEqual(len(decoded), 1)
         message = decoded[0]
         self.assertEqual(message.message_name, "SessionEstablishmentRequest")
-        self.assertTrue(message.fields["pfcp.s_flag"])
         self.assertEqual(message.fields["pfcp.seid"], "0x0000000000000000")
-        self.assertTrue(message.fields["pfcp.seid.is_zero"])
+        self.assertNotIn("pfcp.seid.is_zero", message.fields)
 
     def test_decodes_session_request_correlation_ies(self) -> None:
         cp_f_seid = ie(
@@ -122,22 +124,20 @@ class PfcpDecoderTest(unittest.TestCase):
             session_message(50, 11, 0, ies=ies), "smf_to_upf"
         )[0]
 
-        self.assertEqual(message.fields["pfcp.ie.decode.status"], "decoded")
-        self.assertEqual(message.fields["pfcp.node_id.value"], "oai-smf10.svc")
+        self.assertNotIn("pfcp.ie.decode.status", message.fields)
+        self.assertEqual(message.fields["pfcp.node_id.0.value"], "oai-smf10.svc")
         self.assertEqual(
-            message.fields["pfcp.session.cp_f_seid.seid"],
+            message.fields["pfcp.session.cp_f_seid.0.seid"],
             "0x0102030405060708",
         )
-        self.assertEqual(message.fields["pfcp.session.cp_f_seid.ipv4"], "10.42.2.20")
+        self.assertEqual(
+            message.fields["pfcp.session.cp_f_seid.0.ipv4"], "10.42.2.20"
+        )
         self.assertEqual(message.fields["pfcp.pdr.0.pdr_id"], 7)
         self.assertEqual(message.fields["pfcp.pdr.0.far_id"], 9)
-        self.assertEqual(message.fields["pfcp.pdr.0.path"], "CreatePDR")
         self.assertEqual(message.fields["pfcp.pdr.0.source_interface.name"], "Access")
         self.assertEqual(message.fields["pfcp.pdr.0.f_teid.0.teid"], 0x11223344)
         self.assertEqual(message.fields["pfcp.pdr.0.f_teid.0.ipv4"], "10.42.2.30")
-        self.assertEqual(
-            message.fields["pfcp.pdr.0.f_teid.0.path"], "CreatePDR/PDI/F-TEID"
-        )
         self.assertEqual(
             message.fields["pfcp.pdr.0.f_teid.0.endpoint_role"],
             "upf_n3_ingress",
@@ -147,7 +147,6 @@ class PfcpDecoderTest(unittest.TestCase):
         )
         self.assertEqual(message.fields["pfcp.pdr.0.ue_ip.0.ipv4"], "12.1.0.2")
         self.assertEqual(message.fields["pfcp.far.0.far_id"], 9)
-        self.assertEqual(message.fields["pfcp.far.0.path"], "CreateFAR")
         self.assertEqual(
             message.fields["pfcp.far.0.destination_interface.name"], "Access"
         )
@@ -165,6 +164,11 @@ class PfcpDecoderTest(unittest.TestCase):
         )
         self.assertEqual(message.fields["pfcp.s_nssai.0.sst"], 1)
         self.assertEqual(message.fields["pfcp.s_nssai.0.sd"], "010203")
+        self.assertNotIn("pfcp.node_id.value", message.fields)
+        self.assertNotIn("pfcp.f_seid.count", message.fields)
+        self.assertNotIn("pfcp.f_teid.count", message.fields)
+        self.assertNotIn("pfcp.outer_header_creation.count", message.fields)
+        self.assertNotIn("pfcp.ue_ip.count", message.fields)
 
     def test_decodes_session_response_cause_up_f_seid_and_created_pdr(self) -> None:
         ies = (
@@ -192,10 +196,10 @@ class PfcpDecoderTest(unittest.TestCase):
             "upf_to_smf",
         )[0]
 
-        self.assertEqual(message.fields["pfcp.cause.code"], 1)
-        self.assertTrue(message.fields["pfcp.cause.success"])
+        self.assertEqual(message.fields["pfcp.cause.0.code"], 1)
+        self.assertNotIn("pfcp.cause.success", message.fields)
         self.assertEqual(
-            message.fields["pfcp.session.up_f_seid.seid"],
+            message.fields["pfcp.session.up_f_seid.0.seid"],
             "0x1111222233334444",
         )
         self.assertEqual(message.fields["pfcp.pdr.0.operation"], "created")
@@ -212,7 +216,7 @@ class PfcpDecoderTest(unittest.TestCase):
         )[0]
 
         self.assertIsNone(message.decode_error)
-        self.assertEqual(message.fields["pfcp.decode.status"], "header_decoded")
+        self.assertNotIn("pfcp.decode.status", message.fields)
         self.assertEqual(message.fields["pfcp.ie.decode.status"], "malformed")
         self.assertEqual(message.fields["pfcp.sequence_number"], 19)
         self.assertIn("declares", message.fields["pfcp.ie.decode.error"])
@@ -250,9 +254,27 @@ class PfcpDecoderTest(unittest.TestCase):
         self.assertTrue(message.fields["pfcp.pdr.0.f_teid.0.choose"])
         self.assertEqual(message.fields["pfcp.pdr.0.f_teid.0.choose_id"], 7)
         self.assertTrue(message.fields["pfcp.pdr.0.f_teid.0.v4_flag"])
-        self.assertFalse(message.fields["pfcp.pdr.0.f_teid.0.ipv4_present"])
+        self.assertNotIn("pfcp.pdr.0.f_teid.0.ipv4_present", message.fields)
         self.assertTrue(message.fields["pfcp.pdr.0.ue_ip.0.choose_ipv4"])
-        self.assertFalse(message.fields["pfcp.pdr.0.ue_ip.0.ipv4_present"])
+        self.assertNotIn("pfcp.pdr.0.ue_ip.0.ipv4_present", message.fields)
+
+    def test_keeps_unscoped_selected_ies_without_generic_rule_duplicates(self) -> None:
+        traffic_endpoint = ie(
+            127,
+            ie(
+                21,
+                b"\x01"
+                + 0x11223344.to_bytes(4, "big")
+                + bytes([10, 42, 2, 30]),
+            ),
+        )
+
+        message = self.decoder.decode_datagram(
+            session_message(50, 22, 0, ies=traffic_endpoint), "smf_to_upf"
+        )[0]
+
+        self.assertEqual(message.fields["pfcp.unscoped.f_teid.0.teid"], 0x11223344)
+        self.assertEqual(message.fields["pfcp.unscoped.f_teid.0.ipv4"], "10.42.2.30")
 
     def test_expands_follow_on_messages(self) -> None:
         payload = (

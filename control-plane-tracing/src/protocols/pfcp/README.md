@@ -59,8 +59,9 @@ not affect forwarding.
 The `S` flag means that a SEID field exists, not that its value is necessarily
 non-zero. In particular, a Session Establishment Request may carry a present,
 zero SEID because the peer's session endpoint is not known yet. Therefore a
-light decoder should export both `pfcp.s_flag` and `pfcp.seid`, including a
-zero SEID, rather than treating zero as an invalid parse.
+light decoder exports `pfcp.seid` when `S=1`, including a zero SEID, rather
+than treating zero as an invalid parse. A separate `pfcp.s_flag` would merely
+duplicate the presence or absence of that field, so it is not emitted.
 
 ## Observed OAI Message Mapping
 
@@ -102,16 +103,16 @@ The selected fields follow TS 29.244:
 
 | IE or grouped path | Type | Decoded information | Purpose |
 | --- | ---: | --- | --- |
-| `Cause` | `19` | code, name, acceptance/rejection category, success and partial-success flags | Procedure result. |
+| `Cause` | `19` | code and name | Procedure result. |
 | `Node ID` | `60` | IPv4, IPv6, or DNS-label FQDN | PFCP association peer. |
 | `F-SEID` | `57` | SEID and endpoint IPv4/IPv6 address | CP/UP PFCP-session endpoints. |
 | `Create/Created/Update/Remove PDR` | `1/8/9/15` | operation, PDR ID, referenced FAR ID, and nested PDI fields | PFCP rule identity and direction. |
 | `Source Interface` | `20` | interface code and name | Distinguishes access/core-side incoming traffic. |
-| `F-TEID` | `21` | CH/CHID flags, TEID, IPv4/IPv6, and CHOOSE ID | Local N3/N9 tunnel endpoint or allocation request. |
+| `F-TEID` | `21` | CH/CHID allocation request, TEID, and IPv4/IPv6 endpoint | Local N3/N9 tunnel endpoint or allocation request. |
 | `Create/Update/Remove FAR` | `3/10/16` | operation, FAR ID, and nested forwarding fields | Outgoing rule identity. |
 | `Destination Interface` | `42` | interface code and name | Distinguishes access/core-side outgoing traffic. |
-| `Outer Header Creation` | `84` | header bitmask, GTP-U TEID, destination IP, and applicable UDP/VLAN fields | Peer N3/N9 tunnel endpoint. |
-| `UE IP Address` | `93` | source/destination role, IPv4/IPv6, CHOOSE and prefix flags | Supporting session evidence. |
+| `Outer Header Creation` | `84` | header description, GTP-U TEID, destination IP, and applicable UDP/VLAN fields | Peer N3/N9 tunnel endpoint. |
+| `UE IP Address` | `93` | source/destination role, IPv4/IPv6, and CHOOSE/prefix data when present | Supporting session evidence. |
 | `Network Instance` | `22` | decoded APN/DNN labels, with ASCII/hex fallback | Supporting DNN scope. |
 | `S-NSSAI` | `257` | SST and SD | Supporting slice scope. |
 
@@ -125,56 +126,85 @@ Malformed IE data is isolated from header decoding. A span receives
 available to PFCP transaction correlation. Forwarding has already completed by
 this point.
 
-## Light Decode Scope
+## Span Attribute Profile
 
 The implementation parses and validates the PFCP header and selected IEs after
-the datagram has already been forwarded. Header fields include:
+the datagram has already been forwarded. The span schema is intentionally
+compact. In the 2026-08-20 selected-IE experiment, four Session Establishment
+Request spans reached 130 Jaeger tags and lost standard proxy attributes. The
+Python OpenTelemetry SDK default is 128 span attributes, so the earlier schema
+could evict useful header or timing data when the same IE was exported through
+more than one namespace.
+
+The compact schema removes only exact duplicate representations. It does not
+merge fields merely because their values happened to match in the current OAI
+capture. In particular, these remain distinct facts:
+
+- `pfcp.seid` is the PFCP header's receiver-side session endpoint identifier.
+- `pfcp.session.cp_f_seid.<index>.seid` and
+  `pfcp.session.up_f_seid.<index>.seid` are F-SEID IE values advertised by the
+  control-plane and user-plane peers respectively.
+- `pfcp.message.size` is the embedded PFCP message size; `pfcp.datagram.size`
+  remains available for a PFCP bundle or malformed datagram, where it can differ.
+
+### Header And Decoder Fields
+
+Normal decoded messages emit these canonical fields:
 
 ```text
 pfcp.version
-pfcp.fo_flag
-pfcp.mp_flag
-pfcp.s_flag
 pfcp.message.type
 pfcp.message.name
-pfcp.message.length
-pfcp.message.size
-pfcp.message.offset
-pfcp.message.index
 pfcp.message.class
+pfcp.message.size
 pfcp.sequence_number
-pfcp.seid                 # only when S=1, including zero as a hex string
-pfcp.seid.is_zero
-pfcp.datagram.size
-pfcp.datagram.message.count
-pfcp.datagram.bundled
+pfcp.seid                         # only when S=1; zero is preserved
 ```
 
-IE walker summary fields include:
+The following fields appear only when their non-default or diagnostic meaning
+matters:
 
 ```text
-pfcp.ie.decode.enabled
-pfcp.ie.decode.status
-pfcp.ie.decode.error             # only for malformed/partial IE data
-pfcp.ie.count
-pfcp.ie.top_level.count
-pfcp.ie.top_level.type_ids
-pfcp.ie.top_level.names
-pfcp.ie.grouped.count
-pfcp.ie.unsupported.count
-pfcp.ie.max_depth
+pfcp.fo_flag                       # only when FO=1
+pfcp.mp_flag                       # only when MP=1
+pfcp.message.priority              # only when MP=1 and S=1
+pfcp.message.offset
+pfcp.message.index
+pfcp.datagram.size
+pfcp.datagram.message.count
+pfcp.datagram.bundled              # all four are emitted for a valid bundle
+pfcp.decode.status                 # unknown version/type or malformed header
+pfcp.ie.decode.status              # no IEs, malformed, or partial IE parse
+pfcp.ie.decode.error
+pfcp.ie.count                      # IE parser error context
+pfcp.ie.unsupported.count          # only when nonzero
 pfcp.ie.attributes.truncated
 ```
 
-Decoded values use numbered records so repeated and nested IEs do not overwrite
-one another. Important patterns are:
+`pfcp.message.length`, `pfcp.s_flag`, and `pfcp.seid.is_zero` are omitted
+because they are exactly derivable from the canonical fields. A successful IE
+parse emits no generic `decoded` status. Likewise, false flag values are not
+exported: absence means the corresponding flag was not set. Malformed messages
+retain offset/index diagnostics even when they are not bundled.
+
+At span export, `pfcp.message.class`, `pfcp.message.name`,
+`pfcp.message.type`, and `pfcp.message.size` replace the parallel generic
+`pfcp.pdu.type`, `pfcp.procedure.name`, `pfcp.procedure.code`, and
+`pfcp.payload.size` forms. `decoder.queue_delay_ms`, `decoder.duration_ms`,
+and `decoder.dropped_events` are the canonical asynchronous-observability
+fields; the old duplicate `tracing.*` queue/drop fields are not emitted.
+
+### Selected IE Fields
+
+Repeated values remain numbered; a `.count` appears only when the corresponding
+record set is nonempty. The canonical record paths are:
 
 ```text
 pfcp.node_id.<index>.*
 pfcp.cause.<index>.*
-pfcp.f_seid.<index>.*
-pfcp.session.cp_f_seid.*
-pfcp.session.up_f_seid.*
+pfcp.session.cp_f_seid.<index>.*
+pfcp.session.up_f_seid.<index>.*
+pfcp.unscoped.f_seid.<index>.*
 pfcp.pdr.<index>.pdr_id
 pfcp.pdr.<index>.far_id
 pfcp.pdr.<index>.source_interface.*
@@ -185,22 +215,40 @@ pfcp.far.<index>.far_id
 pfcp.far.<index>.destination_interface.*
 pfcp.far.<index>.outer_header_creation.<index>.*
 pfcp.far.<index>.network_instance.<index>.*
+pfcp.unscoped.f_teid.<index>.*
+pfcp.unscoped.outer_header_creation.<index>.*
+pfcp.unscoped.ue_ip.<index>.*
+pfcp.unscoped.network_instance.<index>.*
 pfcp.s_nssai.<index>.*
 ```
 
-Every generic decoded record also carries a `path`, such as
-`CreatePDR/PDI/F-TEID`. PDR F-TEIDs observed on the Access source interface are
-marked `endpoint_role=upf_n3_ingress`; Created PDR local F-TEIDs are marked
+An F-TEID, Outer Header Creation, UE IP Address, or Network Instance nested in
+a PDR or FAR is emitted only through that PDR/FAR path. The old generic
+`pfcp.f_teid.*`, `pfcp.outer_header_creation.*`, `pfcp.ue_ip.*`, and
+`pfcp.network_instance.*` aliases are therefore removed. The `pfcp.unscoped.*`
+namespace keeps selected values that are not owned by a PDR or FAR, such as a
+Traffic Endpoint child IE.
+
+The old unnumbered first-record aliases for Cause, Node ID, and CP/UP F-SEID are
+also removed. `path`, `teid_hex`, address-presence booleans, Cause
+success/category booleans, and `S-NSSAI.value` are omitted because they are
+either encoded by the canonical key/value or exactly derived from it. PDR
+F-TEIDs observed on the Access source interface are still marked
+`endpoint_role=upf_n3_ingress`; Created PDR local F-TEIDs are marked
 `upf_local`; FAR Outer Header Creation values targeting Access are marked
-`ran_n3_egress`. These are semantic hints for later validation, not a completed
-cross-protocol binding.
+`ran_n3_egress`.
+
+The UDP worker exports low-priority selected fields first, then emits PFCP
+header, first-rule and primary unscoped records, UDP-peer, transaction, core
+network, forwarding, and timing attributes last. This makes an SDK attribute
+cap discard extra IE detail before the fields needed to interpret or correlate
+the span. It does not affect packet forwarding or PFCP transaction matching.
 
 Known message types receive their TS 29.244 request/response names. An unknown
-message type still receives a header-decoded span with an
-`UnknownMessageType<N>` name. A truncated header, impossible declared length,
-or malformed `FO` chain receives a `MalformedDatagram` span with
-`decoder.error`. A malformed message remains a tracing concern only and never
-delays or prevents forwarding.
+message type still receives an `UnknownMessageType<N>` span. A truncated header,
+impossible declared length, or malformed `FO` chain receives a
+`MalformedDatagram` span with `decoder.error`. A malformed message remains a
+tracing concern only and never delays or prevents forwarding.
 
 The current decoder deliberately excludes:
 
@@ -210,7 +258,7 @@ The current decoder deliberately excludes:
 - exporting complete raw PFCP payloads to Jaeger.
 
 PFCP request/response transaction correlation and retransmission detection are
-now implemented from the decoded header fields. The worker groups a request,
+implemented from the decoded header fields. The worker groups a request,
 identical request retransmissions, and a matching response into one trace using
 the scoped sequence number and observed UDP peers. See
 `../../correlator/pfcp-transaction.md` for state, timeout, trace-shape, and
@@ -290,3 +338,5 @@ Neither tool is required in the proxy image.
   https://pypi.org/project/pycrate/
 - Full-path OAI validation record:
   `../../../experiments/20260814-pfcp-proxy-full-path/README.md`
+- Selected-IE validation record:
+  `../../../experiments/20260820-pfcp-ie-decode/README.md`

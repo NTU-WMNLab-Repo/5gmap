@@ -134,41 +134,25 @@ class AsyncDatagramTraceWorker:
                 start_time=event.recv_time_ns,
             )
         try:
-            span.set_attribute("network.protocol.name", self.protocol_name)
-            span.set_attribute("network.transport", "udp")
-            span.set_attribute(f"{self.protocol_name}.direction", event.direction)
-            span.set_attribute(f"{self.protocol_name}.pdu.type", decoded.pdu_type)
-            span.set_attribute(f"{self.protocol_name}.procedure.name", decoded.procedure_name)
-            span.set_attribute(f"{self.protocol_name}.message.name", decoded.message_name)
-            span.set_attribute(
-                f"{self.protocol_name}.payload.size",
-                self._message_size(decoded, event.payload_size),
-            )
-            span.set_attribute(f"{self.protocol_name}.datagram.size", event.payload_size)
-            span.set_attribute("proxy.forward.duration_ms", event.forward_duration_ms)
-            span.set_attribute("tracing.queue_delay_ms", queue_delay_ms)
-            span.set_attribute("tracing.dropped_events", self.dropped)
-
-            if self.decoder is not None:
-                span.set_attribute("decoder.queue_delay_ms", queue_delay_ms)
-                span.set_attribute("decoder.duration_ms", decoder_duration_ms)
-                span.set_attribute("decoder.dropped_events", self.dropped)
-
-            if decoded.procedure_code is not None:
-                span.set_attribute(f"{self.protocol_name}.procedure.code", decoded.procedure_code)
+            # Detail fields go first. Critical header, transaction, and timing
+            # fields are written last so an SDK attribute cap evicts detail first.
+            self._set_decoded_attributes(span, decoded.fields, priority=False)
+            self._set_decoded_attributes(span, decoded.fields, priority=True)
 
             for key, value in event.udp.items():
-                span.set_attribute(f"udp.{key}", value)
-
-            for key, value in decoded.fields.items():
-                if isinstance(value, (bool, int, float, str)):
-                    span.set_attribute(key, value)
-                else:
-                    span.set_attribute(key, repr(value))
+                self._set_attribute(span, f"udp.{key}", value)
 
             if transaction_decision is not None:
                 for key, value in transaction_decision.attributes.items():
-                    span.set_attribute(key, value)
+                    self._set_attribute(span, key, value)
+
+            self._set_core_attributes(
+                span=span,
+                event=event,
+                decoded=decoded,
+                queue_delay_ms=queue_delay_ms,
+                decoder_duration_ms=decoder_duration_ms,
+            )
 
             if decoded.decode_error:
                 span.set_attribute("decoder.error", decoded.decode_error)
@@ -176,6 +160,102 @@ class AsyncDatagramTraceWorker:
             end_time = max(event.send_done_time_ns, event.recv_time_ns + 1)
             span.end(end_time=end_time)
             self._finish_transaction(transaction_decision, end_time)
+
+    def _set_decoded_attributes(
+        self,
+        span: Any,
+        fields: dict[str, Any],
+        *,
+        priority: bool,
+    ) -> None:
+        for key, value in fields.items():
+            if self._is_priority_decoded_field(key) != priority:
+                continue
+            self._set_attribute(span, key, value)
+
+    def _is_priority_decoded_field(self, key: str) -> bool:
+        if self.protocol_name != "pfcp":
+            return False
+
+        if key in {
+            "pfcp.version",
+            "pfcp.message.type",
+            "pfcp.message.class",
+            "pfcp.message.size",
+            "pfcp.message.offset",
+            "pfcp.message.index",
+            "pfcp.sequence_number",
+            "pfcp.seid",
+            "pfcp.decode.status",
+            "pfcp.ie.decode.status",
+            "pfcp.ie.decode.error",
+            "pfcp.ie.attributes.truncated",
+        }:
+            return True
+        return key.startswith(
+            (
+                "pfcp.datagram.",
+                "pfcp.cause.0.",
+                "pfcp.session.cp_f_seid.0.",
+                "pfcp.session.up_f_seid.0.",
+                "pfcp.pdr.0.",
+                "pfcp.far.0.",
+                "pfcp.unscoped.f_seid.0.",
+                "pfcp.unscoped.f_teid.0.",
+                "pfcp.unscoped.outer_header_creation.0.",
+                "pfcp.s_nssai.0.",
+            )
+        )
+
+    @staticmethod
+    def _set_attribute(span: Any, key: str, value: Any) -> None:
+        if isinstance(value, (bool, int, float, str)):
+            span.set_attribute(key, value)
+        else:
+            span.set_attribute(key, repr(value))
+
+    def _set_core_attributes(
+        self,
+        span: Any,
+        event: ForwardedDatagram,
+        decoded: Any,
+        queue_delay_ms: float,
+        decoder_duration_ms: float,
+    ) -> None:
+        fields = decoded.fields
+        message_size = fields.get(f"{self.protocol_name}.message.size")
+        has_decoded_message_size = isinstance(message_size, int) and message_size > 0
+        bundled = fields.get(f"{self.protocol_name}.datagram.bundled") is True
+
+        span.set_attribute("network.protocol.name", self.protocol_name)
+        span.set_attribute("network.transport", "udp")
+        span.set_attribute(f"{self.protocol_name}.direction", event.direction)
+        if f"{self.protocol_name}.message.class" not in fields:
+            span.set_attribute(f"{self.protocol_name}.pdu.type", decoded.pdu_type)
+        if self.protocol_name != "pfcp":
+            span.set_attribute(
+                f"{self.protocol_name}.procedure.name", decoded.procedure_name
+            )
+        span.set_attribute(f"{self.protocol_name}.message.name", decoded.message_name)
+        if decoded.procedure_code is not None and (
+            f"{self.protocol_name}.message.type" not in fields
+        ):
+            span.set_attribute(
+                f"{self.protocol_name}.procedure.code", decoded.procedure_code
+            )
+        if not has_decoded_message_size:
+            span.set_attribute(
+                f"{self.protocol_name}.payload.size",
+                self._message_size(decoded, event.payload_size),
+            )
+        if not has_decoded_message_size or bundled or decoded.decode_error:
+            span.set_attribute(f"{self.protocol_name}.datagram.size", event.payload_size)
+
+        span.set_attribute("proxy.forward.duration_ms", event.forward_duration_ms)
+        if self.decoder is not None:
+            span.set_attribute("decoder.queue_delay_ms", queue_delay_ms)
+            span.set_attribute("decoder.duration_ms", decoder_duration_ms)
+            span.set_attribute("decoder.dropped_events", self.dropped)
 
     def _observe_transaction(self, decoded: Any, event: ForwardedDatagram) -> Optional[Any]:
         if self.transaction_correlator is None:
@@ -217,14 +297,14 @@ class AsyncDatagramTraceWorker:
         fields = getattr(decoded, "fields", {})
         offset = fields.get(f"{self.protocol_name}.message.offset")
         size = fields.get(f"{self.protocol_name}.message.size")
+        message_offset = offset if isinstance(offset, int) else 0
         if (
-            isinstance(offset, int)
-            and isinstance(size, int)
-            and offset >= 0
+            isinstance(size, int)
+            and message_offset >= 0
             and size > 0
-            and offset + size <= len(payload)
+            and message_offset + size <= len(payload)
         ):
-            return payload[offset : offset + size]
+            return payload[message_offset : message_offset + size]
         return payload
 
     def _raw_message(self, direction: str) -> Any:

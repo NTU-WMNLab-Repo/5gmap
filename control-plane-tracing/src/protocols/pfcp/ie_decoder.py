@@ -97,6 +97,12 @@ FAR_GROUPS: Final[dict[int, str]] = {
     IE_UPDATE_FAR: "update",
     IE_REMOVE_FAR: "remove",
 }
+RULE_GROUP_NAMES: Final[frozenset[str]] = frozenset(
+    {
+        IE_NAMES[ie_type]
+        for ie_type in (*PDR_GROUPS.keys(), *FAR_GROUPS.keys())
+    }
+)
 FORWARDING_PARAMETER_GROUPS: Final[frozenset[int]] = frozenset(
     {IE_FORWARDING_PARAMETERS, IE_UPDATE_FORWARDING_PARAMETERS}
 )
@@ -164,9 +170,7 @@ class PfcpIe:
 @dataclass
 class _DecodeState:
     ie_count: int = 0
-    grouped_count: int = 0
     unsupported_count: int = 0
-    max_depth: int = 0
     errors: list[str] = field(default_factory=list)
     attributes_truncated: bool = False
 
@@ -187,25 +191,7 @@ class PfcpIeDecoder:
     def decode(self, payload: bytes, message_type: int, direction: str) -> dict[str, Any]:
         state = _DecodeState()
         nodes = self._parse_sequence(payload, 0, (), state)
-        fields: dict[str, Any] = {
-            "pfcp.ie.decode.enabled": True,
-            "pfcp.ie.bytes": len(payload),
-            "pfcp.ie.count": state.ie_count,
-            "pfcp.ie.top_level.count": len(nodes),
-            "pfcp.ie.grouped.count": state.grouped_count,
-            "pfcp.ie.unsupported.count": state.unsupported_count,
-            "pfcp.ie.max_depth": state.max_depth,
-        }
-
-        top_level = nodes[: self.max_exported_records]
-        if len(nodes) > len(top_level):
-            state.attributes_truncated = True
-        fields["pfcp.ie.top_level.type_ids"] = ",".join(
-            str(node.ie_type) for node in top_level
-        )
-        fields["pfcp.ie.top_level.names"] = ",".join(
-            IE_NAMES.get(node.ie_type, f"IE-{node.ie_type}") for node in top_level
-        )
+        fields: dict[str, Any] = {}
 
         all_nodes = list(self._walk(nodes))
         self._extract_causes(all_nodes, fields, state)
@@ -223,11 +209,16 @@ class PfcpIeDecoder:
             status = "malformed"
         else:
             status = "decoded"
-        fields["pfcp.ie.decode.status"] = status
 
         if state.errors:
+            fields["pfcp.ie.decode.status"] = status
+            fields["pfcp.ie.count"] = state.ie_count
             fields["pfcp.ie.decode.error_count"] = len(state.errors)
             fields["pfcp.ie.decode.error"] = "; ".join(state.errors)[:2048]
+        elif status != "decoded":
+            fields["pfcp.ie.decode.status"] = status
+        if state.unsupported_count:
+            fields["pfcp.ie.unsupported.count"] = state.unsupported_count
         if state.attributes_truncated:
             fields["pfcp.ie.attributes.truncated"] = True
 
@@ -242,7 +233,6 @@ class PfcpIeDecoder:
     ) -> list[PfcpIe]:
         nodes: list[PfcpIe] = []
         offset = 0
-        state.max_depth = max(state.max_depth, depth)
 
         while offset < len(payload):
             if state.ie_count >= self.max_ie_count:
@@ -276,7 +266,6 @@ class PfcpIeDecoder:
 
             children: tuple[PfcpIe, ...] = ()
             if ie_type in GROUPED_IE_TYPES:
-                state.grouped_count += 1
                 if depth >= self.max_depth:
                     state.errors.append(
                         f"grouped IE {'/'.join(path)} exceeds depth limit {self.max_depth}"
@@ -312,11 +301,9 @@ class PfcpIeDecoder:
         fields: dict[str, Any],
         state: _DecodeState,
     ) -> None:
-        records = self._decode_records(
+        self._decode_records(
             nodes, IE_CAUSE, "pfcp.cause", self._decode_cause, fields, state
         )
-        if records:
-            self._copy_record_alias(records[0], "pfcp.cause", fields)
 
     def _extract_node_ids(
         self,
@@ -324,11 +311,9 @@ class PfcpIeDecoder:
         fields: dict[str, Any],
         state: _DecodeState,
     ) -> None:
-        records = self._decode_records(
+        self._decode_records(
             nodes, IE_NODE_ID, "pfcp.node_id", self._decode_node_id, fields, state
         )
-        if records:
-            self._copy_record_alias(records[0], "pfcp.node_id", fields)
 
     def _extract_f_seids(
         self,
@@ -339,15 +324,20 @@ class PfcpIeDecoder:
         state: _DecodeState,
     ) -> None:
         matches = [node for node in nodes if node.ie_type == IE_F_SEID]
-        fields["pfcp.f_seid.count"] = len(matches)
+        if not matches:
+            return
+
         role = self._f_seid_role(message_type, direction)
+        prefix = (
+            f"pfcp.session.{role}_f_seid"
+            if role in {"cp", "up"}
+            else "pfcp.unscoped.f_seid"
+        )
+        fields[f"{prefix}.count"] = len(matches)
 
         for index, node in enumerate(matches[: self.max_exported_records]):
             values = self._decode_record(node, self._decode_f_seid, state)
-            values["role"] = role
-            self._store_record(fields, f"pfcp.f_seid.{index}", values)
-            if index == 0 and role in {"cp", "up"}:
-                self._store_record(fields, f"pfcp.session.{role}_f_seid", values)
+            self._store_record(fields, f"{prefix}.{index}", values)
 
         if len(matches) > self.max_exported_records:
             state.attributes_truncated = True
@@ -358,23 +348,28 @@ class PfcpIeDecoder:
         fields: dict[str, Any],
         state: _DecodeState,
     ) -> None:
+        unscoped_nodes = [node for node in nodes if not self._is_rule_scoped(node)]
         specs: tuple[tuple[int, str, Callable[[bytes], dict[str, Any]]], ...] = (
-            (IE_F_TEID, "pfcp.f_teid", self._decode_f_teid),
+            (IE_F_TEID, "pfcp.unscoped.f_teid", self._decode_f_teid),
             (
                 IE_OUTER_HEADER_CREATION,
-                "pfcp.outer_header_creation",
+                "pfcp.unscoped.outer_header_creation",
                 self._decode_outer_header_creation,
             ),
-            (IE_UE_IP_ADDRESS, "pfcp.ue_ip", self._decode_ue_ip),
+            (IE_UE_IP_ADDRESS, "pfcp.unscoped.ue_ip", self._decode_ue_ip),
             (
                 IE_NETWORK_INSTANCE,
-                "pfcp.network_instance",
+                "pfcp.unscoped.network_instance",
                 self._decode_network_instance,
             ),
-            (IE_S_NSSAI, "pfcp.s_nssai", self._decode_s_nssai),
         )
         for ie_type, prefix, decoder in specs:
-            self._decode_records(nodes, ie_type, prefix, decoder, fields, state)
+            self._decode_records(
+                unscoped_nodes, ie_type, prefix, decoder, fields, state
+            )
+        self._decode_records(
+            nodes, IE_S_NSSAI, "pfcp.s_nssai", self._decode_s_nssai, fields, state
+        )
 
     def _extract_pdrs(
         self,
@@ -383,12 +378,14 @@ class PfcpIeDecoder:
         state: _DecodeState,
     ) -> None:
         pdrs = [node for node in nodes if node.ie_type in PDR_GROUPS]
+        if not pdrs:
+            return
+
         fields["pfcp.pdr.count"] = len(pdrs)
 
         for index, pdr in enumerate(pdrs[: self.max_exported_records]):
             prefix = f"pfcp.pdr.{index}"
             fields[f"{prefix}.operation"] = PDR_GROUPS[pdr.ie_type]
-            fields[f"{prefix}.path"] = "/".join(pdr.path)
 
             pdr_id = self._first_child(pdr, IE_PDR_ID)
             if pdr_id is not None:
@@ -403,7 +400,8 @@ class PfcpIeDecoder:
                     fields[f"{prefix}.far_id"] = far_values["far_id"]
 
             pdi = self._first_child(pdr, IE_PDI)
-            fields[f"{prefix}.pdi.present"] = pdi is not None
+            if pdi is not None:
+                fields[f"{prefix}.pdi.present"] = True
             scope = list(self._walk(pdi.children if pdi is not None else pdr.children))
 
             source = self._first(scope, IE_SOURCE_INTERFACE)
@@ -416,7 +414,8 @@ class PfcpIeDecoder:
                 self._store_record(fields, f"{prefix}.source_interface", source_values)
 
             f_teids = [node for node in scope if node.ie_type == IE_F_TEID]
-            fields[f"{prefix}.f_teid.count"] = len(f_teids)
+            if f_teids:
+                fields[f"{prefix}.f_teid.count"] = len(f_teids)
             for fteid_index, f_teid in enumerate(
                 f_teids[: self.max_exported_records]
             ):
@@ -456,12 +455,14 @@ class PfcpIeDecoder:
         state: _DecodeState,
     ) -> None:
         fars = [node for node in nodes if node.ie_type in FAR_GROUPS]
+        if not fars:
+            return
+
         fields["pfcp.far.count"] = len(fars)
 
         for index, far in enumerate(fars[: self.max_exported_records]):
             prefix = f"pfcp.far.{index}"
             fields[f"{prefix}.operation"] = FAR_GROUPS[far.ie_type]
-            fields[f"{prefix}.path"] = "/".join(far.path)
 
             far_id = self._first_child(far, IE_FAR_ID)
             if far_id is not None:
@@ -495,7 +496,8 @@ class PfcpIeDecoder:
             creations = [
                 node for node in scope if node.ie_type == IE_OUTER_HEADER_CREATION
             ]
-            fields[f"{prefix}.outer_header_creation.count"] = len(creations)
+            if creations:
+                fields[f"{prefix}.outer_header_creation.count"] = len(creations)
             for creation_index, creation in enumerate(
                 creations[: self.max_exported_records]
             ):
@@ -532,7 +534,8 @@ class PfcpIeDecoder:
         state: _DecodeState,
     ) -> None:
         matches = [node for node in nodes if node.ie_type == ie_type]
-        fields[f"{prefix}.count"] = len(matches)
+        if matches:
+            fields[f"{prefix}.count"] = len(matches)
         for index, node in enumerate(matches[: self.max_exported_records]):
             values = self._decode_record(node, decoder, state)
             self._store_record(fields, f"{prefix}.{index}", values)
@@ -549,7 +552,8 @@ class PfcpIeDecoder:
         state: _DecodeState,
     ) -> list[dict[str, Any]]:
         matches = [node for node in nodes if node.ie_type == ie_type]
-        fields[f"{prefix}.count"] = len(matches)
+        if matches:
+            fields[f"{prefix}.count"] = len(matches)
         records: list[dict[str, Any]] = []
         for index, node in enumerate(matches[: self.max_exported_records]):
             values = self._decode_record(node, decoder, state)
@@ -567,19 +571,16 @@ class PfcpIeDecoder:
             fields[f"{prefix}.{key}"] = value
 
     @staticmethod
-    def _copy_record_alias(
-        values: dict[str, Any], prefix: str, fields: dict[str, Any]
-    ) -> None:
-        for key, value in values.items():
-            fields[f"{prefix}.{key}"] = value
-
-    @staticmethod
     def _first(nodes: Iterable[PfcpIe], ie_type: int) -> PfcpIe | None:
         return next((node for node in nodes if node.ie_type == ie_type), None)
 
     @staticmethod
     def _first_child(node: PfcpIe, ie_type: int) -> PfcpIe | None:
         return next((child for child in node.children if child.ie_type == ie_type), None)
+
+    @staticmethod
+    def _is_rule_scoped(node: PfcpIe) -> bool:
+        return bool(node.path) and node.path[0] in RULE_GROUP_NAMES
 
     @staticmethod
     def _f_seid_role(message_type: int, direction: str) -> str:
@@ -599,7 +600,7 @@ class PfcpIeDecoder:
         decoder: Callable[[bytes], dict[str, Any]],
         state: _DecodeState,
     ) -> dict[str, Any]:
-        values: dict[str, Any] = {"path": "/".join(node.path)}
+        values: dict[str, Any] = {}
         try:
             values.update(decoder(node.value))
         except ValueError as exc:
@@ -612,18 +613,9 @@ class PfcpIeDecoder:
     def _decode_cause(value: bytes) -> dict[str, Any]:
         PfcpIeDecoder._require(value, 1, "Cause")
         code = value[0]
-        if code == 0:
-            category = "invalid"
-        elif code < 64:
-            category = "acceptance"
-        else:
-            category = "rejection"
         return {
             "code": code,
             "name": CAUSE_NAMES.get(code, f"Cause{code}"),
-            "category": category,
-            "success": code == 1,
-            "partial": code == 3,
         }
 
     @staticmethod
@@ -655,8 +647,6 @@ class PfcpIeDecoder:
         cursor = 9
         result: dict[str, Any] = {
             "seid": f"0x{int.from_bytes(value[1:9], 'big'):016x}",
-            "ipv4_present": has_ipv4,
-            "ipv6_present": has_ipv6,
         }
         if has_ipv4:
             PfcpIeDecoder._require(value[cursor:], 4, "F-SEID IPv4 address")
@@ -679,20 +669,19 @@ class PfcpIeDecoder:
         choose = bool(flags & 0x04)
         choose_id_present = bool(flags & 0x08)
         cursor = 1
-        result: dict[str, Any] = {
-            "choose": choose,
-            "choose_id_present": choose_id_present,
-            "v4_flag": has_ipv4,
-            "v6_flag": has_ipv6,
-            "ipv4_present": has_ipv4 and not choose,
-            "ipv6_present": has_ipv6 and not choose,
-        }
+        result: dict[str, Any] = {}
+
+        if choose:
+            result["choose"] = True
+            if has_ipv4:
+                result["v4_flag"] = True
+            if has_ipv6:
+                result["v6_flag"] = True
 
         if not choose:
             PfcpIeDecoder._require(value[cursor:], 4, "F-TEID TEID")
             teid = int.from_bytes(value[cursor : cursor + 4], "big")
             result["teid"] = teid
-            result["teid_hex"] = f"0x{teid:08x}"
             cursor += 4
             if has_ipv4:
                 PfcpIeDecoder._require(value[cursor:], 4, "F-TEID IPv4 address")
@@ -776,18 +765,19 @@ class PfcpIeDecoder:
             if octet5 & mask
         ]
         result: dict[str, Any] = {
-            "description_bits": f"0x{octet5:02x}{octet6:02x}",
             "description": ",".join(names) if names else "none",
-            "n19_indication": bool(octet6 & 0x01),
-            "n6_indication": bool(octet6 & 0x02),
-            "low_layer_ssm": bool(octet6 & 0x04),
         }
+        if octet6 & 0x01:
+            result["n19_indication"] = True
+        if octet6 & 0x02:
+            result["n6_indication"] = True
+        if octet6 & 0x04:
+            result["low_layer_ssm"] = True
 
         if octet5 & 0x03:
             PfcpIeDecoder._require(value[cursor:], 4, "Outer Header Creation TEID")
             teid = int.from_bytes(value[cursor : cursor + 4], "big")
             result["teid"] = teid
-            result["teid_hex"] = f"0x{teid:08x}"
             cursor += 4
         if octet5 & 0x15:
             PfcpIeDecoder._require(value[cursor:], 4, "Outer Header Creation IPv4")
@@ -827,11 +817,11 @@ class PfcpIeDecoder:
         cursor = 1
         result: dict[str, Any] = {
             "role": "destination" if destination else "source",
-            "choose_ipv4": choose_ipv4,
-            "choose_ipv6": choose_ipv6,
-            "ipv4_present": has_ipv4,
-            "ipv6_present": has_ipv6,
         }
+        if choose_ipv4:
+            result["choose_ipv4"] = True
+        if choose_ipv6:
+            result["choose_ipv6"] = True
         if has_ipv4:
             PfcpIeDecoder._require(value[cursor:], 4, "UE IPv4 address")
             result["ipv4"] = str(IPv4Address(value[cursor : cursor + 4]))
@@ -857,7 +847,7 @@ class PfcpIeDecoder:
         PfcpIeDecoder._require(value, 4, "S-NSSAI")
         sst = value[0]
         sd = value[1:4].hex()
-        return {"sst": sst, "sd": sd, "value": f"{sst}-{sd}"}
+        return {"sst": sst, "sd": sd}
 
     @staticmethod
     def _decode_dns_labels(value: bytes) -> str:

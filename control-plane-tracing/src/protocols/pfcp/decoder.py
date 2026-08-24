@@ -137,18 +137,16 @@ class PfcpDecoder:
         message_size = 4 + message_length
 
         base_fields: dict[str, Any] = {
-            "decoder.strategy": "pfcp_header_ie",
-            "pfcp.decode.enabled": True,
             "pfcp.version": version,
-            "pfcp.fo_flag": follow_on,
-            "pfcp.mp_flag": message_priority,
-            "pfcp.s_flag": seid_present,
             "pfcp.message.type": message_type,
-            "pfcp.message.length": message_length,
             "pfcp.message.size": message_size,
             "pfcp.message.offset": offset,
             "pfcp.message.index": message_index,
         }
+        if follow_on:
+            base_fields["pfcp.fo_flag"] = True
+        if message_priority:
+            base_fields["pfcp.mp_flag"] = True
         if spare_bits:
             base_fields["pfcp.header.spare_bits"] = spare_bits
 
@@ -197,7 +195,6 @@ class PfcpDecoder:
         if seid_present:
             seid = int.from_bytes(payload[offset + 4 : offset + 12], "big")
             base_fields["pfcp.seid"] = f"0x{seid:016x}"
-            base_fields["pfcp.seid.is_zero"] = seid == 0
             if message_priority:
                 base_fields["pfcp.message.priority"] = payload[offset + 15] >> 4
         else:
@@ -209,7 +206,6 @@ class PfcpDecoder:
         base_fields["pfcp.message.class"] = message_class
         if version != PFCP_VERSION:
             base_fields["pfcp.decode.status"] = "unsupported_version"
-            base_fields["pfcp.ie.decode.enabled"] = False
             base_fields["pfcp.ie.decode.status"] = "skipped_unsupported_version"
             decode_error = f"unsupported PFCP version {version}"
         else:
@@ -222,11 +218,8 @@ class PfcpDecoder:
                     direction=direction,
                 )
             )
-            base_fields["pfcp.decode.status"] = (
-                "unknown_message_type"
-                if message_type not in PFCP_MESSAGE_TYPES
-                else "header_decoded"
-            )
+            if message_type not in PFCP_MESSAGE_TYPES:
+                base_fields["pfcp.decode.status"] = "unknown_message_type"
             decode_error = None
 
         return (
@@ -265,7 +258,6 @@ class PfcpDecoder:
     ) -> DecodedMessage:
         message_fields: dict[str, Any] = {
             "decoder.strategy": "pfcp_header_ie",
-            "pfcp.decode.enabled": True,
             "pfcp.decode.status": "malformed",
             "pfcp.message.offset": offset,
             "pfcp.message.index": message_index,
@@ -295,6 +287,13 @@ class PfcpDecoder:
     def _annotate_datagram(decoded_messages: list[DecodedMessage], datagram_size: int) -> None:
         message_count = len(decoded_messages)
         bundled = message_count > 1
+        if not bundled:
+            for decoded in decoded_messages:
+                if decoded.decode_error is None:
+                    decoded.fields.pop("pfcp.message.offset", None)
+                    decoded.fields.pop("pfcp.message.index", None)
+            return
+
         for decoded in decoded_messages:
             decoded.fields["pfcp.datagram.size"] = datagram_size
             decoded.fields["pfcp.datagram.message.count"] = message_count
