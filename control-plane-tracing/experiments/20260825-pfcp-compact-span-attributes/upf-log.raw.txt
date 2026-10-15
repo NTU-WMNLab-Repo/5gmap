@@ -1,0 +1,457 @@
+﻿2026-08-25T09:37:56.049044912Z [2026-08-25T09:37:56.048833] [spgwu] [spgwu_sx ] [info ] handle_receive(34 bytes)
+2026-08-25T09:37:56.049093690Z [2026-08-25T09:37:56.048974] [spgwu] [spgwu_sx ] [info ] Handle SX ASSOCIATION SETUP REQUEST
+2026-08-25T09:38:04.991570899Z [2026-08-25T09:38:04.991345] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 1
+2026-08-25T09:38:04.991701473Z [2026-08-25T09:38:04.991516] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:38:05.044949293Z [2026-08-25T09:38:05.044809] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:38:05.045054999Z [2026-08-25T09:38:05.044969] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:38:06.056262664Z [2026-08-25T09:38:06.056031] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:38:06.056310564Z [2026-08-25T09:38:06.056099] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:38:14.991680729Z [2026-08-25T09:38:14.991565] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 3
+2026-08-25T09:38:14.991723809Z [2026-08-25T09:38:14.991609] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:38:14.993180795Z [2026-08-25T09:38:14.993121] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:38:14.993234891Z [2026-08-25T09:38:14.993213] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:38:16.059245412Z [2026-08-25T09:38:16.059087] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:38:16.059299475Z [2026-08-25T09:38:16.059175] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:38:24.991814322Z [2026-08-25T09:38:24.991695] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 5
+2026-08-25T09:38:24.991844963Z [2026-08-25T09:38:24.991749] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:38:24.993373889Z [2026-08-25T09:38:24.993265] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:38:24.993459135Z [2026-08-25T09:38:24.993380] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:38:26.062170702Z [2026-08-25T09:38:26.061859] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:38:26.062218218Z [2026-08-25T09:38:26.061922] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:38:34.991951894Z [2026-08-25T09:38:34.991826] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 7
+2026-08-25T09:38:34.991999992Z [2026-08-25T09:38:34.991874] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:38:34.993679090Z [2026-08-25T09:38:34.993599] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:38:34.993729399Z [2026-08-25T09:38:34.993685] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:38:36.066163671Z [2026-08-25T09:38:36.065995] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:38:36.066216490Z [2026-08-25T09:38:36.066074] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:38:44.992119042Z [2026-08-25T09:38:44.991957] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 9
+2026-08-25T09:38:44.992204309Z [2026-08-25T09:38:44.992019] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:38:44.994068140Z [2026-08-25T09:38:44.993991] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:38:44.994113753Z [2026-08-25T09:38:44.994085] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:38:46.069275416Z [2026-08-25T09:38:46.068914] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:38:46.069323824Z [2026-08-25T09:38:46.068980] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:38:54.992215968Z [2026-08-25T09:38:54.992092] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 11
+2026-08-25T09:38:54.992250362Z [2026-08-25T09:38:54.992152] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:38:54.993509933Z [2026-08-25T09:38:54.993458] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:38:54.993565388Z [2026-08-25T09:38:54.993525] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:38:56.071911697Z [2026-08-25T09:38:56.071653] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:38:56.071956988Z [2026-08-25T09:38:56.071720] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:39:04.992312612Z [2026-08-25T09:39:04.992241] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 13
+2026-08-25T09:39:04.992331738Z [2026-08-25T09:39:04.992285] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:39:04.993226099Z [2026-08-25T09:39:04.993181] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:39:04.993258207Z [2026-08-25T09:39:04.993235] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:39:06.074559213Z [2026-08-25T09:39:06.074304] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:39:06.074612797Z [2026-08-25T09:39:06.074373] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:39:14.992497096Z [2026-08-25T09:39:14.992362] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 15
+2026-08-25T09:39:14.992551926Z [2026-08-25T09:39:14.992422] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:39:14.994668615Z [2026-08-25T09:39:14.994556] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:39:14.994763885Z [2026-08-25T09:39:14.994697] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:39:16.078830588Z [2026-08-25T09:39:16.078665] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:39:16.078888099Z [2026-08-25T09:39:16.078741] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:39:24.992565578Z [2026-08-25T09:39:24.992458] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 17
+2026-08-25T09:39:24.992604223Z [2026-08-25T09:39:24.992497] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:39:24.993956159Z [2026-08-25T09:39:24.993916] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:39:24.994004015Z [2026-08-25T09:39:24.993984] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:39:26.081944082Z [2026-08-25T09:39:26.081816] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:39:26.081991298Z [2026-08-25T09:39:26.081876] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:39:34.992713805Z [2026-08-25T09:39:34.992587] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 19
+2026-08-25T09:39:34.992772410Z [2026-08-25T09:39:34.992657] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:39:34.994224029Z [2026-08-25T09:39:34.994180] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:39:34.994283766Z [2026-08-25T09:39:34.994251] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:39:36.086492082Z [2026-08-25T09:39:36.086249] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:39:36.086522843Z [2026-08-25T09:39:36.086325] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:39:44.992869722Z [2026-08-25T09:39:44.992744] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 21
+2026-08-25T09:39:44.992937798Z [2026-08-25T09:39:44.992787] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:39:44.993977673Z [2026-08-25T09:39:44.993944] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:39:44.993991719Z [2026-08-25T09:39:44.993977] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:39:46.091372206Z [2026-08-25T09:39:46.091036] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:39:46.091421132Z [2026-08-25T09:39:46.091104] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:39:54.993041871Z [2026-08-25T09:39:54.992873] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 23
+2026-08-25T09:39:54.993095733Z [2026-08-25T09:39:54.992942] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:39:54.994114080Z [2026-08-25T09:39:54.994090] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:39:54.994153492Z [2026-08-25T09:39:54.994127] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:39:56.093947745Z [2026-08-25T09:39:56.093715] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:39:56.094000569Z [2026-08-25T09:39:56.093779] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:40:04.993185206Z [2026-08-25T09:40:04.993026] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 25
+2026-08-25T09:40:04.993241640Z [2026-08-25T09:40:04.993091] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:40:04.996068969Z [2026-08-25T09:40:04.995886] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:40:04.996144201Z [2026-08-25T09:40:04.996046] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:40:06.096763660Z [2026-08-25T09:40:06.096637] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:40:06.096819538Z [2026-08-25T09:40:06.096702] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:40:09.429336158Z [2026-08-25T09:40:09.429222] [spgwu] [spgwu_sx ] [info ] handle_receive(132 bytes)
+2026-08-25T09:40:09.429479551Z [2026-08-25T09:40:09.429385] [spgwu] [spgwu_app] [info ] Received SXAB_SESSION_ESTABLISHMENT_REQUEST seid 0x0 
+2026-08-25T09:40:09.429541924Z [2026-08-25T09:40:09.429488] [spgwu] [spgwu_sx ] [info ] pfcp_session::add(far) seid 0x1 
+2026-08-25T09:40:09.429606473Z [2026-08-25T09:40:09.429562] [spgwu] [spgwu_sx ] [info ] pfcp_session::add(pdr) seid 0x1 
+2026-08-25T09:40:09.471834337Z [2026-08-25T09:40:09.471705] [spgwu] [spgwu_sx ] [info ] handle_receive(100 bytes)
+2026-08-25T09:40:09.471931004Z [2026-08-25T09:40:09.471864] [spgwu] [spgwu_app] [info ] Received SXAB_SESSION_MODIFICATION_REQUEST seid 0x1 
+2026-08-25T09:40:09.471940211Z [2026-08-25T09:40:09.471888] [spgwu] [spgwu_sx ] [info ] pfcp_session::add(far) seid 0x1 
+2026-08-25T09:40:09.471961040Z [2026-08-25T09:40:09.471926] [spgwu] [spgwu_sx ] [info ] pfcp_session::add(pdr) seid 0x1 
+2026-08-25T09:40:14.993282898Z [2026-08-25T09:40:14.993172] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 27
+2026-08-25T09:40:14.993323561Z [2026-08-25T09:40:14.993221] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:40:14.994717496Z [2026-08-25T09:40:14.994670] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:40:14.994763754Z [2026-08-25T09:40:14.994743] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:40:16.100039907Z [2026-08-25T09:40:16.099900] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:40:16.100056102Z [2026-08-25T09:40:16.099970] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:40:24.993458401Z [2026-08-25T09:40:24.993304] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 31
+2026-08-25T09:40:24.993513110Z [2026-08-25T09:40:24.993373] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:40:24.995791735Z [2026-08-25T09:40:24.995703] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:40:24.995885945Z [2026-08-25T09:40:24.995834] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:40:26.104949649Z [2026-08-25T09:40:26.104741] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:40:26.104992065Z [2026-08-25T09:40:26.104814] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:40:34.993613751Z [2026-08-25T09:40:34.993472] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 33
+2026-08-25T09:40:34.993672586Z [2026-08-25T09:40:34.993543] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:40:34.996307473Z [2026-08-25T09:40:34.996187] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:40:34.996354450Z [2026-08-25T09:40:34.996295] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:40:36.109876579Z [2026-08-25T09:40:36.109760] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:40:36.109890077Z [2026-08-25T09:40:36.109825] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:40:44.993788984Z [2026-08-25T09:40:44.993631] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 35
+2026-08-25T09:40:44.993845457Z [2026-08-25T09:40:44.993699] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:40:44.995415080Z [2026-08-25T09:40:44.995375] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:40:44.995460752Z [2026-08-25T09:40:44.995435] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:40:46.114371014Z [2026-08-25T09:40:46.114175] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:40:46.114412735Z [2026-08-25T09:40:46.114247] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:40:54.993931896Z [2026-08-25T09:40:54.993779] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 37
+2026-08-25T09:40:54.993989321Z [2026-08-25T09:40:54.993844] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:40:54.996221972Z [2026-08-25T09:40:54.996117] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:40:54.996283993Z [2026-08-25T09:40:54.996231] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:40:56.117490103Z [2026-08-25T09:40:56.117238] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:40:56.117537899Z [2026-08-25T09:40:56.117316] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:41:04.994081587Z [2026-08-25T09:41:04.993930] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 39
+2026-08-25T09:41:04.994159996Z [2026-08-25T09:41:04.994017] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:41:04.996417771Z [2026-08-25T09:41:04.996319] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:41:04.996491881Z [2026-08-25T09:41:04.996418] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:41:06.121438748Z [2026-08-25T09:41:06.121280] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:41:06.121484297Z [2026-08-25T09:41:06.121348] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:41:14.994350238Z [2026-08-25T09:41:14.994190] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 41
+2026-08-25T09:41:14.994383310Z [2026-08-25T09:41:14.994242] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:41:14.995407395Z [2026-08-25T09:41:14.995335] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:41:14.995428414Z [2026-08-25T09:41:14.995383] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:41:16.124180533Z [2026-08-25T09:41:16.124098] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:41:16.124202653Z [2026-08-25T09:41:16.124132] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:41:24.994553601Z [2026-08-25T09:41:24.994298] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 43
+2026-08-25T09:41:24.994584064Z [2026-08-25T09:41:24.994348] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:41:24.995596709Z [2026-08-25T09:41:24.995551] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:41:24.995644178Z [2026-08-25T09:41:24.995613] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:41:26.126437936Z [2026-08-25T09:41:26.126363] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:41:26.126460158Z [2026-08-25T09:41:26.126397] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:41:34.994651690Z [2026-08-25T09:41:34.994524] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 45
+2026-08-25T09:41:34.994706462Z [2026-08-25T09:41:34.994607] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:41:34.997056668Z [2026-08-25T09:41:34.996957] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:41:34.997133078Z [2026-08-25T09:41:34.997062] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:41:36.130184556Z [2026-08-25T09:41:36.129982] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:41:36.130241519Z [2026-08-25T09:41:36.130059] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:41:44.994772012Z [2026-08-25T09:41:44.994653] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 47
+2026-08-25T09:41:44.994795120Z [2026-08-25T09:41:44.994682] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:41:44.995565829Z [2026-08-25T09:41:44.995525] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:41:44.995578339Z [2026-08-25T09:41:44.995560] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:41:46.134566756Z [2026-08-25T09:41:46.134445] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:41:46.134617240Z [2026-08-25T09:41:46.134498] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:41:54.994904847Z [2026-08-25T09:41:54.994775] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 49
+2026-08-25T09:41:54.994959368Z [2026-08-25T09:41:54.994835] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:41:54.997022074Z [2026-08-25T09:41:54.996955] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:41:54.997212073Z [2026-08-25T09:41:54.997039] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:41:56.139706970Z [2026-08-25T09:41:56.139586] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:41:56.139739407Z [2026-08-25T09:41:56.139651] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:41:56.561211325Z [2026-08-25T09:41:56.561050] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:41:56.561269073Z [2026-08-25T09:41:56.561098] [spgwu] [pfcp     ] [error] PFCP IE type 0 length 0
+2026-08-25T09:41:56.561279486Z [2026-08-25T09:41:56.561173] [spgwu] [spgwu_app] [info ] Received SXAB_SESSION_DELETION_REQUEST seid 0x1 
+2026-08-25T09:42:04.995064634Z [2026-08-25T09:42:04.994926] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 51
+2026-08-25T09:42:04.995108556Z [2026-08-25T09:42:04.994983] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:42:04.996978779Z [2026-08-25T09:42:04.996917] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:42:04.997054752Z [2026-08-25T09:42:04.997014] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:42:06.142394505Z [2026-08-25T09:42:06.142348] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:42:06.142405832Z [2026-08-25T09:42:06.142372] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:42:08.725115373Z [2026-08-25T09:42:08.724943] [spgwu] [spgwu_sx ] [info ] handle_receive(132 bytes)
+2026-08-25T09:42:08.725234530Z [2026-08-25T09:42:08.725101] [spgwu] [spgwu_app] [info ] Received SXAB_SESSION_ESTABLISHMENT_REQUEST seid 0x0 
+2026-08-25T09:42:08.725277060Z [2026-08-25T09:42:08.725120] [spgwu] [spgwu_sx ] [info ] pfcp_session::add(far) seid 0x2 
+2026-08-25T09:42:08.725286360Z [2026-08-25T09:42:08.725173] [spgwu] [spgwu_sx ] [info ] pfcp_session::add(pdr) seid 0x2 
+2026-08-25T09:42:08.763573526Z [2026-08-25T09:42:08.763384] [spgwu] [spgwu_sx ] [info ] handle_receive(100 bytes)
+2026-08-25T09:42:08.763623746Z [2026-08-25T09:42:08.763525] [spgwu] [spgwu_app] [info ] Received SXAB_SESSION_MODIFICATION_REQUEST seid 0x2 
+2026-08-25T09:42:08.763645080Z [2026-08-25T09:42:08.763542] [spgwu] [spgwu_sx ] [info ] pfcp_session::add(far) seid 0x2 
+2026-08-25T09:42:08.763660490Z [2026-08-25T09:42:08.763560] [spgwu] [spgwu_sx ] [info ] pfcp_session::add(pdr) seid 0x2 
+2026-08-25T09:42:14.995225618Z [2026-08-25T09:42:14.995064] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 54
+2026-08-25T09:42:14.995283842Z [2026-08-25T09:42:14.995133] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:42:14.997985011Z [2026-08-25T09:42:14.997774] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:42:14.998077018Z [2026-08-25T09:42:14.997938] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:42:16.145350706Z [2026-08-25T09:42:16.145202] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:42:16.145396746Z [2026-08-25T09:42:16.145279] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:42:24.995306551Z [2026-08-25T09:42:24.995158] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 58
+2026-08-25T09:42:24.995332289Z [2026-08-25T09:42:24.995189] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:42:24.996289471Z [2026-08-25T09:42:24.996255] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:42:24.996312564Z [2026-08-25T09:42:24.996297] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:42:26.148192156Z [2026-08-25T09:42:26.148038] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:42:26.148220042Z [2026-08-25T09:42:26.148110] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:42:34.995551564Z [2026-08-25T09:42:34.995337] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 60
+2026-08-25T09:42:34.995621407Z [2026-08-25T09:42:34.995415] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:42:34.998023285Z [2026-08-25T09:42:34.997944] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:42:34.998182930Z [2026-08-25T09:42:34.998071] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:42:36.151826100Z [2026-08-25T09:42:36.151708] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:42:36.151862032Z [2026-08-25T09:42:36.151750] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:42:44.995607670Z [2026-08-25T09:42:44.995486] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 62
+2026-08-25T09:42:44.995648688Z [2026-08-25T09:42:44.995542] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:42:44.997422985Z [2026-08-25T09:42:44.997356] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:42:44.997517601Z [2026-08-25T09:42:44.997468] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:42:46.154847802Z [2026-08-25T09:42:46.154622] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:42:46.154889905Z [2026-08-25T09:42:46.154694] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:42:51.131529369Z [2026-08-25T09:42:51.131371] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:42:51.131573720Z [2026-08-25T09:42:51.131424] [spgwu] [pfcp     ] [error] PFCP IE type 0 length 0
+2026-08-25T09:42:51.131582653Z [2026-08-25T09:42:51.131489] [spgwu] [spgwu_app] [info ] Received SXAB_SESSION_DELETION_REQUEST seid 0x2 
+2026-08-25T09:42:54.995715393Z [2026-08-25T09:42:54.995612] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 64
+2026-08-25T09:42:54.995749511Z [2026-08-25T09:42:54.995657] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:42:54.997091625Z [2026-08-25T09:42:54.997050] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:42:54.997126637Z [2026-08-25T09:42:54.997099] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:42:56.157834795Z [2026-08-25T09:42:56.157616] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:42:56.157884681Z [2026-08-25T09:42:56.157695] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:43:02.461789620Z [2026-08-25T09:43:02.461695] [spgwu] [spgwu_sx ] [info ] handle_receive(132 bytes)
+2026-08-25T09:43:02.461937501Z [2026-08-25T09:43:02.461871] [spgwu] [spgwu_app] [info ] Received SXAB_SESSION_ESTABLISHMENT_REQUEST seid 0x0 
+2026-08-25T09:43:02.461946642Z [2026-08-25T09:43:02.461889] [spgwu] [spgwu_sx ] [info ] pfcp_session::add(far) seid 0x3 
+2026-08-25T09:43:02.461966851Z [2026-08-25T09:43:02.461913] [spgwu] [spgwu_sx ] [info ] pfcp_session::add(pdr) seid 0x3 
+2026-08-25T09:43:02.501049933Z [2026-08-25T09:43:02.500878] [spgwu] [spgwu_sx ] [info ] handle_receive(100 bytes)
+2026-08-25T09:43:02.501061405Z [2026-08-25T09:43:02.500995] [spgwu] [spgwu_app] [info ] Received SXAB_SESSION_MODIFICATION_REQUEST seid 0x3 
+2026-08-25T09:43:02.501067108Z [2026-08-25T09:43:02.501008] [spgwu] [spgwu_sx ] [info ] pfcp_session::add(far) seid 0x3 
+2026-08-25T09:43:02.501072018Z [2026-08-25T09:43:02.501023] [spgwu] [spgwu_sx ] [info ] pfcp_session::add(pdr) seid 0x3 
+2026-08-25T09:43:04.996050316Z [2026-08-25T09:43:04.995834] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 67
+2026-08-25T09:43:04.996099449Z [2026-08-25T09:43:04.995903] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:43:04.998346380Z [2026-08-25T09:43:04.998246] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:43:04.998434088Z [2026-08-25T09:43:04.998363] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:43:06.163191861Z [2026-08-25T09:43:06.163037] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:43:06.163238608Z [2026-08-25T09:43:06.163112] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:43:14.996178858Z [2026-08-25T09:43:14.995991] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 71
+2026-08-25T09:43:14.996250152Z [2026-08-25T09:43:14.996057] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:43:14.997349642Z [2026-08-25T09:43:14.997305] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:43:14.997367583Z [2026-08-25T09:43:14.997346] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:43:16.167414068Z [2026-08-25T09:43:16.167174] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:43:16.167466749Z [2026-08-25T09:43:16.167240] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:43:24.996346959Z [2026-08-25T09:43:24.996175] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 73
+2026-08-25T09:43:24.996416216Z [2026-08-25T09:43:24.996243] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:43:24.998833299Z [2026-08-25T09:43:24.998756] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:43:24.998900066Z [2026-08-25T09:43:24.998855] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:43:26.170994756Z [2026-08-25T09:43:26.170895] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:43:26.171024322Z [2026-08-25T09:43:26.170966] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:43:34.996457215Z [2026-08-25T09:43:34.996318] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 75
+2026-08-25T09:43:34.996532319Z [2026-08-25T09:43:34.996391] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:43:34.999101822Z [2026-08-25T09:43:34.999026] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:43:34.999252548Z [2026-08-25T09:43:34.999125] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:43:36.176372684Z [2026-08-25T09:43:36.176249] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:43:36.176417760Z [2026-08-25T09:43:36.176332] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:43:44.923521512Z [2026-08-25T09:43:44.923396] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:43:44.923569184Z [2026-08-25T09:43:44.923448] [spgwu] [pfcp     ] [error] PFCP IE type 0 length 0
+2026-08-25T09:43:44.923581398Z [2026-08-25T09:43:44.923507] [spgwu] [spgwu_app] [info ] Received SXAB_SESSION_DELETION_REQUEST seid 0x3 
+2026-08-25T09:43:44.996559572Z [2026-08-25T09:43:44.996442] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 77
+2026-08-25T09:43:44.996593320Z [2026-08-25T09:43:44.996500] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:43:44.998196208Z [2026-08-25T09:43:44.998132] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:43:44.998237620Z [2026-08-25T09:43:44.998210] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:43:46.179505023Z [2026-08-25T09:43:46.179298] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:43:46.179545511Z [2026-08-25T09:43:46.179367] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:43:54.996720005Z [2026-08-25T09:43:54.996589] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 80
+2026-08-25T09:43:54.996764991Z [2026-08-25T09:43:54.996646] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:43:54.998781934Z [2026-08-25T09:43:54.998715] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:43:54.998868270Z [2026-08-25T09:43:54.998828] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:43:56.184833604Z [2026-08-25T09:43:56.184592] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:43:56.184888615Z [2026-08-25T09:43:56.184660] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:43:56.228399830Z [2026-08-25T09:43:56.228288] [spgwu] [spgwu_sx ] [info ] handle_receive(132 bytes)
+2026-08-25T09:43:56.228582391Z [2026-08-25T09:43:56.228449] [spgwu] [spgwu_app] [info ] Received SXAB_SESSION_ESTABLISHMENT_REQUEST seid 0x0 
+2026-08-25T09:43:56.228619403Z [2026-08-25T09:43:56.228469] [spgwu] [spgwu_sx ] [info ] pfcp_session::add(far) seid 0x4 
+2026-08-25T09:43:56.228629103Z [2026-08-25T09:43:56.228494] [spgwu] [spgwu_sx ] [info ] pfcp_session::add(pdr) seid 0x4 
+2026-08-25T09:43:56.266005447Z [2026-08-25T09:43:56.265893] [spgwu] [spgwu_sx ] [info ] handle_receive(100 bytes)
+2026-08-25T09:43:56.266064740Z [2026-08-25T09:43:56.266019] [spgwu] [spgwu_app] [info ] Received SXAB_SESSION_MODIFICATION_REQUEST seid 0x4 
+2026-08-25T09:43:56.266075248Z [2026-08-25T09:43:56.266031] [spgwu] [spgwu_sx ] [info ] pfcp_session::add(far) seid 0x4 
+2026-08-25T09:43:56.266090378Z [2026-08-25T09:43:56.266048] [spgwu] [spgwu_sx ] [info ] pfcp_session::add(pdr) seid 0x4 
+2026-08-25T09:44:04.996854051Z [2026-08-25T09:44:04.996736] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 82
+2026-08-25T09:44:04.996903195Z [2026-08-25T09:44:04.996797] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:44:04.999375177Z [2026-08-25T09:44:04.999303] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:44:04.999433219Z [2026-08-25T09:44:04.999386] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:44:06.188459036Z [2026-08-25T09:44:06.188167] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:44:06.188510670Z [2026-08-25T09:44:06.188252] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:44:14.997002076Z [2026-08-25T09:44:14.996883] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 86
+2026-08-25T09:44:14.997023710Z [2026-08-25T09:44:14.996925] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:44:14.997935248Z [2026-08-25T09:44:14.997880] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:44:14.997975959Z [2026-08-25T09:44:14.997949] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:44:16.193824312Z [2026-08-25T09:44:16.193530] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:44:16.193867661Z [2026-08-25T09:44:16.193601] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:44:24.997028164Z [2026-08-25T09:44:24.996970] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 88
+2026-08-25T09:44:24.997053984Z [2026-08-25T09:44:24.996995] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:44:24.997900554Z [2026-08-25T09:44:24.997866] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:44:24.997934249Z [2026-08-25T09:44:24.997911] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:44:26.197681206Z [2026-08-25T09:44:26.197453] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:44:26.197726250Z [2026-08-25T09:44:26.197531] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:44:34.997360642Z [2026-08-25T09:44:34.997170] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 90
+2026-08-25T09:44:34.997433987Z [2026-08-25T09:44:34.997248] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:44:35.000354020Z [2026-08-25T09:44:35.000266] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:44:35.000500991Z [2026-08-25T09:44:35.000438] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:44:36.202302375Z [2026-08-25T09:44:36.202129] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:44:36.202356922Z [2026-08-25T09:44:36.202215] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:44:44.997499135Z [2026-08-25T09:44:44.997339] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 92
+2026-08-25T09:44:44.997566672Z [2026-08-25T09:44:44.997405] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:44:45.000048326Z [2026-08-25T09:44:44.999945] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:44:45.000109058Z [2026-08-25T09:44:45.000048] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:44:46.205443398Z [2026-08-25T09:44:46.205238] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:44:46.205466422Z [2026-08-25T09:44:46.205308] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:44:54.997640374Z [2026-08-25T09:44:54.997497] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 94
+2026-08-25T09:44:54.997688564Z [2026-08-25T09:44:54.997563] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:44:54.999699680Z [2026-08-25T09:44:54.999638] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:44:54.999771011Z [2026-08-25T09:44:54.999732] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:44:56.208399390Z [2026-08-25T09:44:56.208240] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:44:56.208442424Z [2026-08-25T09:44:56.208321] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:45:04.997752926Z [2026-08-25T09:45:04.997640] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 96
+2026-08-25T09:45:04.997779304Z [2026-08-25T09:45:04.997690] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:45:04.998623824Z [2026-08-25T09:45:04.998601] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:45:04.998659339Z [2026-08-25T09:45:04.998642] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:45:06.211592617Z [2026-08-25T09:45:06.211352] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:45:06.211638491Z [2026-08-25T09:45:06.211418] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:45:14.997905002Z [2026-08-25T09:45:14.997781] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 98
+2026-08-25T09:45:14.997950582Z [2026-08-25T09:45:14.997835] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:45:14.999510487Z [2026-08-25T09:45:14.999450] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:45:14.999587883Z [2026-08-25T09:45:14.999554] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:45:16.216426859Z [2026-08-25T09:45:16.216013] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:45:16.216490525Z [2026-08-25T09:45:16.216082] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:45:24.998053016Z [2026-08-25T09:45:24.997924] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 100
+2026-08-25T09:45:24.998078265Z [2026-08-25T09:45:24.997969] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:45:24.998920195Z [2026-08-25T09:45:24.998860] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:45:24.998957801Z [2026-08-25T09:45:24.998928] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:45:26.219705282Z [2026-08-25T09:45:26.219471] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:45:26.219788315Z [2026-08-25T09:45:26.219542] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:45:34.998470670Z [2026-08-25T09:45:34.998195] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 102
+2026-08-25T09:45:34.998541699Z [2026-08-25T09:45:34.998269] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:45:35.001265312Z [2026-08-25T09:45:35.001110] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:45:35.001358988Z [2026-08-25T09:45:35.001301] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:45:36.224356919Z [2026-08-25T09:45:36.224206] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:45:36.224405880Z [2026-08-25T09:45:36.224276] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:45:44.998468997Z [2026-08-25T09:45:44.998349] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 104
+2026-08-25T09:45:44.998514928Z [2026-08-25T09:45:44.998404] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:45:45.000290100Z [2026-08-25T09:45:45.000233] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:45:45.000351551Z [2026-08-25T09:45:45.000315] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:45:46.228401663Z [2026-08-25T09:45:46.227996] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:45:46.228449708Z [2026-08-25T09:45:46.228066] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:45:54.998615725Z [2026-08-25T09:45:54.998492] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 106
+2026-08-25T09:45:54.998657963Z [2026-08-25T09:45:54.998552] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:45:55.000379612Z [2026-08-25T09:45:55.000334] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:45:55.000446801Z [2026-08-25T09:45:55.000411] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:45:56.232816219Z [2026-08-25T09:45:56.232585] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:45:56.232858515Z [2026-08-25T09:45:56.232653] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:46:04.998815558Z [2026-08-25T09:46:04.998686] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 108
+2026-08-25T09:46:04.998868041Z [2026-08-25T09:46:04.998750] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:46:05.001833138Z [2026-08-25T09:46:05.001736] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:46:05.001896039Z [2026-08-25T09:46:05.001846] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:46:06.235786872Z [2026-08-25T09:46:06.235630] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:46:06.235828298Z [2026-08-25T09:46:06.235703] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:46:14.998962779Z [2026-08-25T09:46:14.998836] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 110
+2026-08-25T09:46:14.999040290Z [2026-08-25T09:46:14.998904] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:46:15.001036560Z [2026-08-25T09:46:15.000960] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:46:15.001165684Z [2026-08-25T09:46:15.001096] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:46:16.238867756Z [2026-08-25T09:46:16.238644] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:46:16.238916092Z [2026-08-25T09:46:16.238712] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:46:24.999172096Z [2026-08-25T09:46:24.998993] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 112
+2026-08-25T09:46:24.999227437Z [2026-08-25T09:46:24.999063] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:46:25.001600931Z [2026-08-25T09:46:25.001528] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:46:25.001698170Z [2026-08-25T09:46:25.001640] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:46:26.243340953Z [2026-08-25T09:46:26.243116] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:46:26.243384905Z [2026-08-25T09:46:26.243209] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:46:34.999598714Z [2026-08-25T09:46:34.999329] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 114
+2026-08-25T09:46:34.999653673Z [2026-08-25T09:46:34.999410] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:46:35.001963803Z [2026-08-25T09:46:35.001845] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:46:35.002056287Z [2026-08-25T09:46:35.002001] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:46:36.248710670Z [2026-08-25T09:46:36.248383] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:46:36.248749088Z [2026-08-25T09:46:36.248444] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:46:44.999597484Z [2026-08-25T09:46:44.999487] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 116
+2026-08-25T09:46:44.999640049Z [2026-08-25T09:46:44.999541] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:46:45.001760001Z [2026-08-25T09:46:45.001675] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:46:45.001768967Z [2026-08-25T09:46:45.001745] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:46:46.251826514Z [2026-08-25T09:46:46.251691] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:46:46.251875892Z [2026-08-25T09:46:46.251765] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:46:54.999698544Z [2026-08-25T09:46:54.999598] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 118
+2026-08-25T09:46:54.999737851Z [2026-08-25T09:46:54.999636] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:46:55.000364704Z [2026-08-25T09:46:55.000338] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:46:55.000383979Z [2026-08-25T09:46:55.000360] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:46:56.255326668Z [2026-08-25T09:46:56.255122] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:46:56.255372699Z [2026-08-25T09:46:56.255245] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:47:04.999879930Z [2026-08-25T09:47:04.999736] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 120
+2026-08-25T09:47:04.999937720Z [2026-08-25T09:47:04.999803] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:47:05.002589390Z [2026-08-25T09:47:05.002413] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:47:05.002602251Z [2026-08-25T09:47:05.002531] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:47:06.258830491Z [2026-08-25T09:47:06.258697] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:47:06.258870523Z [2026-08-25T09:47:06.258765] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:47:15.000046138Z [2026-08-25T09:47:14.999890] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 122
+2026-08-25T09:47:15.000103345Z [2026-08-25T09:47:14.999958] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:47:15.002331046Z [2026-08-25T09:47:15.002251] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:47:15.002400398Z [2026-08-25T09:47:15.002356] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:47:16.261830970Z [2026-08-25T09:47:16.261523] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:47:16.261884598Z [2026-08-25T09:47:16.261589] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:47:25.000203173Z [2026-08-25T09:47:25.000037] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 124
+2026-08-25T09:47:25.000263758Z [2026-08-25T09:47:25.000120] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:47:25.003068533Z [2026-08-25T09:47:25.002992] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:47:25.003210702Z [2026-08-25T09:47:25.003114] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:47:26.266762434Z [2026-08-25T09:47:26.266628] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:47:26.266807965Z [2026-08-25T09:47:26.266692] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:47:35.000317778Z [2026-08-25T09:47:35.000206] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 126
+2026-08-25T09:47:35.000369530Z [2026-08-25T09:47:35.000264] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:47:35.002919762Z [2026-08-25T09:47:35.002789] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:47:35.002969341Z [2026-08-25T09:47:35.002880] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:47:36.271788590Z [2026-08-25T09:47:36.271668] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:47:36.271830096Z [2026-08-25T09:47:36.271740] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:47:45.000454010Z [2026-08-25T09:47:45.000354] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 128
+2026-08-25T09:47:45.000500062Z [2026-08-25T09:47:45.000409] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:47:45.002257388Z [2026-08-25T09:47:45.002189] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:47:45.002299704Z [2026-08-25T09:47:45.002266] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:47:46.274888789Z [2026-08-25T09:47:46.274764] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:47:46.274935385Z [2026-08-25T09:47:46.274831] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:47:55.000719259Z [2026-08-25T09:47:55.000578] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 130
+2026-08-25T09:47:55.000772226Z [2026-08-25T09:47:55.000641] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:47:55.003083884Z [2026-08-25T09:47:55.003013] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:47:55.003173361Z [2026-08-25T09:47:55.003112] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:47:56.279204383Z [2026-08-25T09:47:56.278992] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:47:56.279248285Z [2026-08-25T09:47:56.279057] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:48:05.000870791Z [2026-08-25T09:48:05.000726] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 132
+2026-08-25T09:48:05.000936475Z [2026-08-25T09:48:05.000788] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:48:05.003334524Z [2026-08-25T09:48:05.003247] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:48:05.003471816Z [2026-08-25T09:48:05.003413] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:48:06.282473497Z [2026-08-25T09:48:06.282263] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:48:06.282531277Z [2026-08-25T09:48:06.282324] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:48:15.001029325Z [2026-08-25T09:48:15.000879] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 134
+2026-08-25T09:48:15.001105122Z [2026-08-25T09:48:15.000957] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:48:15.003832120Z [2026-08-25T09:48:15.003559] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:48:15.003894975Z [2026-08-25T09:48:15.003741] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:48:16.286864481Z [2026-08-25T09:48:16.286706] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:48:16.286911256Z [2026-08-25T09:48:16.286786] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:48:25.001226313Z [2026-08-25T09:48:25.001024] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 136
+2026-08-25T09:48:25.001290405Z [2026-08-25T09:48:25.001092] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:48:25.003803246Z [2026-08-25T09:48:25.003700] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:48:25.003910200Z [2026-08-25T09:48:25.003836] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:48:26.291375299Z [2026-08-25T09:48:26.291247] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:48:26.291424648Z [2026-08-25T09:48:26.291310] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:48:35.001420772Z [2026-08-25T09:48:35.001270] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 138
+2026-08-25T09:48:35.001485821Z [2026-08-25T09:48:35.001345] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:48:35.003980392Z [2026-08-25T09:48:35.003883] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:48:35.004126059Z [2026-08-25T09:48:35.004050] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:48:36.296785749Z [2026-08-25T09:48:36.296639] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:48:36.296800038Z [2026-08-25T09:48:36.296707] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:48:45.001575872Z [2026-08-25T09:48:45.001435] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 140
+2026-08-25T09:48:45.001628953Z [2026-08-25T09:48:45.001512] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:48:45.004006721Z [2026-08-25T09:48:45.003947] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:48:45.004086122Z [2026-08-25T09:48:45.004041] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:48:46.301401573Z [2026-08-25T09:48:46.301243] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:48:46.301447713Z [2026-08-25T09:48:46.301308] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:48:55.001731232Z [2026-08-25T09:48:55.001594] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 142
+2026-08-25T09:48:55.001791668Z [2026-08-25T09:48:55.001658] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:48:55.004033664Z [2026-08-25T09:48:55.003956] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:48:55.004227767Z [2026-08-25T09:48:55.004116] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:48:56.305428147Z [2026-08-25T09:48:56.305250] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:48:56.305487137Z [2026-08-25T09:48:56.305311] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:49:05.002117089Z [2026-08-25T09:49:05.001793] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 144
+2026-08-25T09:49:05.002210973Z [2026-08-25T09:49:05.001874] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:49:05.004458173Z [2026-08-25T09:49:05.004295] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:49:05.004491893Z [2026-08-25T09:49:05.004453] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:49:06.308320053Z [2026-08-25T09:49:06.308057] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:49:06.308407522Z [2026-08-25T09:49:06.308124] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:49:15.002074928Z [2026-08-25T09:49:15.001958] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 146
+2026-08-25T09:49:15.002133192Z [2026-08-25T09:49:15.002020] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:49:15.004652141Z [2026-08-25T09:49:15.004597] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:49:15.004734091Z [2026-08-25T09:49:15.004689] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:49:16.312576418Z [2026-08-25T09:49:16.312449] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:49:16.312623824Z [2026-08-25T09:49:16.312517] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
+2026-08-25T09:49:25.002213273Z [2026-08-25T09:49:25.002097] [spgwu] [spgwu_app] [info ] TIME-OUT event timer id 148
+2026-08-25T09:49:25.002243360Z [2026-08-25T09:49:25.002157] [spgwu] [spgwu_app] [info ] Send NF Update to NRF
+2026-08-25T09:49:25.003680368Z [2026-08-25T09:49:25.003633] [spgwu] [spgwu_app] [info ] Response from NRF, HTTP Code: 204
+2026-08-25T09:49:25.003719998Z [2026-08-25T09:49:25.003693] [spgwu] [spgwu_app] [info ] Got successful response from NRF
+2026-08-25T09:49:26.316919545Z [2026-08-25T09:49:26.316680] [spgwu] [spgwu_sx ] [info ] handle_receive(16 bytes)
+2026-08-25T09:49:26.316964879Z [2026-08-25T09:49:26.316754] [spgwu] [spgwu_sx ] [info ] Received SX HEARTBEAT REQUEST
