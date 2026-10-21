@@ -2,6 +2,8 @@
 
 5gmap 的資源狀態收集工具。初期目標是在兩週內將 Pod／VM／GPU 與基本網路觀測送達資源管理接收 Pod，結合拓樸、工作負載需求及資源政策，提供可查詢的 input snapshot。目前為設計文件，尚未實作採集程式或接收服務。
 
+實驗室環境已確認為 RKE／Kubernetes `v1.24.10` 的裸機 Linux 叢集。三個 node 的 CPU／RAM metrics 可讀；`edge` 的 AMD 內顯可透過主機 sysfs 讀取 GPU busy 與 VRAM／GTT 用量，容器採集仍待驗證。`az` 為 Intel 內顯，利用率採集尚未驗證；控制節點 RTX 2070 SUPER 的 NVIDIA 量測路徑尚未就緒。部署條件與採集證據見 [環境盤點](docs/lab-environment.md)。
+
 ## 架構
 
 ```text
@@ -13,7 +15,7 @@ node-probe     ──┼─ HTTP JSON → Service → resource-manager Pod → �
 | 元件 | 位置 | 責任 |
 | --- | --- | --- |
 | cluster-probe | 每個 cluster 一個 Deployment | K8s Pod／Node metadata、health、Events、capacity／requests／limits；kubelet 資源 metrics |
-| node-probe | 每個受測 node 一個 DaemonSet Pod；必要時採 VM 本機程序 | 主機視角 CPU／RAM、可見 GPU、指定網卡 counters 與基本連線探測 |
+| node-probe | 每個受測 node 一個 DaemonSet Pod；必要時採 node 本機程序 | 主機視角 CPU／RAM、可見 GPU、指定網卡 counters 與基本連線探測 |
 | resource-manager | 一個 Deployment＋Service＋持久儲存 | 接收、驗證、去重、保存、合併配置、標示過期資料及提供查詢 |
 
 接收端只回覆資料已收妥，不產生決策或執行資源調整。RSU 的 contributors／受援助對象使用固定情境資料，不處理影像。
