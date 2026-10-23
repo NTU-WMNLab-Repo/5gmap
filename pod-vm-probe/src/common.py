@@ -82,16 +82,21 @@ def observation(subject_kind, subject_id, metric, value, unit, source,
 
 def run_loop(collect, probe_id, interval):
     sender = Sender(probe_id)
+    last_report = 0.0
     while True:
         started = time.monotonic()
+        count = 0
         try:
             records = collect()
+            count = len(records)
             sender.enqueue(records)
         except Exception as exc:
             print(f"collection failed: {exc}", flush=True)
         try:
             sender.flush()
-            print(f"send queue drained for {probe_id}; pending={len(sender.pending)}", flush=True)
+            if time.monotonic() - last_report >= 60:
+                print(f"{probe_id}: collected={count}, pending=0, dropped={sender.dropped_batches}", flush=True)
+                last_report = time.monotonic()
         except Exception as exc:
             print(f"send failed: {exc}; pending={len(sender.pending)}", flush=True)
         time.sleep(max(1, interval - (time.monotonic() - started)))

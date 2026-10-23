@@ -1,6 +1,6 @@
 # 實驗室環境盤點
 
-本文件記錄環境查詢結果與部署規劃；probe 與接收服務尚未部署。
+本文件記錄環境查詢結果、部署規劃與首次部署的驗證狀態。
 
 ## 節點與部署位置
 
@@ -88,8 +88,8 @@ container_start_time_seconds
 | 節點 | 裝置與驅動 | 已驗證的觀測能力 | 尚未驗證／不可用項目 |
 | --- | --- | --- | --- |
 | `monitor` | RTX 2070 SUPER；`nouveau` | PCI 硬體存在 | NVIDIA SMI／NVML 路徑不可用 |
-| `az` | PCI `0000:00:02.0`，Intel `8086:4680`；`i915` | PCI 裝置與 DRM 節點可見 | `intel_gpu_top` 不在 PATH；利用率與記憶體採集尚未驗證 |
-| `edge` | PCI `0000:03:00.0`，AMD `1002:1638`；`amdgpu` | 普通使用者可讀 GPU busy、VRAM／GTT total 與 used | probe 容器掛載／讀取權限、計算 runtime 與 Pod 對應尚未驗證 |
+| `az` | PCI `0000:00:02.0`，Intel `8086:4680`；`i915` | PCI 裝置與 DRM 節點可見；probe 回報 GPU hardware present | `intel_gpu_top` 不在 PATH；目前 backend 對利用率回報 unsupported |
+| `edge` | PCI `0000:03:00.0`，AMD `1002:1638`；`amdgpu` | 普通使用者及 node probe Pod 均可讀 GPU busy、VRAM／GTT total 與 used | 計算 runtime 與 Pod 對 GPU 的使用關係尚未驗證 |
 
 兩個 worker 均有 `/dev/dri/card0` 與 `/dev/dri/renderD128`，群組分別為 `video`、`render`。裝置存在與主機帳號可讀 sysfs，不保證 Pod 已具備裝置存取能力或 GPU 計算能力。本次未驗證 ROCm／OpenCL 等計算環境或 GPU 工作負載排程。
 
@@ -107,17 +107,19 @@ container_start_time_seconds
 
 `gpu_busy_percent` 是驅動提供的 GPU 忙碌百分比，不能作為 Pod 個別使用率；記憶體欄位單位為 bytes。VRAM 與 GTT 應保留各自的 memory domain；內顯的讀值不能描述成獨立顯示卡容量，也不能直接與 OS RAM 相加。[AMDGPU busy 指標](https://docs.kernel.org/6.12/gpu/amdgpu/thermal.html)、[AMDGPU memory 指標](https://docs.kernel.org/gpu/amdgpu/driver-misc.html)。
 
-第一版可優先用 `edge` 的 AMD sysfs 作為真實 GPU 輸入，將所需主機 sysfs 路徑唯讀掛載後驗證容器採集。每筆附來源與採集時間；無來源時間戳時不捏造 `observed_at`。`az` 與控制節點未取得的 utilization／memory 保持 unknown 並附原因，不能填 0%；上表的 0% 則是成功讀取的實測值。若裝置沒有可用 UUID，保留獨立的 `pci_bdf`，以 Node UID 加 PCI 位址在本次 inventory 中定位，不偽造 UUID；硬體拓樸變更後重新盤點。
+第一版已從 `edge` 的 AMD sysfs 收到真實 GPU 輸入，主機 sysfs 由 probe Pod 唯讀掛載。每筆附來源與採集時間；無來源時間戳時不捏造 `observed_at`。`az` 與控制節點未取得的 utilization／memory 保持 unknown／unsupported 並附原因，不能填 0%；上表的 0% 則是成功讀取的實測值。若裝置沒有可用 UUID，保留獨立的 `pci_bdf`，以 Node UID 加 PCI 位址在本次 inventory 中定位，不偽造 UUID；硬體拓樸變更後重新盤點。
 
 ## Plan
 
-首次部署 probe 所用的 `python:3.12-slim` 映像在三台主機的 Docker 快取中都不存在；兩個 worker 的 Docker Hub registry 入口連線成功並回傳正常的未授權挑戰（HTTP 401），實際 image pull 尚未驗證。若拉取失敗，需指定實驗室已準備的相容 Python 映像。
+2026-10-23 已在 `oai` namespace 部署一個 cluster probe、一個 receiver 與兩個 worker node probe。兩個 worker 的主機視角 CPU／RAM／網卡紀錄與 `edge` AMD GPU 指標均成功送達；cluster probe 的 kubelet CPU／RAM 指標亦成功送達。接收端提供健康檢查並將資料寫入 `az` 的 SQLite。後續以受控負載驗證指標變化與 receiver 重啟後的資料保留。
+
+首次部署前 `python:3.12-slim` 未在節點快取；2026-10-23 的實際部署已成功在兩個 worker 啟動該映像。
 
 1. **主要受測節點：**`edge` 與 `az` 兩個 worker，metadata 與 node resource inventory 可涵蓋全部三個 node。
 2. 第一批資料：Pod metadata／health／requests／limits、node capacity／allocatable，以及已驗證的 kubelet CPU／RAM 指標。
-3. 接收服務：放在 `az` worker，使用 SQLite；預先配置帶 node affinity 的靜態 local PV／PVC，或明確綁定節點的持久目錄。現有叢集不具動態 PVC 供應條件。
+3. 接收服務：已在 `az` worker 使用 SQLite 與綁定節點的 hostPath；重啟後資料保留尚需實測。現有叢集不具動態 PVC 供應條件。
 4. 測試負載：在 worker 上建立小型 CPU／RAM 測試 Pod，再觀察資源與 restart／health 變化；既有服務只作讀取與對照。
-5. GPU：優先接入 `edge` 的 AMD sysfs；先驗證 probe Pod 能讀取，再送出 device 層級資料。Intel 與 NVIDIA 尚未取得的指標明示缺值，不作為整條 input pipeline 的阻塞條件。
+5. GPU：`edge` 的 AMD sysfs 已由 node probe Pod 讀取並送出 device 層級資料。Intel 與 NVIDIA 尚未取得的指標明示缺值，不作為整條 input pipeline 的阻塞條件。
 6. 其餘設定：site 對照、工作負載需求、RAN 保留量、RSU 情境與假設網路條件由設定檔提供；node-probe 另補 OS available memory 與網卡 counters。
 
 映像與 Kubernetes API／client 版本需與現有 `v1.24.10` 配合；實作時固定相容版本，不直接使用未驗證的最新 addon。
@@ -182,4 +184,4 @@ ping -c 3 -W 2 192.168.1.240
 head -v /sys/bus/pci/devices/0000:03:00.0/gpu_busy_percent /sys/bus/pci/devices/0000:03:00.0/mem_info_vram_total /sys/bus/pci/devices/0000:03:00.0/mem_info_vram_used /sys/bus/pci/devices/0000:03:00.0/mem_info_gtt_total /sys/bus/pci/devices/0000:03:00.0/mem_info_gtt_used
 ```
 
-Pod、資源用量、磁碟空間及網路數值為盤點當下狀態，部署前需重新確認。仍待驗證 probe ServiceAccount／kubelet 存取、容器內主機視角與 sysfs 權限，以及接收端持久儲存配置。
+Pod、資源用量、磁碟空間及網路數值為盤點當下狀態。probe ServiceAccount／kubelet 存取與 `edge` 容器內 sysfs 讀取已於首次部署驗證；接收端重啟後的 SQLite 資料保留仍待實測。

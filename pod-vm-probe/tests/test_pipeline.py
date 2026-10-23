@@ -7,6 +7,8 @@ import unittest
 import urllib.error
 import urllib.request
 from contextlib import closing
+from datetime import datetime, timezone
+from unittest.mock import patch
 
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
@@ -16,6 +18,41 @@ from common import observation
 
 
 class PipelineTest(unittest.TestCase):
+    def test_service_location_uses_ready_endpoint_site(self):
+        responses = {
+            "/api/v1/nodes": {"items": [{"metadata": {"uid": "node-1", "name": "worker-1",
+                                                       "labels": {"deplocation": "edge"}},
+                                           "status": {}}]},
+            "/api/v1/pods": {"items": [{"metadata": {"uid": "pod-1", "name": "du-1",
+                                                      "namespace": "oai"},
+                                          "spec": {"nodeName": "worker-1", "containers": []},
+                                          "status": {}}]},
+            "/api/v1/events": {"items": []},
+            "/api/v1/services": {"items": [{"metadata": {"uid": "svc-1", "name": "du",
+                                                          "namespace": "oai"}, "spec": {}}]},
+            "/api/v1/endpoints": {"items": [{"metadata": {"name": "du", "namespace": "oai"},
+                                             "subsets": [{"addresses": [{"ip": "10.0.0.1",
+                                                                         "targetRef": {"uid": "pod-1"}}]}]}]},
+        }
+        with patch.object(cluster_probe, "kube_json", side_effect=lambda path: responses[path]), \
+             patch.object(cluster_probe, "kube_request", return_value=""):
+            records = cluster_probe.collect()
+        locations = [item for item in records if item["metric"] == "service_location"]
+        self.assertEqual(locations[0]["value"], ["edge"])
+        self.assertEqual(locations[0]["unit"], "sites")
+
+    def test_events_emit_only_when_resource_version_changes(self):
+        cluster_probe.EVENT_RESOURCE_VERSIONS.clear()
+        event = {"metadata": {"uid": "event-1", "resourceVersion": "10",
+                              "creationTimestamp": "2026-10-23T00:00:00Z"},
+                 "reason": "Started", "involvedObject": {"kind": "Pod", "uid": "pod-1"}}
+        first = cluster_probe.changed_events([event])
+        self.assertEqual(len(first), 1)
+        self.assertEqual(first[0]["observed_at"], "2026-10-23T00:00:00Z")
+        self.assertFalse(cluster_probe.changed_events([event]))
+        event["metadata"]["resourceVersion"] = "11"
+        self.assertEqual(len(cluster_probe.changed_events([event])), 1)
+
     def test_metrics_use_pod_uid_and_source_time(self):
         cluster_probe.PREVIOUS_CPU.clear()
         pod_uids = {("oai", "du-a"): "uid-a"}
@@ -56,7 +93,24 @@ class PipelineTest(unittest.TestCase):
                 self.assertEqual(len(state["observations"]), 1)
                 self.assertTrue(state["observations"][0]["stale"])
                 self.assertEqual(state["fixtures"]["version"], "test")
-                bad = dict(body, sequence=2, observations=[dict(record, collected_at="2020-01-01")])
+                older = dict(body, sequence=2, observations=[dict(record, value=99.0,
+                                                                  collected_at="2019-01-01T00:00:00+00:00")])
+                request = urllib.request.Request(base + "/v1/observations",
+                                                 data=json.dumps(older).encode(), method="POST")
+                with urllib.request.urlopen(request) as response:
+                    self.assertTrue(json.load(response)["stored"])
+                with urllib.request.urlopen(base + "/v1/summary") as response:
+                    summary = json.load(response)
+                self.assertEqual(summary["total"], 1)
+                self.assertEqual(summary["by_kind"], {"node": 1})
+                self.assertEqual(summary["fixtures_version"], "test")
+                with urllib.request.urlopen(base + "/v1/state?kind=node&limit=1") as response:
+                    state = json.load(response)
+                self.assertEqual(state["total"], 1)
+                self.assertEqual(state["observations"][0]["value"], 12.5)
+                with urllib.request.urlopen(base + "/v1/state?kind=gpu") as response:
+                    self.assertEqual(json.load(response)["observations"], [])
+                bad = dict(body, sequence=3, observations=[dict(record, collected_at="2020-01-01")])
                 request = urllib.request.Request(base + "/v1/observations",
                                                  data=json.dumps(bad).encode(), method="POST")
                 with self.assertRaises(urllib.error.HTTPError) as raised:
@@ -66,6 +120,25 @@ class PipelineTest(unittest.TestCase):
                 server.shutdown()
                 server.server_close()
                 thread.join(timeout=2)
+
+    def test_source_timestamp_controls_freshness(self):
+        record = observation("node", "node-1", "memory", 1, "bytes", "kubelet",
+                             observed_at="2020-01-01T00:00:00Z")
+        self.assertTrue(receiver.is_stale(record, datetime.now(timezone.utc)))
+
+    def test_existing_database_backfills_latest(self):
+        with tempfile.TemporaryDirectory() as temp:
+            receiver.DB_PATH = str(pathlib.Path(temp) / "old.sqlite3")
+            record = observation("gpu", "node-1/pci-1", "gpu_busy_percent", 7, "%", "old")
+            with closing(receiver.connect()) as db, db:
+                db.execute("""INSERT INTO observations
+                    (probe_id, boot_id, sequence, subject_kind, subject_id, metric,
+                     collected_at, received_at, payload) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    ("old-probe", "old-boot", 1, "gpu", "node-1/pci-1", "gpu_busy_percent",
+                     record["collected_at"], record["collected_at"], json.dumps(record)))
+            receiver.initialize()
+            with closing(receiver.connect()) as db:
+                self.assertEqual(db.execute("SELECT count(*) FROM latest").fetchone()[0], 1)
 
 
 if __name__ == "__main__":

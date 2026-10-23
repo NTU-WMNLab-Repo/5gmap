@@ -9,6 +9,7 @@ from common import kube_json, kube_request, observation, run_loop
 
 CLUSTER_ID = os.environ.get("CLUSTER_ID", "lab-rke")
 PREVIOUS_CPU = {}
+EVENT_RESOURCE_VERSIONS = {}
 METRIC_LINE = re.compile(r'^([a-zA-Z_:][a-zA-Z0-9_:]*)(?:\{(.*)\})?\s+([^\s]+)(?:\s+([^\s]+))?$')
 LABEL = re.compile(r'([a-zA-Z_][a-zA-Z0-9_]*)="((?:\\.|[^"\\])*)"')
 
@@ -79,6 +80,30 @@ def parse_metrics(raw, node_uid, site_id, pod_uids):
     return records
 
 
+def changed_events(events):
+    records = []
+    current = {}
+    for event in events[-200:]:
+        meta = event["metadata"]
+        uid = meta["uid"]
+        version = meta.get("resourceVersion")
+        current[uid] = version
+        if uid in EVENT_RESOURCE_VERSIONS and EVENT_RESOURCE_VERSIONS[uid] == version:
+            continue
+        involved = event.get("involvedObject", {})
+        observed_at = (event.get("eventTime") or event.get("lastTimestamp")
+                       or meta.get("creationTimestamp"))
+        records.append(observation("event", uid, "event_reason", event.get("reason", "Unknown"),
+                                   "state", "k8s/event", ttl_seconds=300, observed_at=observed_at,
+                                   attributes={"message": event.get("message", "")[:500],
+                                               "type": event.get("type"), "count": event.get("count"),
+                                               "object_kind": involved.get("kind"),
+                                               "object_uid": involved.get("uid")}))
+    EVENT_RESOURCE_VERSIONS.clear()
+    EVENT_RESOURCE_VERSIONS.update(current)
+    return records
+
+
 def collect():
     records = []
     nodes = kube_json("/api/v1/nodes")["items"]
@@ -89,6 +114,7 @@ def collect():
     pod_uids = {(pod["metadata"]["namespace"], pod["metadata"]["name"]): pod["metadata"]["uid"] for pod in pods}
     service_uids = {(service["metadata"]["namespace"], service["metadata"]["name"]): service["metadata"]["uid"] for service in services}
     node_by_name = {}
+    pod_nodes = {pod["metadata"]["uid"]: pod.get("spec", {}).get("nodeName") for pod in pods}
     for node in nodes:
         meta, spec, status = node["metadata"], node.get("spec", {}), node.get("status", {})
         uid, name = meta["uid"], meta["name"]
@@ -152,35 +178,34 @@ def collect():
                 for resource, quantity in container.get("resources", {}).get(category, {}).items():
                     records.append(observation("container", container_id, f"{category}_{resource}", quantity,
                                                "k8s_quantity", "k8s/pod", node_uid=node_uid, site_id=site))
-    for service in services:
-        meta = service["metadata"]
-        spec = service.get("spec", {})
-        records.append(observation("service", meta["uid"], "service_location", meta["namespace"],
-                                   "namespace", "k8s/service",
-                                   attributes={"service_name": meta["name"], "cluster_ip": spec.get("clusterIP"),
-                                               "selector": spec.get("selector", {})}))
+    sites_by_service = {}
     for endpoint in endpoints:
         meta = endpoint["metadata"]
         addresses = []
         for subset in endpoint.get("subsets", []):
             for address in subset.get("addresses", []):
                 target = address.get("targetRef", {})
+                node_name = address.get("nodeName") or pod_nodes.get(target.get("uid"))
+                site = node_by_name.get(node_name, (None, None))[1]
                 addresses.append({"ip": address.get("ip"), "pod_uid": target.get("uid"),
-                                  "node_name": address.get("nodeName")})
+                                  "node_name": node_name, "site_id": site})
         service_uid = service_uids.get((meta["namespace"], meta["name"]))
         if not service_uid:
             continue
+        sites_by_service.setdefault(service_uid, set()).update(
+            address["site_id"] for address in addresses if address["site_id"])
         records.append(observation("service", service_uid,
                                    "ready_endpoints", len(addresses), "count", "k8s/endpoints",
                                    attributes={"addresses": addresses[:100]}))
-    for event in events[-200:]:
-        meta = event["metadata"]
-        involved = event.get("involvedObject", {})
-        records.append(observation("event", meta["uid"], "event_reason", event.get("reason", "Unknown"),
-                                   "state", "k8s/event", ttl_seconds=300,
-                                   attributes={"message": event.get("message", "")[:500],
-                                               "type": event.get("type"), "object_kind": involved.get("kind"),
-                                               "object_uid": involved.get("uid")}))
+    for service in services:
+        meta = service["metadata"]
+        spec = service.get("spec", {})
+        records.append(observation("service", meta["uid"], "service_location",
+                                   sorted(sites_by_service.get(meta["uid"], set())), "sites", "k8s/endpoints",
+                                   attributes={"namespace": meta["namespace"], "service_name": meta["name"],
+                                               "cluster_ip": spec.get("clusterIP"),
+                                               "selector": spec.get("selector", {})}))
+    records.extend(changed_events(events))
     return records
 
 
