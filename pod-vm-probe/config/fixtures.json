@@ -1,0 +1,25 @@
+{
+  "version": "lab-initial-1",
+  "sites": {
+    "az": {"node_ip": "192.168.1.240"},
+    "edge": {"node_ip": "192.168.1.68"}
+  },
+  "workload_requests": [],
+  "policy": {
+    "provenance": "configured",
+    "extra_ran_reserve_cpu_cores": 0,
+    "extra_ran_reserve_memory_bytes": 0
+  },
+  "rsu_scenario": {
+    "provenance": "simulated",
+    "session_id": "example-session",
+    "contributors": [],
+    "assisted_target": null
+  },
+  "network_scenario": {
+    "provenance": "simulated",
+    "uplink_capacity_bps": null,
+    "inter_edge_capacity_bps": null,
+    "inter_edge_delay_ms": null
+  }
+}

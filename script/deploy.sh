@@ -17,6 +17,7 @@ RUN_MODE="${RUN_MODE:-rfsim}"
 DEPLOY_UE="${DEPLOY_UE:-${DeployUE:-1}}"
 RAN_PROXY="${RAN_PROXY:-${RanProxy:-0}}"
 CROSS_PROTOCOL_CORRELATE="${CROSS_PROTOCOL_CORRELATE:-${CrossProtocolCorrelate:-0}}"
+POD_PROBE="${POD_PROBE:-${pod_probe:-0}}"
 
 positional_args=()
 while [ "$#" -gt 0 ]; do
@@ -67,6 +68,16 @@ while [ "$#" -gt 0 ]; do
             ;;
         CrossProtocolCorrelate=*|crossProtocolCorrelate=*|cross_protocol_correlate=*)
             CROSS_PROTOCOL_CORRELATE="${1#*=}"
+            ;;
+        --pod_probe|--pod-probe)
+            POD_PROBE=1
+            if [ "$#" -gt 1 ] && { [ "$2" = "0" ] || [ "$2" = "1" ]; }; then
+                shift
+                POD_PROBE="$1"
+            fi
+            ;;
+        --pod_probe=*|--pod-probe=*|pod_probe=*)
+            POD_PROBE="${1#*=}"
             ;;
         --*)
             die "Unknown argument: $1"
@@ -159,6 +170,11 @@ case "$CROSS_PROTOCOL_CORRELATE" in
     *)
         die "Unsupported CrossProtocolCorrelate '$CROSS_PROTOCOL_CORRELATE'. Supported values: 0, 1"
         ;;
+esac
+
+case "$POD_PROBE" in
+    0|1) ;;
+    *) die "Unsupported pod_probe '$POD_PROBE'. Supported values: 0, 1" ;;
 esac
 
 if [ "$CROSS_PROTOCOL_CORRELATE" = "1" ] && [ "$RAN_PROXY" != "1" ]; then
@@ -673,5 +689,10 @@ for ((s=10; s<=slice_end; s++)); do
         ue_ip_suffix=$((ue_ip_suffix + 1))
     done
 done
+
+if [ "$POD_PROBE" = "1" ]; then
+    info "Deploying pod-vm-probe"
+    bash "$ROOT_DIR/pod-vm-probe/deploy/deploy.sh"
+fi
 
 success "Finished 5G core and OAI RAN deployment"

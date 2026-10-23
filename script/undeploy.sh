@@ -12,8 +12,18 @@ NAMESPACE="${NAMESPACE:-oai}"
 DELETE_MYSQL="${DELETE_MYSQL:-0}"
 CLEAR_JAEGER_DATA="${CLEAR_JAEGER_DATA:-0}"
 JAEGER_NAMESPACE="${JAEGER_NAMESPACE:-jaeger}"
+POD_PROBE="${POD_PROBE:-${pod_probe:-0}}"
 
 require_commands kubectl helm
+
+case "$POD_PROBE" in
+    0|1) ;;
+    *) die "Unsupported pod_probe '$POD_PROBE'. Supported values: 0, 1" ;;
+esac
+
+if [ "$POD_PROBE" = "1" ]; then
+    bash "$(dirname "$SCRIPT_DIR")/pod-vm-probe/deploy/undeploy.sh"
+fi
 
 info "Cleaning 5GMAP OAI RAN deployment"
 

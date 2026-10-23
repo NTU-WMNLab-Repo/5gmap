@@ -1,0 +1,192 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pod-probe-cluster
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pod-probe-node
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: pod-probe-cluster
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "pods", "events", "services", "endpoints"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["nodes/proxy"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: pod-probe-cluster
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: pod-probe-cluster
+subjects:
+  - kind: ServiceAccount
+    name: pod-probe-cluster
+    namespace: oai
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: pod-probe-node
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: pod-probe-node
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: pod-probe-node
+subjects:
+  - kind: ServiceAccount
+    name: pod-probe-node
+    namespace: oai
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pod-probe-receiver
+spec:
+  selector:
+    app: pod-probe-receiver
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-probe-receiver
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: pod-probe-receiver
+  template:
+    metadata:
+      labels:
+        app: pod-probe-receiver
+    spec:
+      nodeSelector:
+        deplocation: az
+      containers:
+        - name: receiver
+          image: __POD_PROBE_IMAGE__
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-u", "/app/receiver.py"]
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet: {path: /readyz, port: 8080}
+          livenessProbe:
+            httpGet: {path: /healthz, port: 8080}
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: 500m, memory: 256Mi}
+          volumeMounts:
+            - {name: code, mountPath: /app, readOnly: true}
+            - {name: fixtures, mountPath: /config, readOnly: true}
+            - {name: data, mountPath: /data}
+      volumes:
+        - name: code
+          configMap: {name: pod-probe-code}
+        - name: fixtures
+          configMap: {name: pod-probe-fixtures}
+        - name: data
+          hostPath:
+            path: /var/lib/pod-vm-probe
+            type: DirectoryOrCreate
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-probe-cluster
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pod-probe-cluster
+  template:
+    metadata:
+      labels:
+        app: pod-probe-cluster
+    spec:
+      serviceAccountName: pod-probe-cluster
+      nodeSelector:
+        deplocation: az
+      containers:
+        - name: cluster
+          image: __POD_PROBE_IMAGE__
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-u", "/app/cluster_probe.py"]
+          env:
+            - {name: CLUSTER_ID, value: lab-rke}
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: 500m, memory: 256Mi}
+          volumeMounts:
+            - {name: code, mountPath: /app, readOnly: true}
+      volumes:
+        - name: code
+          configMap: {name: pod-probe-code}
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: pod-probe-node
+spec:
+  selector:
+    matchLabels:
+      app: pod-probe-node
+  template:
+    metadata:
+      labels:
+        app: pod-probe-node
+    spec:
+      serviceAccountName: pod-probe-node
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: deplocation
+                    operator: In
+                    values: [az, edge]
+      containers:
+        - name: node
+          image: __POD_PROBE_IMAGE__
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-u", "/app/node_probe.py"]
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef: {fieldPath: spec.nodeName}
+          resources:
+            requests: {cpu: 25m, memory: 48Mi}
+            limits: {cpu: 300m, memory: 128Mi}
+          volumeMounts:
+            - {name: code, mountPath: /app, readOnly: true}
+            - {name: host-proc, mountPath: /host/proc, readOnly: true}
+            - {name: host-sys, mountPath: /host/sys, readOnly: true}
+      volumes:
+        - name: code
+          configMap: {name: pod-probe-code}
+        - name: host-proc
+          hostPath: {path: /proc, type: Directory}
+        - name: host-sys
+          hostPath: {path: /sys, type: Directory}

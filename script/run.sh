@@ -16,6 +16,7 @@ RUN_MODE="${RUN_MODE:-rfsim}"
 DEPLOY_UE="${DEPLOY_UE:-${DeployUE:-1}}"
 RAN_PROXY="${RAN_PROXY:-${RanProxy:-0}}"
 CROSS_PROTOCOL_CORRELATE="${CROSS_PROTOCOL_CORRELATE:-${CrossProtocolCorrelate:-0}}"
+POD_PROBE="${POD_PROBE:-${pod_probe:-0}}"
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -66,6 +67,16 @@ while [ "$#" -gt 0 ]; do
         CrossProtocolCorrelate=*|crossProtocolCorrelate=*|cross_protocol_correlate=*)
             CROSS_PROTOCOL_CORRELATE="${1#*=}"
             ;;
+        --pod_probe|--pod-probe)
+            POD_PROBE=1
+            if [ "$#" -gt 1 ] && { [ "$2" = "0" ] || [ "$2" = "1" ]; }; then
+                shift
+                POD_PROBE="$1"
+            fi
+            ;;
+        --pod_probe=*|--pod-probe=*|pod_probe=*)
+            POD_PROBE="${1#*=}"
+            ;;
         *)
             die "Unknown argument: $1"
             ;;
@@ -105,14 +116,19 @@ case "$CROSS_PROTOCOL_CORRELATE" in
         ;;
 esac
 
+case "$POD_PROBE" in
+    0|1) ;;
+    *) die "Unsupported pod_probe '$POD_PROBE'. Supported values: 0, 1" ;;
+esac
+
 if [ "$CROSS_PROTOCOL_CORRELATE" = "1" ] && [ "$RAN_PROXY" != "1" ]; then
     die "CrossProtocolCorrelate=1 requires RanProxy=1"
 fi
 
 info "Starting 5GMAP with OAI RAN"
-info "usecase=${USECASE}, users=${NUM_USERS}, slices=${NUM_SLICES}, iterations=${NUM_ITERATIONS}, test_type=${TEST_TYPE}, run_mode=${RUN_MODE}, DeployUE=${DEPLOY_UE}, RanProxy=${RAN_PROXY}, CrossProtocolCorrelate=${CROSS_PROTOCOL_CORRELATE}"
+info "usecase=${USECASE}, users=${NUM_USERS}, slices=${NUM_SLICES}, iterations=${NUM_ITERATIONS}, test_type=${TEST_TYPE}, run_mode=${RUN_MODE}, DeployUE=${DEPLOY_UE}, RanProxy=${RAN_PROXY}, CrossProtocolCorrelate=${CROSS_PROTOCOL_CORRELATE}, pod_probe=${POD_PROBE}"
 
-"$SCRIPT_DIR/deploy.sh" \
+POD_PROBE="$POD_PROBE" "$SCRIPT_DIR/deploy.sh" \
     "$USECASE" \
     "$NUM_USERS" \
     "$NUM_SLICES" \
@@ -133,10 +149,10 @@ else
 fi
 
 if [ "$AUTO_CLEANUP" = "1" ]; then
-    "$SCRIPT_DIR/undeploy.sh" "$NUM_USERS" "$NUM_SLICES"
+    POD_PROBE="$POD_PROBE" "$SCRIPT_DIR/undeploy.sh" "$NUM_USERS" "$NUM_SLICES"
 else
     read -r -p "Press ENTER to cleanup, or Ctrl-C to keep the deployment running..."
-    "$SCRIPT_DIR/undeploy.sh" "$NUM_USERS" "$NUM_SLICES"
+    POD_PROBE="$POD_PROBE" "$SCRIPT_DIR/undeploy.sh" "$NUM_USERS" "$NUM_SLICES"
 fi
 
 success "Experiment finished"

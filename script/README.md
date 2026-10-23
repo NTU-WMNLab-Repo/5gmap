@@ -1,3 +1,16 @@
+## Pod／VM 資源收集
+
+`pod_probe` 預設為 `0`。加上旗標時，`run.sh` 會在 RAN 部署後建立 `pod-vm-probe` 的 receiver、cluster probe 與 node probe；清理時同步移除 Pod 和 RBAC，保留 `az` 主機上的 SQLite 資料。
+
+```bash
+./script/run.sh --pod_probe
+pod_probe=1 ./script/run.sh
+./script/deploy.sh zoomv3 1 1 --pod_probe
+POD_PROBE=1 ./script/undeploy.sh 1 1
+```
+
+未提供旗標時不建立 probe。可用 `--pod_probe=0` 明確關閉。部署與查詢方式見 [Pod and VM Probe](../pod-vm-probe/README.md)。
+
 ## Experimental RanProxy Flag
 
 **Warning: `RanProxy=1` is experimental. It enables the F1AP/F1-C, NGAP/N2,

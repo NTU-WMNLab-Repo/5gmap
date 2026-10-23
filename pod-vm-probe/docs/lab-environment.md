@@ -111,6 +111,8 @@ container_start_time_seconds
 
 ## Plan
 
+首次部署 probe 所用的 `python:3.12-slim` 映像在三台主機的 Docker 快取中都不存在；兩個 worker 的 Docker Hub registry 入口連線成功並回傳正常的未授權挑戰（HTTP 401），實際 image pull 尚未驗證。若拉取失敗，需指定實驗室已準備的相容 Python 映像。
+
 1. **主要受測節點：**`edge` 與 `az` 兩個 worker，metadata 與 node resource inventory 可涵蓋全部三個 node。
 2. 第一批資料：Pod metadata／health／requests／limits、node capacity／allocatable，以及已驗證的 kubelet CPU／RAM 指標。
 3. 接收服務：放在 `az` worker，使用 SQLite；預先配置帶 node affinity 的靜態 local PV／PVC，或明確綁定節點的持久目錄。現有叢集不具動態 PVC 供應條件。
