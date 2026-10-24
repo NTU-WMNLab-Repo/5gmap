@@ -440,7 +440,7 @@ The default run deploys:
 The script flow is:
 
 ```text
-script/run.sh -> script/deploy.sh -> script/start_traffic.sh -> script/undeploy.sh
+script/run.sh -> script/deploy.sh -> script/start_iperf_cpu_test.sh -> script/undeploy.sh
 ```
 
 During deployment, `script/deploy.sh` installs MySQL if needed, then deploys

@@ -138,7 +138,7 @@ POD_PROBE="$POD_PROBE" "$SCRIPT_DIR/deploy.sh" \
     "$CROSS_PROTOCOL_CORRELATE"
 
 if [ "$DEPLOY_UE" = "1" ]; then
-    "$SCRIPT_DIR/start_traffic.sh" \
+    POD_PROBE="$POD_PROBE" bash "$SCRIPT_DIR/start_iperf_cpu_test.sh" \
         "$USECASE" \
         "$NUM_USERS" \
         "$NUM_SLICES" \

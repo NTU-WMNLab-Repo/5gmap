@@ -104,6 +104,6 @@ python3 -m unittest discover -s pod-vm-probe/tests -v
 
 ## 後續驗收
 
-依 [start_traffic.sh](../script/start_traffic.sh) 的 ping、DL／UL iperf3 流程，記錄流量開始前、20 秒 DL、20 秒 UL、結束恢復後的 node／Pod／container CPU 與 RAM、網卡 counters、來源時間及 iperf3 吞吐量。先以 `/v1/summary` 確認三個來源，再對照 `/v1/snapshot` 與 `kubectl top`；Pod 重建、probe 失聯與接收端重啟則另外驗證 UID、TTL 與保存。GPU 負載驗證需先選定此 AMD 內顯可執行的計算程式，不能只以靜置時的 0% 認定負載指標正確。決策演算法、資源配置執行與平台整合不列入此階段。
+依 [start_iperf_cpu_test.sh](../script/start_iperf_cpu_test.sh) 的 ping、DL／UL iperf3 流程，記錄流量開始前、20 秒 DL、20 秒 UL、結束恢復後的 node／Pod／container CPU 與 RAM、網卡 counters、來源時間及 iperf3 吞吐量。先以 `/v1/summary` 確認三個來源，再對照 `/v1/snapshot` 與 `kubectl top`；Pod 重建、probe 失聯與接收端重啟則另外驗證 UID、TTL 與保存。GPU 負載驗證需先選定此 AMD 內顯可執行的計算程式，不能只以靜置時的 0% 認定負載指標正確。決策演算法、資源配置執行與平台整合不列入此階段。
 
-單 UE、單 slice 的範例可在 `5gmap/` 執行 `./script/start_traffic.sh zoomv3 1 1 3 0`，產生三輪 DL／UL 測試；實際 use case 名稱依當次部署調整。每輪 iperf3 各跑 20 秒，probe 的 node 與 cluster 採樣週期分別為 5 秒與 10 秒。吞吐量紀錄位於 `5gcore/logs/<usecase>/throughput/`。執行流量測試前先確定 DNN 與 NR UE 容器已有 `iperf3`，並保留流量前、兩個方向期間及結束後的快照時間戳。
+單 UE、單 slice 的範例可在 `5gmap/` 執行 `POD_PROBE=1 bash ./script/start_iperf_cpu_test.sh zoomv3 1 1 3 0`，產生三輪 DL／UL 測試；實際 use case 名稱依當次部署調整。每輪 iperf3 各跑 20 秒，腳本每 5 秒保存精簡快照，輸出位於 `5gcore/logs/<usecase>/iperf-cpu/<run-id>/`。`samples.jsonl` 保留來源時間，`cpu-memory-summary.tsv` 比較基線、DL、UL、恢復階段的平均 CPU cores 與 RAM MiB。這些平均值用於觀察同次實驗的變化，不能單獨證明流量是全部 CPU 差異的原因。
