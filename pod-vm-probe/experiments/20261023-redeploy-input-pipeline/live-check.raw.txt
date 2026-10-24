@@ -1,0 +1,96 @@
+Read-only lab checks, 2026-10-23 11:28-11:29 UTC.
+Commands run through the local lab helper; no lab files were changed.
+
+$ kubectl get pods -n oai -o wide -l app=pod-probe-receiver
+NAME                                  READY   STATUS    RESTARTS   AGE     IP            NODE
+pod-probe-receiver-57c8dd8459-w5qns   1/1     Running   0          5m35s   10.42.2.130   192.168.1.240
+
+$ kubectl get pods -n oai -o wide -l app=pod-probe-cluster
+NAME                                 READY   STATUS    RESTARTS   AGE    IP            NODE
+pod-probe-cluster-59665fc5f7-tnfjx   1/1     Running   0          6m7s   10.42.2.128   192.168.1.240
+
+$ kubectl get pods -n oai -o wide -l app=pod-probe-node
+NAME                   READY   STATUS    RESTARTS   AGE     IP            NODE
+pod-probe-node-9z22j   1/1     Running   0          5m35s   10.42.2.129   192.168.1.240
+pod-probe-node-j6shq   1/1     Running   0          5m34s   10.42.1.219   192.168.1.68
+
+$ kubectl get deployment,daemonset,service -n oai | grep pod-probe
+deployment.apps/pod-probe-cluster          1/1     1            1           7m29s
+deployment.apps/pod-probe-receiver         1/1     1            1           7m29s
+daemonset.apps/pod-probe-node   2         2         2       2            2           <none>          7m29s
+service/pod-probe-receiver         ClusterIP   10.43.147.203   <none>        8080/TCP                                7m29s
+
+$ kubectl get --raw /api/v1/namespaces/oai/services/http:pod-probe-receiver:8080/proxy/v1/summary
+{"schema_version":1,"generated_at":"2026-10-23T11:28:28.579+00:00","total":1363,"stale":805,"by_kind":{"container":501,"event":441,"gpu":8,"link":2,"node":67,"pod":266,"service":78},"by_status":{"ok":1362,"unsupported":1},"by_probe":{"cluster-probe:lab-rke":1319,"node-probe:192.168.1.240":20,"node-probe:192.168.1.68":24},"non_ok":[{"subject_kind":"gpu","subject_id":"50da375c-6b16-4789-8cf4-737257fa3a2b/0000:00:02.0","metric":"gpu_busy_percent","status":"unsupported","reason":"driver metric unavailable"}],"fixtures_version":"lab-initial-1"}
+
+$ kubectl exec -n oai deployment/pod-probe-receiver -- python -m sqlite3 /data/observations.sqlite3 'SELECT subject_kind,COUNT(*),MIN(collected_at),MAX(collected_at) FROM latest GROUP BY subject_kind'
+('container', 501, '2026-10-23T09:45:29.489+00:00', '2026-10-23T11:28:09.506+00:00')
+('event', 441, '2026-10-23T09:45:29.490+00:00', '2026-10-23T11:22:29.490+00:00')
+('gpu', 8, '2026-10-23T11:28:11.929+00:00', '2026-10-23T11:28:13.452+00:00')
+('link', 2, '2026-10-23T11:28:06.930+00:00', '2026-10-23T11:28:08.456+00:00')
+('node', 67, '2026-10-23T11:28:09.454+00:00', '2026-10-23T11:28:13.450+00:00')
+('pod', 266, '2026-10-23T09:45:39.352+00:00', '2026-10-23T11:28:09.506+00:00')
+('service', 78, '2026-10-23T10:18:59.364+00:00', '2026-10-23T11:28:09.507+00:00')
+
+$ kubectl exec -n oai deployment/pod-probe-receiver -- python -m sqlite3 /data/observations.sqlite3 'SELECT subject_kind,COUNT(*),SUM((julianday()-julianday(collected_at))*86400>45),SUM((julianday()-julianday(collected_at))*86400>300) FROM latest GROUP BY subject_kind'
+('container', 501, 224, 224)
+('event', 441, 441, 441)
+('gpu', 8, 0, 0)
+('link', 2, 0, 0)
+('node', 67, 0, 0)
+('pod', 266, 110, 110)
+('service', 78, 30, 30)
+
+$ kubectl exec -n oai deployment/pod-probe-receiver -- python -m sqlite3 /data/observations.sqlite3 'SELECT subject_kind,COUNT(*),SUM((julianday()-julianday(received_at))*86400<300) FROM observations GROUP BY subject_kind'
+('container', 62956, 7715)
+('event', 40622, 0)
+('gpu', 3810, 480)
+('link', 406, 51)
+('node', 24251, 3030)
+('pod', 35196, 4309)
+('service', 11760, 1440)
+
+$ kubectl exec -n oai deployment/pod-probe-receiver -- python -m sqlite3 /data/observations.sqlite3 'SELECT subject_kind,COUNT(*),SUM((julianday()-julianday(received_at))*86400<900) FROM observations GROUP BY subject_kind'
+('container', 63469, 11538)
+('event', 40622, 222)
+('gpu', 3844, 666)
+('link', 410, 72)
+('node', 24469, 4305)
+('pod', 35482, 6434)
+('service', 11856, 2160)
+
+$ kubectl exec -n oai deployment/pod-probe-receiver -- python -m sqlite3 /data/observations.sqlite3 'SELECT probe_id,COUNT(*),MIN(received_at),MAX(received_at) FROM batches GROUP BY probe_id'
+('cluster-probe:lab-rke', 241, '2026-10-23T09:46:09.433+00:00', '2026-10-23T11:28:09.517+00:00')
+('node-probe:192.168.1.240', 469, '2026-10-23T09:46:04.152+00:00', '2026-10-23T11:28:11.933+00:00')
+('node-probe:192.168.1.68', 468, '2026-10-23T09:46:00.598+00:00', '2026-10-23T11:28:13.467+00:00')
+
+$ kubectl logs -n oai deployment/pod-probe-cluster --tail=12
+send failed: <urlopen error [Errno 111] Connection refused>; pending=1
+send failed: <urlopen error [Errno 111] Connection refused>; pending=2
+send failed: <urlopen error [Errno 111] Connection refused>; pending=3
+send failed: <urlopen error [Errno 111] Connection refused>; pending=4
+cluster-probe:lab-rke: collected=499, pending=0, dropped=0
+cluster-probe:lab-rke: collected=486, pending=0, dropped=0
+cluster-probe:lab-rke: collected=474, pending=0, dropped=0
+cluster-probe:lab-rke: collected=478, pending=0, dropped=0
+cluster-probe:lab-rke: collected=485, pending=0, dropped=0
+cluster-probe:lab-rke: collected=483, pending=0, dropped=0
+
+$ kubectl logs -n oai daemonset/pod-probe-node --tail=12
+Found 2 pods, using pod/pod-probe-node-9z22j
+send failed: <urlopen error [Errno 111] Connection refused>; pending=1
+node-probe:192.168.1.240: collected=19, pending=0, dropped=0
+node-probe:192.168.1.240: collected=19, pending=0, dropped=0
+node-probe:192.168.1.240: collected=20, pending=0, dropped=0
+node-probe:192.168.1.240: collected=19, pending=0, dropped=0
+node-probe:192.168.1.240: collected=19, pending=0, dropped=0
+node-probe:192.168.1.240: collected=20, pending=0, dropped=0
+
+$ kubectl exec -n oai deployment/pod-probe-receiver -- ls -lh /data/observations.sqlite3
+-rw-r--r-- 1 root root 175M Oct 23 11:29 /data/observations.sqlite3
+
+$ kubectl top pods -n oai --containers | grep pod-probe
+pod-probe-cluster-59665fc5f7-tnfjx         cluster      4m           18Mi
+pod-probe-node-9z22j                       node         1m           14Mi
+pod-probe-node-j6shq                       node         1m           14Mi
+pod-probe-receiver-57c8dd8459-w5qns        receiver     9m           19Mi

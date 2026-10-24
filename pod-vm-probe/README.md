@@ -1,5 +1,7 @@
 # Pod and VM Probe
 
+部署驗證與量測結果見[實驗紀錄](experiments/README.md)。
+
 5gmap 的資源狀態收集工具。第一版將 Pod／節點／GPU 的資源觀測送達接收 Pod，結合拓樸、工作負載需求及資源政策設定，提供可查詢的 input snapshot。
 
 實驗室環境為 RKE／Kubernetes `v1.24.10` 的裸機 Linux 叢集。2026-10-23 的首次部署已驗證三個 node 的 CPU／RAM 指標可讀、兩個 worker 的 node probe 可送資料，且 `edge` 的 AMD 內顯可由 Pod 讀到 GPU busy 與 VRAM／GTT 用量。`az` 的 Intel 內顯利用率目前為 unsupported；控制節點 RTX 2070 SUPER 的 NVIDIA 量測路徑尚未就緒。各程式職責見 [src 說明](src/README.md)，硬體與部署條件見 [環境盤點](docs/lab-environment.md)。
