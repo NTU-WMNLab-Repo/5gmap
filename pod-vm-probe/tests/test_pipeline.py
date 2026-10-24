@@ -40,6 +40,9 @@ class PipelineTest(unittest.TestCase):
         locations = [item for item in records if item["metric"] == "service_location"]
         self.assertEqual(locations[0]["value"], ["edge"])
         self.assertEqual(locations[0]["unit"], "sites")
+        inventory = next(item for item in records if item["metric"] == "k8s_object_uids")
+        self.assertEqual(inventory["value"], {"node": ["node-1"], "pod": ["pod-1"],
+                                              "container": [], "service": ["svc-1"]})
 
     def test_events_emit_only_when_resource_version_changes(self):
         cluster_probe.EVENT_RESOURCE_VERSIONS.clear()
@@ -104,6 +107,23 @@ class PipelineTest(unittest.TestCase):
                 self.assertEqual(summary["total"], 1)
                 self.assertEqual(summary["by_kind"], {"node": 1})
                 self.assertEqual(summary["fixtures_version"], "test")
+                with self.assertRaises(urllib.error.HTTPError) as raised:
+                    urllib.request.urlopen(base + "/v1/snapshot")
+                self.assertEqual(raised.exception.code, 503)
+                inventory = observation("inventory", "lab-rke", "k8s_object_uids",
+                                        {"node": ["node-1"], "pod": [], "container": [],
+                                         "service": []}, "uid_sets", "k8s/list")
+                request = urllib.request.Request(base + "/v1/observations",
+                                                 data=json.dumps(dict(body, sequence=4,
+                                                                      observations=[inventory])).encode(),
+                                                 method="POST")
+                with urllib.request.urlopen(request):
+                    pass
+                with urllib.request.urlopen(base + "/v1/snapshot") as response:
+                    snapshot = json.load(response)
+                self.assertEqual(snapshot["total"], 0)
+                self.assertEqual(snapshot["excluded"]["stale"], 1)
+                self.assertEqual(len(snapshot["missing"]), len(receiver.REQUIRED_NODE_METRICS))
                 with urllib.request.urlopen(base + "/v1/state?kind=node&limit=1") as response:
                     state = json.load(response)
                 self.assertEqual(state["total"], 1)
@@ -125,6 +145,35 @@ class PipelineTest(unittest.TestCase):
         record = observation("node", "node-1", "memory", 1, "bytes", "kubelet",
                              observed_at="2020-01-01T00:00:00Z")
         self.assertTrue(receiver.is_stale(record, datetime.now(timezone.utc)))
+
+    def test_snapshot_excludes_retired_events_and_reports_unavailable(self):
+        now = datetime.now(timezone.utc)
+        members = {"node": ["node-1"], "pod": ["pod-new"],
+                   "container": ["pod-new/app"], "service": ["service-1"]}
+        inventory = observation("inventory", "lab-rke", "k8s_object_uids",
+                                members, "uid_sets", "k8s/list")
+        ready = observation("node", "node-1", "node_ready", "True", "state", "k8s/node")
+        old_pod = observation("pod", "pod-old", "pod_ready", "True", "state", "k8s/pod")
+        current_pod = observation("pod", "pod-new", "pod_ready", "True", "state", "k8s/pod")
+        stale_container = observation("container", "pod-new/app", "container_ready", True,
+                                      "boolean", "k8s/pod")
+        stale_container["collected_at"] = "2020-01-01T00:00:00+00:00"
+        event = observation("event", "event-1", "event_reason", "Started", "state", "k8s/event")
+        unsupported = observation("gpu", "node-1/pci-1", "gpu_busy_percent", None, "%",
+                                  "host/sys/pci", status="unsupported", node_uid="node-1")
+        records = [inventory, ready, old_pod, current_pod, stale_container, event, unsupported]
+        snapshot = receiver.decision_snapshot([(json.dumps(record), record["collected_at"])
+                                               for record in records], now)
+        self.assertEqual({item["subject_id"] for item in snapshot["observations"]},
+                         {"node-1", "pod-new"})
+        self.assertEqual(snapshot["excluded"], {"event": 1, "other": 1, "retired": 1,
+                                                 "stale": 1, "non_ok": 1})
+        self.assertEqual(snapshot["unavailable"][0]["metric"], "gpu_busy_percent")
+        self.assertIn({"subject_kind": "node", "subject_id": "node-1",
+                       "metric": "node_cpu_usage_cores"}, snapshot["missing"])
+        inventory["collected_at"] = "2020-01-01T00:00:00+00:00"
+        with self.assertRaisesRegex(ValueError, "inventory missing or stale"):
+            receiver.decision_snapshot([(json.dumps(inventory), inventory["collected_at"])], now)
 
     def test_existing_database_backfills_latest(self):
         with tempfile.TemporaryDirectory() as temp:

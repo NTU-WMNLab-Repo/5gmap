@@ -89,7 +89,7 @@ container_start_time_seconds
 | --- | --- | --- | --- |
 | `monitor` | RTX 2070 SUPER；`nouveau` | PCI 硬體存在 | NVIDIA SMI／NVML 路徑不可用 |
 | `az` | PCI `0000:00:02.0`，Intel `8086:4680`；`i915` | PCI 裝置與 DRM 節點可見；probe 回報 GPU hardware present | `intel_gpu_top` 不在 PATH；目前 backend 對利用率回報 unsupported |
-| `edge` | PCI `0000:03:00.0`，AMD `1002:1638`；`amdgpu` | 普通使用者及 node probe Pod 均可讀 GPU busy、VRAM／GTT total 與 used | 計算 runtime 與 Pod 對 GPU 的使用關係尚未驗證 |
+| `edge` | PCI `0000:03:00.0`，AMD `1002:1638`；`amdgpu` | 主機一般帳號及 node probe Pod 均可讀 GPU busy、VRAM／GTT total 與 used | 計算 runtime 與 Pod 對 GPU 的使用關係尚未驗證 |
 
 兩個 worker 均有 `/dev/dri/card0` 與 `/dev/dri/renderD128`，群組分別為 `video`、`render`。裝置存在與主機帳號可讀 sysfs，不保證 Pod 已具備裝置存取能力或 GPU 計算能力。本次未驗證 ROCm／OpenCL 等計算環境或 GPU 工作負載排程。
 

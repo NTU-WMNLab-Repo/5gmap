@@ -59,6 +59,70 @@ def is_stale(record, now):
     return (now - sampled).total_seconds() > record["ttl_seconds"]
 
 
+SNAPSHOT_KINDS = {"node", "pod", "container", "service", "gpu", "link"}
+REQUIRED_NODE_METRICS = ("node_ready", "node_allocatable_cpu", "node_allocatable_memory",
+                         "node_cpu_usage_cores", "node_memory_working_set_bytes")
+
+
+def decision_snapshot(rows, now):
+    records = [(json.loads(payload), received_at) for payload, received_at in rows]
+    inventories = [record for record, _ in records
+                   if record["subject_kind"] == "inventory"
+                   and record["metric"] == "k8s_object_uids"]
+    inventory = max(inventories, key=lambda item: item["collected_at"], default=None)
+    if inventory is None or inventory.get("status") != "ok" or is_stale(inventory, now):
+        raise ValueError("cluster inventory missing or stale")
+    members = inventory.get("value")
+    if not isinstance(members, dict) or any(
+        not isinstance(members.get(kind), list) or
+        any(not isinstance(uid, str) for uid in members[kind])
+        for kind in ("node", "pod", "container", "service")
+    ):
+        raise ValueError("invalid cluster inventory")
+    active = {kind: set(uids) for kind, uids in members.items()}
+    selected = []
+    unavailable = []
+    excluded = {"event": 0, "other": 0, "retired": 0, "stale": 0, "non_ok": 0}
+    for record, received_at in records:
+        kind = record["subject_kind"]
+        if kind == "event":
+            excluded["event"] += 1
+            continue
+        if kind not in SNAPSHOT_KINDS:
+            excluded["other"] += 1
+            continue
+        if kind in ("gpu", "link"):
+            present = record.get("node_uid") in active["node"]
+        else:
+            present = record["subject_id"] in active[kind]
+        if not present:
+            excluded["retired"] += 1
+            continue
+        if is_stale(record, now):
+            excluded["stale"] += 1
+            continue
+        if record["status"] != "ok":
+            excluded["non_ok"] += 1
+            unavailable.append({key: record.get(key) for key in
+                                ("subject_kind", "subject_id", "node_uid", "site_id", "metric",
+                                 "status", "reason", "source", "observed_at", "collected_at")})
+            continue
+        record["received_at"] = received_at
+        selected.append(record)
+    selected.sort(key=lambda item: (item["subject_kind"], item["subject_id"], item["metric"]))
+    available = {(item["subject_kind"], item["subject_id"], item["metric"]) for item in selected}
+    missing = [{"subject_kind": "node", "subject_id": uid, "metric": metric}
+               for uid in sorted(active["node"]) for metric in REQUIRED_NODE_METRICS
+               if ("node", uid, metric) not in available]
+    return {"inventory": {"source": inventory["source"],
+                          "collected_at": inventory["collected_at"],
+                          "ttl_seconds": inventory["ttl_seconds"],
+                          "counts": {kind: len(active[kind]) for kind in
+                                     ("node", "pod", "container", "service")}},
+            "observations": selected, "unavailable": unavailable, "missing": missing,
+            "excluded": excluded}
+
+
 def validate_batch(body):
     if not isinstance(body, dict):
         raise ValueError("batch must be an object")
@@ -186,6 +250,36 @@ class Handler(BaseHTTPRequestHandler):
             with open(CONFIG_PATH, encoding="utf-8") as handle:
                 summary["fixtures_version"] = json.load(handle).get("version")
             return self.reply(200, {"schema_version": 1, "generated_at": utc_now(), **summary})
+        if route.path == "/v1/snapshot":
+            query = parse_qs(route.query)
+            try:
+                limit = int(query.get("limit", ["10000"])[0])
+                offset = int(query.get("offset", ["0"])[0])
+                if not 1 <= limit <= 10000 or offset < 0:
+                    raise ValueError("invalid limit or offset")
+            except ValueError as exc:
+                return self.reply(400, {"error": str(exc)})
+            with LOCK, closing(connect()) as db:
+                rows = db.execute("SELECT payload, received_at FROM latest").fetchall()
+            now = datetime.now(timezone.utc)
+            try:
+                snapshot = decision_snapshot(rows, now)
+            except ValueError as exc:
+                return self.reply(503, {"error": str(exc), "generated_at": now.isoformat()})
+            selected = snapshot["observations"]
+            for key, field in (("kind", "subject_kind"), ("metric", "metric"), ("site", "site_id")):
+                value = query.get(key, [None])[0]
+                if value:
+                    selected = [record for record in selected if record.get(field) == value]
+            total = len(selected)
+            snapshot["observations"] = selected[offset:offset + limit]
+            with open(CONFIG_PATH, encoding="utf-8") as handle:
+                fixtures = json.load(handle)
+            return self.reply(200, {"schema_version": 1, "generated_at": now.isoformat(),
+                                    "total": total,
+                                    "next_offset": offset + len(snapshot["observations"])
+                                    if offset + len(snapshot["observations"]) < total else None,
+                                    **snapshot, "fixtures": fixtures})
         if route.path != "/v1/state":
             return self.reply(404, {"error": "not found"})
         query = parse_qs(route.query)

@@ -206,6 +206,15 @@ def collect():
                                                "cluster_ip": spec.get("clusterIP"),
                                                "selector": spec.get("selector", {})}))
     records.extend(changed_events(events))
+    inventory = {
+        "node": sorted(node["metadata"]["uid"] for node in nodes),
+        "pod": sorted(pod["metadata"]["uid"] for pod in pods),
+        "container": sorted(f"{pod['metadata']['uid']}/{container['name']}"
+                            for pod in pods for container in pod.get("spec", {}).get("containers", [])),
+        "service": sorted(service["metadata"]["uid"] for service in services),
+    }
+    records.append(observation("inventory", CLUSTER_ID, "k8s_object_uids", inventory,
+                               "uid_sets", "k8s/list"))
     return records
 
 

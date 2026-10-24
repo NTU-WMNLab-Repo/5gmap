@@ -62,11 +62,31 @@ Port forward 執行期間，在另一個 shell 查詢更新後的接收端：
 ```bash
 curl http://127.0.0.1:8080/healthz
 curl -s http://127.0.0.1:8080/v1/summary
+curl -s 'http://127.0.0.1:8080/v1/snapshot?kind=node&limit=20'
 curl -s 'http://127.0.0.1:8080/v1/state?kind=gpu&limit=20'
 curl -s 'http://127.0.0.1:8080/v1/state?kind=node&metric=node_cpu_usage_cores&limit=20'
 ```
 
 輸入格式為 `schema_version`、`probe_id`、`boot_id`、`sequence` 加 `observations` 陣列。接收端先保存再回覆，重複批次以三個發送欄位去重；`/v1/state` 提供最新記錄、stale 標記與 [固定情境設定](config/fixtures.json)，可用 `kind`、`metric`、`limit`、`offset` 篩選與分頁；不帶條件會輸出大量資料。`/v1/summary` 提供精簡的數量與非正常狀態摘要。原始紀錄保留 24 小時，過期資料由定期清理移除。有來源時間戳時以 `observed_at` 判斷資料是否過期，否則使用 `collected_at`。CPU 來源為 kubelet 累計計數器的相鄰樣本差值，最初一筆不產生 CPU cores。
+
+### 決策輸入快照
+
+`GET /v1/snapshot` 由 receiver 依 cluster probe 每次傳來的完整 Kubernetes 物件清單建立。Node／Pod／container／service 必須仍在清單內；GPU 與 link 必須屬於清單內的 node。只有 `status=ok` 且來源時間未超過 TTL 的數值進入 `observations`。Event 保留在 `/v1/state` 與歷史資料，不進快照。`unsupported` 等非正常數值列在 `unavailable`；缺少的核心 node 指標列在 `missing`；`excluded` 統計過期、已消失物件等排除原因。原始觀測的來源、採集時間與單位會保留在快照中。
+
+若 cluster probe 尚未送出清單，或最後一份清單已超過 45 秒，receiver 回傳 HTTP 503，避免使用無法確認物件存活的資料。單次採集失敗時，上一次清單仍保留至 TTL 到期。可用 `kind`、`metric`、`site`、`limit`、`offset` 縮小回傳量；`total` 與 `next_offset` 用於分頁。查詢結果不產生 who／how／where 決策。
+
+### 完整清空 probe 資料庫
+
+下列指令會**永久刪除** receiver 的歷史紀錄、最新值與去重批次；在 `5gmap/` 目錄執行。先停止 probe，確認相關 Pod 已消失，再刪除 `az` 節點的 SQLite 檔並重新部署。`DELETE_MYSQL=1` 只處理核心網路的 MySQL，不能清空 probe 的 SQLite。
+
+```bash
+bash pod-vm-probe/deploy/undeploy.sh
+kubectl get pods -n oai | grep pod-probe  # 確認沒有任何 probe Pod；若還在終止中，先等待
+ssh -t wmnlab@192.168.1.240 'sudo rm -f -- /var/lib/pod-vm-probe/observations.sqlite3 /var/lib/pod-vm-probe/observations.sqlite3-wal /var/lib/pod-vm-probe/observations.sqlite3-shm'
+bash pod-vm-probe/deploy/deploy.sh
+```
+
+`/var/lib/pod-vm-probe` 位於 `az`，檔案由 root 擁有，因此需要 `sudo`。重新部署後，新資料會由 probes 自動寫入。若 namespace 不是 `oai`，`kubectl` 與部署指令需使用相同的 `NAMESPACE`；刪檔位置仍以 receiver 的 nodeSelector 與 hostPath 設定為準。
 
 第一版從 `/proc`／sysfs 讀取主機網卡 counters，並對另一個 worker 的 SSH port 做低頻 TCP connect 探測；該時間只代表此方法的連線耗時，不代表無線 UL capacity。AMD GPU 是 `edge` 的 device 層級資料，未建立 Pod 對 GPU 映射。這次部署已驗證 Pod 內 AMD sysfs 及 probe ServiceAccount 經 API proxy 讀 kubelet 的路徑；主機檔案以唯讀方式掛載。接收端 SQLite 使用固定在 `az` 節點的 hostPath。fixture 範例由實際實驗條件填入後再作推論。
 
@@ -84,4 +104,6 @@ python3 -m unittest discover -s pod-vm-probe/tests -v
 
 ## 後續驗收
 
-接下來用受控 CPU／RAM 負載、Pod 重建、probe 失聯與接收端重啟檢查數值變化、UID 關聯、資料過期與保存。先以 `/v1/summary` 確認三個來源及非正常狀態，再查具體指標；receiver 重啟前後對照 `/v1/state?kind=gpu&limit=20` 與一個 Pod UID。GPU 負載驗證需先選定此 AMD 內顯可執行的計算程式，不能只以靜置時的 0% 認定負載指標正確。決策演算法、資源配置執行與平台整合不列入此階段。
+依 [start_traffic.sh](../script/start_traffic.sh) 的 ping、DL／UL iperf3 流程，記錄流量開始前、20 秒 DL、20 秒 UL、結束恢復後的 node／Pod／container CPU 與 RAM、網卡 counters、來源時間及 iperf3 吞吐量。先以 `/v1/summary` 確認三個來源，再對照 `/v1/snapshot` 與 `kubectl top`；Pod 重建、probe 失聯與接收端重啟則另外驗證 UID、TTL 與保存。GPU 負載驗證需先選定此 AMD 內顯可執行的計算程式，不能只以靜置時的 0% 認定負載指標正確。決策演算法、資源配置執行與平台整合不列入此階段。
+
+單 UE、單 slice 的範例可在 `5gmap/` 執行 `./script/start_traffic.sh zoomv3 1 1 3 0`，產生三輪 DL／UL 測試；實際 use case 名稱依當次部署調整。每輪 iperf3 各跑 20 秒，probe 的 node 與 cluster 採樣週期分別為 5 秒與 10 秒。吞吐量紀錄位於 `5gcore/logs/<usecase>/throughput/`。執行流量測試前先確定 DNN 與 NR UE 容器已有 `iperf3`，並保留流量前、兩個方向期間及結束後的快照時間戳。
