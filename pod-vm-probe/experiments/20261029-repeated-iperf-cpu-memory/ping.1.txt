@@ -1,0 +1,8 @@
+PING 10.42.2.176 (10.42.2.176) from 12.1.1.2 oaitun_ue1: 56(84) bytes of data.
+64 bytes from 10.42.2.176: icmp_seq=1 ttl=62 time=7.96 ms
+64 bytes from 10.42.2.176: icmp_seq=2 ttl=62 time=4.53 ms
+64 bytes from 10.42.2.176: icmp_seq=3 ttl=62 time=7.87 ms
+
+--- 10.42.2.176 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2002ms
+rtt min/avg/max/mdev = 4.531/6.787/7.959/1.595 ms

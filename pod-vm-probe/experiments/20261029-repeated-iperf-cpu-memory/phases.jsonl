@@ -1,0 +1,16 @@
+{"phase": "baseline", "user": 1, "iteration": 1, "attempt": 1, "started_at": "2026-10-29T14:41:35.334Z", "ended_at": "2026-10-29T14:42:05.887Z"}
+{"phase": "dl", "user": 1, "iteration": 1, "attempt": 1, "started_at": "2026-10-29T14:42:08.085Z", "ended_at": "2026-10-29T14:43:08.418Z"}
+{"phase": "dl_recovery", "user": 1, "iteration": 1, "attempt": 1, "started_at": "2026-10-29T14:43:09.166Z", "ended_at": "2026-10-29T14:43:39.689Z"}
+{"phase": "ul", "user": 1, "iteration": 1, "attempt": 1, "started_at": "2026-10-29T14:43:41.883Z", "ended_at": "2026-10-29T14:44:42.423Z"}
+{"phase": "ul_recovery", "user": 1, "iteration": 1, "attempt": 1, "started_at": "2026-10-29T14:44:42.956Z", "ended_at": "2026-10-29T14:45:13.467Z"}
+{"phase": "baseline", "user": 1, "iteration": 2, "attempt": 1, "started_at": "2026-10-29T14:45:13.493Z", "ended_at": "2026-10-29T14:45:43.993Z"}
+{"phase": "dl", "user": 1, "iteration": 2, "attempt": 1, "started_at": "2026-10-29T14:45:46.185Z", "ended_at": "2026-10-29T14:46:46.478Z"}
+{"phase": "dl_recovery", "user": 1, "iteration": 2, "attempt": 1, "started_at": "2026-10-29T14:46:47.230Z", "ended_at": "2026-10-29T14:47:17.727Z"}
+{"phase": "ul", "user": 1, "iteration": 2, "attempt": 1, "started_at": "2026-10-29T14:47:19.934Z", "ended_at": "2026-10-29T14:48:20.519Z"}
+{"phase": "ul_recovery", "user": 1, "iteration": 2, "attempt": 1, "started_at": "2026-10-29T14:48:20.990Z", "ended_at": "2026-10-29T14:48:51.497Z"}
+{"phase": "baseline", "user": 1, "iteration": 3, "attempt": 1, "started_at": "2026-10-29T14:48:51.523Z", "ended_at": "2026-10-29T14:49:22.046Z"}
+{"phase": "dl", "user": 1, "iteration": 3, "attempt": 1, "started_at": "2026-10-29T14:49:24.219Z", "ended_at": "2026-10-29T14:50:24.520Z"}
+{"phase": "dl_recovery", "user": 1, "iteration": 3, "attempt": 1, "started_at": "2026-10-29T14:50:25.268Z", "ended_at": "2026-10-29T14:50:55.771Z"}
+{"phase": "ul", "user": 1, "iteration": 3, "attempt": 1, "started_at": "2026-10-29T14:50:57.983Z", "ended_at": "2026-10-29T14:51:58.549Z"}
+{"phase": "ul_recovery", "user": 1, "iteration": 3, "attempt": 1, "started_at": "2026-10-29T14:51:59.043Z", "ended_at": "2026-10-29T14:52:29.561Z"}
+{"phase": "drain", "user": 1, "iteration": 3, "attempt": 1, "started_at": "2026-10-29T14:52:29.587Z", "ended_at": "2026-10-29T14:52:44.840Z"}

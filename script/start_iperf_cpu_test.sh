@@ -6,6 +6,7 @@ SCRIPT_DIR="${SCRIPT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 source "$SCRIPT_DIR/common.sh"
 enable_error_trap
+SUMMARY_SCRIPT="${SUMMARY_SCRIPT:-$SCRIPT_DIR/summarize_iperf_cpu.py}"
 
 USECASE="${1:-zoomv3}"
 NUM_USERS="${2:-1}"
@@ -33,10 +34,25 @@ LOG_DIR="$ROOT_DIR/5gcore/logs/$USECASE/iperf-cpu/$RUN_ID"
 mkdir -p "$LOG_DIR"
 SAMPLES="$LOG_DIR/samples.jsonl"
 POD_MAP="$LOG_DIR/pods.tsv"
+PHASES="$LOG_DIR/phases.jsonl"
 SNAPSHOT_PATH="/api/v1/namespaces/$NAMESPACE/services/http:pod-probe-receiver:8080/proxy/v1/snapshot"
 ACTIVE_PID=""
 CURRENT_ITERATION=0
 CURRENT_PHASE_START=""
+CURRENT_USER=0
+CURRENT_ATTEMPT=1
+
+finish_phase() {
+    local phase="$1" ended_at
+    ended_at="${2:-$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)}"
+    python3 - "$phase" "$CURRENT_USER" "$CURRENT_ITERATION" "$CURRENT_ATTEMPT" \
+        "$CURRENT_PHASE_START" "$ended_at" >> "$PHASES" <<'PY'
+import json, sys
+phase, user, iteration, attempt, started_at, ended_at = sys.argv[1:]
+print(json.dumps({"phase": phase, "user": int(user), "iteration": int(iteration),
+                  "attempt": int(attempt), "started_at": started_at, "ended_at": ended_at}))
+PY
+}
 
 cleanup() {
     if [ -n "$ACTIVE_PID" ] && kill -0 "$ACTIVE_PID" 2>/dev/null; then
@@ -87,10 +103,11 @@ for record in snapshot["observations"]:
                      "value", "unit", "source", "observed_at", "collected_at")})
 print(json.dumps({"generated_at": snapshot["generated_at"], "phase": sys.argv[1],
                   "iteration": int(sys.argv[2]), "phase_started_at": sys.argv[3],
+                  "user": int(sys.argv[4]), "attempt": int(sys.argv[5]),
                   "inventory": snapshot["inventory"],
                   "missing": snapshot["missing"], "excluded": snapshot["excluded"],
                   "observations": records}, separators=(",", ":")))
-' "$phase" "$CURRENT_ITERATION" "$CURRENT_PHASE_START" >> "$SAMPLES"
+' "$phase" "$CURRENT_ITERATION" "$CURRENT_PHASE_START" "$CURRENT_USER" "$CURRENT_ATTEMPT" >> "$SAMPLES"
 }
 
 sample_for_seconds() {
@@ -102,13 +119,23 @@ sample_for_seconds() {
         sample_once "$phase" || die "probe snapshot sampling failed during $phase"
         sleep "$SAMPLE_INTERVAL"
     done
+    finish_phase "$phase"
 }
 
 run_iperf_phase() {
-    local phase="$1" log_file="$2" result
+    local phase="$1" log_file="$2" result ended_file
     shift 2
     CURRENT_PHASE_START="$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)"
-    timeout "$((IPERF_SECONDS + 15))s" "$@" > "$log_file" 2>&1 &
+    ended_file="$log_file.ended_at"
+    (
+        if timeout "$((IPERF_SECONDS + 15))s" "$@" > "$log_file" 2>&1; then
+            result=0
+        else
+            result=$?
+        fi
+        date -u +%Y-%m-%dT%H:%M:%S.%3NZ > "$ended_file"
+        exit "$result"
+    ) &
     ACTIVE_PID=$!
     while kill -0 "$ACTIVE_PID" 2>/dev/null; do
         sample_once "$phase" || die "probe snapshot sampling failed during $phase"
@@ -117,6 +144,7 @@ run_iperf_phase() {
     result=0
     wait "$ACTIVE_PID" || result=$?
     ACTIVE_PID=""
+    finish_phase "$phase" "$(cat "$ended_file")"
     cat "$log_file"
     return "$result"
 }
@@ -130,60 +158,7 @@ start_iperf_server() {
 
 summarize_samples() {
     [ "$POD_PROBE" = 1 ] || return 0
-    python3 - "$SAMPLES" "$POD_MAP" > "$LOG_DIR/cpu-memory-summary.tsv" <<'PY'
-import collections
-from datetime import datetime
-import json
-import statistics
-import sys
-
-samples_path, pod_map_path = sys.argv[1:]
-pod_names = {}
-with open(pod_map_path, encoding="utf-8") as handle:
-    for line in handle:
-        uid, name, _node = line.rstrip("\n").split("\t", 2)
-        pod_names[uid] = name
-
-values = collections.defaultdict(lambda: collections.defaultdict(list))
-seen = set()
-with open(samples_path, encoding="utf-8") as handle:
-    for line in handle:
-        sample = json.loads(line)
-        phase_start = datetime.fromisoformat(sample["phase_started_at"].replace("Z", "+00:00"))
-        for record in sample["observations"]:
-            metric = record["metric"]
-            if not metric.endswith(("cpu_usage_cores", "memory_working_set_bytes")):
-                continue
-            kind, subject = record["subject_kind"], record["subject_id"]
-            source_time = record.get("observed_at") or record["collected_at"]
-            if datetime.fromisoformat(source_time.replace("Z", "+00:00")) < phase_start:
-                continue
-            sample_key = (kind, subject, metric, sample["phase"], sample["iteration"], source_time)
-            if sample_key in seen:
-                continue
-            seen.add(sample_key)
-            if kind == "node":
-                label = record.get("site_id") or subject
-            else:
-                pod_name = pod_names.get(subject.split("/")[0], "")
-                if not pod_name.startswith(("oai-nr-ue", "oai-dnn", "oai-gnb-cu", "oai-gnb-du")):
-                    continue
-                label = pod_name + ("/" + subject.split("/", 1)[1] if "/" in subject else "")
-            unit = "MiB" if metric.endswith("memory_working_set_bytes") else "cores"
-            value = float(record["value"]) / (1024 * 1024) if unit == "MiB" else float(record["value"])
-            values[(kind, label, metric, unit)][sample["phase"]].append(value)
-
-phases = ("baseline", "dl", "dl_recovery", "ul", "ul_recovery")
-print("\t".join(("kind", "name", "metric", "unit") +
-                tuple(column for phase in phases for column in (phase + "_n", phase + "_mean"))))
-for key in sorted(values):
-    cells = list(key)
-    for phase in phases:
-        phase_values = values[key][phase]
-        cells.extend((str(len(phase_values)),
-                      f"{statistics.mean(phase_values):.3f}" if phase_values else ""))
-    print("\t".join(cells))
-PY
+    python3 "$SUMMARY_SCRIPT" "$SAMPLES" "$PHASES" "$POD_MAP" "$LOG_DIR"
 }
 
 info "iperf3 CPU/RAM test; output: $LOG_DIR"
@@ -191,6 +166,7 @@ total=$((NUM_USERS * NUM_SLICES))
 for ((offset=0; offset<total; offset++)); do
     u=$((10 + offset))
     index=$((offset + 1))
+    CURRENT_USER=$index
     dnn_pod="$(pod_by_prefix "$NAMESPACE" "oai-dnn$u")"
     ue_pod="$(pod_by_prefix "$NAMESPACE" "oai-nr-ue$u")"
     [ -n "$dnn_pod" ] || die "Cannot find DNN pod oai-dnn$u"
@@ -211,10 +187,12 @@ for ((offset=0; offset<total; offset++)); do
 
         start_iperf_server "$dnn_pod" "$dnn_ip"
         info "UE $index, iteration $iteration: DL iperf3"
+        CURRENT_ATTEMPT=1
         dl_log="$LOG_DIR/throughput.DL.$index.$iteration.txt"
         if ! run_iperf_phase dl "$dl_log" kubectl exec -n "$NAMESPACE" "$ue_pod" -c nr-ue -- \
             iperf3 -c "$dnn_ip" -B "$ue_ip" -t "$IPERF_SECONDS" -R; then
             info "DL retry with MSS 1300"
+            CURRENT_ATTEMPT=2
             run_iperf_phase dl "$LOG_DIR/throughput.DL.$index.$iteration.retry.txt" \
                 kubectl exec -n "$NAMESPACE" "$ue_pod" -c nr-ue -- \
                 iperf3 -c "$dnn_ip" -B "$ue_ip" -t "$IPERF_SECONDS" -R -M 1300
@@ -223,6 +201,7 @@ for ((offset=0; offset<total; offset++)); do
 
         start_iperf_server "$dnn_pod" "$dnn_ip"
         info "UE $index, iteration $iteration: UL iperf3"
+        CURRENT_ATTEMPT=1
         run_iperf_phase ul "$LOG_DIR/throughput.UL.$index.$iteration.txt" \
             kubectl exec -n "$NAMESPACE" "$ue_pod" -c nr-ue -- \
             iperf3 -c "$dnn_ip" -B "$ue_ip" -t "$IPERF_SECONDS"
@@ -230,5 +209,9 @@ for ((offset=0; offset<total; offset++)); do
     done
 done
 
+if [ "$POD_PROBE" = 1 ]; then
+    info "Collecting late kubelet samples for $((SAMPLE_INTERVAL * 3)) seconds"
+    sample_for_seconds drain "$((SAMPLE_INTERVAL * 3))"
+fi
 summarize_samples
 success "iperf3 test complete; logs: $LOG_DIR"

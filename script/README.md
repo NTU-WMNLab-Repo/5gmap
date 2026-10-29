@@ -336,9 +336,16 @@ deploy.sh <USECASE> <NUM_USERS> <NUM_SLICES> [RUN_MODE] [DeployUE] [RanProxy] [C
 POD_PROBE=1 bash ./script/start_iperf_cpu_test.sh zoomv3 1 1 3 0
 ```
 
-`run.sh` 目前呼叫 `start_iperf_cpu_test.sh`。`start_traffic.sh` 保留供舊流程單獨使用。新腳本先 ping DNN，再以每輪 15 秒基線、20 秒 DL、15 秒 DL 恢復、20 秒 UL、15 秒 UL 恢復的順序執行；有 probe 時每 5 秒查詢一次 `/v1/snapshot`。輸出在 `5gcore/logs/<usecase>/iperf-cpu/<UTC時間>-<PID>/`：`samples.jsonl` 保留每次採樣與來源時間，`cpu-memory-summary.tsv` 列出 node 及 UE／DNN／gNB 的各階段平均 CPU cores、RAM MiB，另有 ping、iperf3 原始輸出及 Pod UID 對照。`POD_PROBE=0` 時只跑流量，不做採樣。
+`run.sh` 目前呼叫 `start_iperf_cpu_test.sh`。`start_traffic.sh` 保留供舊流程單獨使用。新腳本先 ping DNN，再以每輪 15 秒基線、20 秒 DL、15 秒 DL 恢復、20 秒 UL、15 秒 UL 恢復的預設順序執行；有 probe 時每 5 秒查詢一次 `/v1/snapshot`。輸出在 `5gcore/logs/<usecase>/iperf-cpu/<UTC時間>-<PID>/`：`samples.jsonl` 保留每次查詢的原始快照，`phases.jsonl` 保留各階段的開始與結束時間，`cpu-memory-series.tsv` 是按來源時間歸屬階段的 node／Pod／container CPU 與 RAM 時間序列，`cpu-memory-summary.tsv` 列出每輪與全輪的來源樣本數、可用樣本數、平均、最小與最大值；另有 ping、iperf3 原始輸出及 Pod UID 對照。最後一段流量後再採集 3 個查詢週期，以接住稍晚才出現在 receiver 的 kubelet 值。`POD_PROBE=0` 時只跑流量，不做採樣。
 
-摘要以 `observed_at`（若無則 `collected_at`）判斷來源樣本是否在該階段開始後產生，並對同一階段、同一指標、同一來源時間去重。原始 `samples.jsonl` 仍保留每次查詢結果；kubelet CPU 差值的時間窗可能跨越階段邊界，因此短階段的平均值仍需搭配來源時間判讀。
+摘要先依 `(對象類型、對象 ID、指標、來源時間)` 全域去重，再以 `observed_at`（若無則 `collected_at`）對照 `phases.jsonl`。`source_n` 是該階段的獨立來源樣本數；`clean_n` 排除 CPU 差值視窗跨階段邊界或無法確認起點的樣本；平均、最小、最大值只用 `clean_n` 計算。時間序列的 `window_note` 保留被排除的原因。主機 `os_cpu_busy_percent` 也納入輸出，單位為 `%`，與 kubelet CPU `cores` 分開判讀。`samples.jsonl` 不因摘要去重而刪除任何查詢紀錄。
+
+較長的重複實驗可單獨執行：
+
+```bash
+POD_PROBE=1 BASELINE_SECONDS=30 RECOVERY_SECONDS=30 IPERF_SECONDS=60 \
+  SAMPLE_INTERVAL=5 bash ./script/start_iperf_cpu_test.sh zoomv3 1 1 3 0
+```
 
 UL iperf3 用 `-B <UE data IP>` 綁定 `oaitun_ue1` 的來源位址；實驗室的 UE 路由表會把該來源位址的封包導向 `oaitun_ue1`。檢查 UL 原始輸出的 `local` 欄位應為 `12.1.1.x` 等 UE data IP；若顯示 `10.42.x.x` 的 Pod IP，該輪流量走的是 Pod 網路，不能用來評估 RAN uplink。
 
