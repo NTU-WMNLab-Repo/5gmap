@@ -1,0 +1,29 @@
+kind	name	metric	unit	baseline_n	baseline_mean	dl_n	dl_mean	dl_recovery_n	dl_recovery_mean	ul_n	ul_mean	ul_recovery_n	ul_recovery_mean
+container	oai-dnn10-767ddc7f4b-pjj2w/dnn	container_cpu_usage_cores	cores	1	0.001	0		0		1	0.062	0	
+container	oai-dnn10-767ddc7f4b-pjj2w/dnn	container_memory_working_set_bytes	MiB	1	0.562	0		0		1	1.422	0	
+container	oai-gnb-cu10-7cc59cb9b4-m48p2/gnbcu	container_cpu_usage_cores	cores	1	0.012	1	0.038	0		1	0.082	0	
+container	oai-gnb-cu10-7cc59cb9b4-m48p2/gnbcu	container_memory_working_set_bytes	MiB	1	125.582	1	125.582	0		1	125.734	0	
+container	oai-gnb-cu10-7cc59cb9b4-m48p2/tcpdump	container_cpu_usage_cores	cores	0		0		1	0.000	0		0	
+container	oai-gnb-cu10-7cc59cb9b4-m48p2/tcpdump	container_memory_working_set_bytes	MiB	0		0		1	0.426	0		0	
+container	oai-gnb-du10-5cf7896486-grnnh/gnbdu	container_cpu_usage_cores	cores	1	1.913	1	1.882	1	1.761	1	2.010	0	
+container	oai-gnb-du10-5cf7896486-grnnh/gnbdu	container_memory_working_set_bytes	MiB	1	646.078	1	647.082	1	647.047	1	647.348	0	
+container	oai-gnb-du10-5cf7896486-grnnh/tcpdump	container_cpu_usage_cores	cores	0		1	0.000	1	0.000	1	0.000	1	0.000
+container	oai-gnb-du10-5cf7896486-grnnh/tcpdump	container_memory_working_set_bytes	MiB	0		1	0.430	1	0.430	1	0.430	1	0.430
+container	oai-nr-ue10-5f745dd58b-ctcv9/nr-ue	container_cpu_usage_cores	cores	0		1	1.823	0		2	1.527	0	
+container	oai-nr-ue10-5f745dd58b-ctcv9/nr-ue	container_memory_working_set_bytes	MiB	0		1	406.914	0		2	414.525	0	
+container	oai-nr-ue10-5f745dd58b-ctcv9/tcpdump	container_cpu_usage_cores	cores	0		0		1	0.000	1	0.000	1	0.000
+container	oai-nr-ue10-5f745dd58b-ctcv9/tcpdump	container_memory_working_set_bytes	MiB	0		0		1	0.430	1	0.430	1	0.430
+node	az	node_cpu_usage_cores	cores	1	0.366	1	0.589	1	0.496	1	1.005	0	
+node	az	node_memory_working_set_bytes	MiB	1	7410.133	1	7419.676	1	7397.945	1	7406.988	0	
+node	edge	node_cpu_usage_cores	cores	1	3.313	1	3.815	1	3.995	2	4.111	1	3.628
+node	edge	node_memory_working_set_bytes	MiB	1	6572.629	1	6577.324	1	6576.441	2	6584.619	1	6582.195
+node	monitor	node_cpu_usage_cores	cores	1	0.247	1	0.156	1	0.153	2	0.139	1	0.141
+node	monitor	node_memory_working_set_bytes	MiB	1	7437.281	1	7452.422	1	7443.789	2	7452.365	1	7445.023
+pod	oai-dnn10-767ddc7f4b-pjj2w	pod_cpu_usage_cores	cores	0		1	0.002	0		1	0.008	0	
+pod	oai-dnn10-767ddc7f4b-pjj2w	pod_memory_working_set_bytes	MiB	0		1	4.570	0		1	2.270	0	
+pod	oai-gnb-cu10-7cc59cb9b4-m48p2	pod_cpu_usage_cores	cores	0		1	0.108	0		1	0.274	0	
+pod	oai-gnb-cu10-7cc59cb9b4-m48p2	pod_memory_working_set_bytes	MiB	0		1	126.551	0		1	126.551	0	
+pod	oai-gnb-du10-5cf7896486-grnnh	pod_cpu_usage_cores	cores	0		1	1.859	0		1	2.270	0	
+pod	oai-gnb-du10-5cf7896486-grnnh	pod_memory_working_set_bytes	MiB	0		1	647.852	0		1	647.871	0	
+pod	oai-nr-ue10-5f745dd58b-ctcv9	pod_cpu_usage_cores	cores	0		0		1	2.377	2	1.501	0	
+pod	oai-nr-ue10-5f745dd58b-ctcv9	pod_memory_working_set_bytes	MiB	0		0		1	407.723	2	413.666	0	
