@@ -14,6 +14,12 @@ OAI 5GC slice -> OAI gNB-CU -> OAI gNB-DU -> OAI NR-UE -> DNN test pod
 The old `5gcore/run.sh` path used `gnbsim`. For new deployments, use
 `./script/run.sh`.
 
+The resource-management components are separate directories: [pod-vm-probe](pod-vm-probe/README.md)
+collects and serves node/Pod observations; [resource-decision](resource-decision/README.md)
+reads a probe snapshot and a declared scenario to produce a who/how/where proposal.
+The decision module currently supports offline replay and live snapshot queries;
+it does not apply changes to the cluster.
+
 ## Tested Baseline
 
 These instructions assume Ubuntu 22.04.5 VMs and an RKE-created Kubernetes

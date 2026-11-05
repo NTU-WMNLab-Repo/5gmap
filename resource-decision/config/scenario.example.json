@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "version": "resource-demo-1",
+  "provenance": "simulated",
+  "session_id": "intersection-session-1",
+  "target_id": "target-vehicle-1",
+  "serving_site": "edge",
+  "eligible_sites": ["edge", "az"],
+  "min_utility": 0.5,
+  "base_demand": {"cpu_cores": 0.5, "memory_bytes": 268435456},
+  "extra_ran_reserve": {"cpu_cores": 0.5, "memory_bytes": 268435456},
+  "network": {
+    "provenance": "simulated",
+    "uplink_capacity_bps": {"edge": 80000000},
+    "inter_edge_capacity_bps": 100000000
+  },
+  "candidates": [
+    {
+      "id": "rsu-north",
+      "ingress_site": "edge",
+      "profiles": [
+        {"id": "low", "cpu_cores": 0.5, "memory_bytes": 134217728,
+         "uplink_bps": 20000000, "utility": 0.25},
+        {"id": "high", "cpu_cores": 1.5, "memory_bytes": 268435456,
+         "uplink_bps": 60000000, "utility": 0.5}
+      ]
+    },
+    {
+      "id": "rsu-east",
+      "ingress_site": "edge",
+      "profiles": [
+        {"id": "low", "cpu_cores": 0.5, "memory_bytes": 134217728,
+         "uplink_bps": 20000000, "utility": 0.25},
+        {"id": "high", "cpu_cores": 1.5, "memory_bytes": 268435456,
+         "uplink_bps": 60000000, "utility": 0.5}
+      ]
+    }
+  ]
+}
