@@ -2,19 +2,25 @@
   "schema_version": 1,
   "generated_at": "2026-10-30T00:00:00+00:00",
   "inventory": {"source": "simulated/example", "counts": {"node": 2, "pod": 0, "container": 0, "service": 0}},
-  "total": 10,
+  "total": 16,
   "next_offset": null,
   "missing": [],
   "observations": [
     {"subject_kind": "node", "subject_id": "example-node-edge", "site_id": "edge", "metric": "node_ready", "value": "True", "status": "ok", "provenance": "simulated"},
+    {"subject_kind": "node", "subject_id": "example-node-edge", "site_id": "edge", "metric": "node_unschedulable", "value": false, "status": "ok", "provenance": "simulated"},
+    {"subject_kind": "node", "subject_id": "example-node-edge", "site_id": "edge", "metric": "node_capacity_cpu", "value": "8", "status": "ok", "provenance": "simulated"},
     {"subject_kind": "node", "subject_id": "example-node-edge", "site_id": "edge", "metric": "node_allocatable_cpu", "value": "8", "status": "ok", "provenance": "simulated"},
     {"subject_kind": "node", "subject_id": "example-node-edge", "site_id": "edge", "metric": "node_allocatable_memory", "value": "8Gi", "status": "ok", "provenance": "simulated"},
     {"subject_kind": "node", "subject_id": "example-node-edge", "site_id": "edge", "metric": "node_cpu_usage_cores", "value": 3.3, "status": "ok", "provenance": "simulated"},
     {"subject_kind": "node", "subject_id": "example-node-edge", "site_id": "edge", "metric": "node_memory_working_set_bytes", "value": 2147483648, "status": "ok", "provenance": "simulated"},
+    {"subject_kind": "node", "subject_id": "example-node-edge", "site_id": "edge", "metric": "os_memavailable_bytes", "value": 6442450944, "status": "ok", "provenance": "simulated"},
     {"subject_kind": "node", "subject_id": "example-node-az", "site_id": "az", "metric": "node_ready", "value": "True", "status": "ok", "provenance": "simulated"},
+    {"subject_kind": "node", "subject_id": "example-node-az", "site_id": "az", "metric": "node_unschedulable", "value": false, "status": "ok", "provenance": "simulated"},
+    {"subject_kind": "node", "subject_id": "example-node-az", "site_id": "az", "metric": "node_capacity_cpu", "value": "8", "status": "ok", "provenance": "simulated"},
     {"subject_kind": "node", "subject_id": "example-node-az", "site_id": "az", "metric": "node_allocatable_cpu", "value": "8", "status": "ok", "provenance": "simulated"},
     {"subject_kind": "node", "subject_id": "example-node-az", "site_id": "az", "metric": "node_allocatable_memory", "value": "8Gi", "status": "ok", "provenance": "simulated"},
     {"subject_kind": "node", "subject_id": "example-node-az", "site_id": "az", "metric": "node_cpu_usage_cores", "value": 0.4, "status": "ok", "provenance": "simulated"},
-    {"subject_kind": "node", "subject_id": "example-node-az", "site_id": "az", "metric": "node_memory_working_set_bytes", "value": 1073741824, "status": "ok", "provenance": "simulated"}
+    {"subject_kind": "node", "subject_id": "example-node-az", "site_id": "az", "metric": "node_memory_working_set_bytes", "value": 1073741824, "status": "ok", "provenance": "simulated"},
+    {"subject_kind": "node", "subject_id": "example-node-az", "site_id": "az", "metric": "os_memavailable_bytes", "value": 7516192768, "status": "ok", "provenance": "simulated"}
   ]
 }

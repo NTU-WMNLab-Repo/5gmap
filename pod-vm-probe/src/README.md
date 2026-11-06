@@ -5,8 +5,8 @@
 | 檔案 | 執行位置 | 職責 |
 | --- | --- | --- |
 | `common.py` | 兩種 probe 共用 | 透過 Pod ServiceAccount 與叢集 API 通訊、建立含來源／時間／狀態的觀測紀錄、將批次送至 receiver；傳送失敗時保留最多 60 批記憶體佇列 |
-| `cluster_probe.py` | 單一 `pod-probe-cluster` Deployment | 目標每 10 秒讀取 Node、Pod、Event、Service 與 Endpoints；經 API server 的 node proxy 讀 kubelet `/metrics/resource`，計算 node／Pod／container CPU cores，收集 memory working set；以 UID 關聯 Pod 和 container，並附上當次完整物件清單 |
-| `node_probe.py` | 兩個 worker 各一個 `pod-probe-node` DaemonSet Pod | 每 5 秒從主機唯讀掛載的 `/proc`、`/sys` 取得 OS 可用記憶體、CPU busy、網卡 counters 與 AMD GPU 指標；每約 10 秒對另一個 worker 的 TCP 22 埠做連線探測 |
+| `cluster_probe.py` | 單一 `pod-probe-cluster` Deployment | 目標每 10 秒讀取 Node、Pod、Event、Service 與 Endpoints；經 API server 的 node proxy 讀 kubelet `/metrics/resource`，計算 node／Pod／container CPU cores，收集 memory working set；對每個 Pod 送出一般／init container requests、Pod overhead、phase 和 node UID，並附上當次完整物件清單 |
+| `node_probe.py` | 兩個 worker 各一個 `pod-probe-node` DaemonSet Pod | 每 5 秒從主機唯讀掛載的 `/proc`、`/sys` 取得 OS `MemAvailable`、CPU busy、網卡 counters 與 AMD GPU 指標；每約 10 秒對另一個 worker 的 TCP 22 埠做連線探測 |
 | `receiver.py` | `pod-probe-receiver` Deployment | 驗證批次、以 `probe_id + boot_id + sequence` 去重、寫入 SQLite 歷史與最新值、合併固定情境設定，依物件清單、TTL 與狀態提供決策輸入快照；不執行資源決策 |
 
 ```text

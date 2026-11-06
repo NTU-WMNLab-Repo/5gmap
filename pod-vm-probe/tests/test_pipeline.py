@@ -25,7 +25,10 @@ class PipelineTest(unittest.TestCase):
                                            "status": {}}]},
             "/api/v1/pods": {"items": [{"metadata": {"uid": "pod-1", "name": "du-1",
                                                       "namespace": "oai"},
-                                          "spec": {"nodeName": "worker-1", "containers": []},
+                                          "spec": {"nodeName": "worker-1",
+                                                   "containers": [{"name": "app", "resources": {"requests": {"cpu": "300m"}}}],
+                                                   "initContainers": [{"name": "init", "resources": {"requests": {"cpu": "1"}}}],
+                                                   "overhead": {"memory": "64Mi"}},
                                           "status": {}}]},
             "/api/v1/events": {"items": []},
             "/api/v1/services": {"items": [{"metadata": {"uid": "svc-1", "name": "du",
@@ -40,9 +43,14 @@ class PipelineTest(unittest.TestCase):
         locations = [item for item in records if item["metric"] == "service_location"]
         self.assertEqual(locations[0]["value"], ["edge"])
         self.assertEqual(locations[0]["unit"], "sites")
+        resource_inputs = next(item for item in records if item["metric"] == "pod_resource_inputs")
+        self.assertEqual(resource_inputs["node_uid"], "node-1")
+        self.assertEqual(resource_inputs["value"]["containers"], [{"cpu": "300m"}])
+        self.assertEqual(resource_inputs["value"]["init_containers"], [{"cpu": "1"}])
+        self.assertEqual(resource_inputs["value"]["overhead"], {"memory": "64Mi"})
         inventory = next(item for item in records if item["metric"] == "k8s_object_uids")
         self.assertEqual(inventory["value"], {"node": ["node-1"], "pod": ["pod-1"],
-                                              "container": [], "service": ["svc-1"]})
+                                              "container": ["pod-1/app"], "service": ["svc-1"]})
 
     def test_events_emit_only_when_resource_version_changes(self):
         cluster_probe.EVENT_RESOURCE_VERSIONS.clear()

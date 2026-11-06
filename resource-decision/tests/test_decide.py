@@ -59,6 +59,83 @@ class DecisionTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "GPU demand is unsupported"):
             decide(self.snapshot, scenario)
 
+    def test_effective_requests_include_init_peak_and_overhead(self):
+        snapshot = copy.deepcopy(self.snapshot)
+        snapshot["inventory"]["counts"]["pod"] = 1
+        snapshot["observations"].append({
+            "subject_kind": "pod", "subject_id": "pod-1", "node_uid": "example-node-edge",
+            "site_id": "edge", "metric": "pod_resource_inputs", "status": "ok",
+            "provenance": "simulated", "value": {
+                "phase": "Running", "containers": [
+                    {"cpu": "300m", "memory": "128Mi"}, {"cpu": "200m", "memory": "128Mi"}],
+                "init_containers": [{"cpu": "1200m", "memory": "512Mi"}],
+                "overhead": {"cpu": "100m", "memory": "64Mi"}}})
+        snapshot["total"] += 1
+        result = decide(snapshot, self.scenario)
+        budget = result["budgets"]["edge"]
+        self.assertAlmostEqual(budget["existing_pod_requests"]["cpu_cores"], 1.3)
+        self.assertEqual(budget["existing_pod_requests"]["memory_bytes"], 576 * 1024**2)
+        self.assertAlmostEqual(budget["scheduling_headroom"]["cpu_cores"], 6.2)
+        self.assertEqual(budget["counted_pods"], 1)
+        snapshot["observations"][-1]["value"]["phase"] = "Succeeded"
+        self.assertEqual(decide(snapshot, self.scenario)["budgets"]["edge"]["counted_pods"], 0)
+
+    def test_scheduler_and_runtime_are_independent_constraints(self):
+        snapshot = copy.deepcopy(self.snapshot)
+        snapshot["inventory"]["counts"]["pod"] = 1
+        snapshot["observations"].append({
+            "subject_kind": "pod", "subject_id": "pod-1", "node_uid": "example-node-edge",
+            "site_id": "edge", "metric": "pod_resource_inputs", "status": "ok",
+            "provenance": "simulated", "value": {"phase": "Running", "containers": [{"cpu": "6"}],
+                                                "init_containers": [], "overhead": {}}})
+        snapshot["total"] += 1
+        result = decide(snapshot, self.scenario)
+        self.assertEqual(result["where"], "az")
+        self.assertGreater(result["budgets"]["edge"]["runtime_headroom"]["cpu_cores"], 2.5)
+        self.assertLess(result["budgets"]["edge"]["scheduling_headroom"]["cpu_cores"], 2.5)
+        snapshot["observations"][-1]["value"]["containers"] = [{"cpu": "100m"}]
+        for record in snapshot["observations"]:
+            if record.get("site_id") == "edge" and record["metric"] == "node_cpu_usage_cores":
+                record["value"] = 5.4
+        result = decide(snapshot, self.scenario)
+        self.assertEqual(result["where"], "az")
+        self.assertGreater(result["budgets"]["edge"]["scheduling_headroom"]["cpu_cores"], 2.5)
+        self.assertLess(result["budgets"]["edge"]["runtime_headroom"]["cpu_cores"], 2.5)
+
+    def test_missing_pod_resource_inputs_blocks_proposal(self):
+        snapshot = copy.deepcopy(self.snapshot)
+        snapshot["inventory"]["counts"]["pod"] = 1
+        result = decide(snapshot, self.scenario)
+        self.assertEqual(result["status"], "input_unavailable")
+        self.assertIn("pod resource inputs", result["reason"])
+
+    def test_memory_runtime_and_request_budgets_are_separate(self):
+        snapshot = copy.deepcopy(self.snapshot)
+        for record in snapshot["observations"]:
+            if record.get("site_id") == "edge" and record["metric"] == "os_memavailable_bytes":
+                record["value"] = 400 * 1024**2
+        result = decide(snapshot, self.scenario)
+        self.assertEqual(result["where"], "az")
+        self.assertGreater(result["budgets"]["edge"]["scheduling_headroom"]["memory_bytes"],
+                           640 * 1024**2)
+        self.assertLess(result["budgets"]["edge"]["runtime_headroom"]["memory_bytes"],
+                        640 * 1024**2)
+
+        snapshot = copy.deepcopy(self.snapshot)
+        snapshot["inventory"]["counts"]["pod"] = 1
+        snapshot["observations"].append({
+            "subject_kind": "pod", "subject_id": "pod-1", "node_uid": "example-node-edge",
+            "site_id": "edge", "metric": "pod_resource_inputs", "status": "ok",
+            "provenance": "simulated", "value": {"phase": "Running", "containers": [{"memory": "7600Mi"}],
+                                                "init_containers": [], "overhead": {}}})
+        snapshot["total"] += 1
+        result = decide(snapshot, self.scenario)
+        self.assertEqual(result["where"], "az")
+        self.assertGreater(result["budgets"]["edge"]["runtime_headroom"]["memory_bytes"],
+                           640 * 1024**2)
+        self.assertLess(result["budgets"]["edge"]["scheduling_headroom"]["memory_bytes"],
+                        640 * 1024**2)
+
     def test_sensitivity_matrix_at_lab_like_edge_cpu_budget(self):
         snapshot = copy.deepcopy(self.snapshot)
         for record in snapshot["observations"]:

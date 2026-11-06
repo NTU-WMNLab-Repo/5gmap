@@ -15,13 +15,31 @@ def quantity(value, base):
     if not isinstance(value, str):
         raise ValueError(f"invalid Kubernetes quantity: {value!r}")
     suffixes = {"Ki": 1024, "Mi": 1024**2, "Gi": 1024**3, "Ti": 1024**4,
-                "K": 1000, "M": 1000**2, "G": 1000**3, "T": 1000**4}
-    if base == "cpu" and value.endswith("m"):
-        return float(value[:-1]) / 1000
+                "k": 1000, "K": 1000, "M": 1000**2, "G": 1000**3, "T": 1000**4,
+                "m": 0.001, "u": 0.000001, "n": 0.000000001}
     for suffix, scale in suffixes.items():
         if value.endswith(suffix):
             return float(value[:-len(suffix)]) * scale
     return float(value)
+
+
+def effective_pod_request(value, pod_id):
+    if not isinstance(value, dict) or not isinstance(value.get("containers"), list) or \
+            not isinstance(value.get("init_containers"), list) or \
+            not isinstance(value.get("overhead"), dict):
+        raise ValueError(f"pod {pod_id}: incomplete resource inputs")
+    result = {}
+    for resource, field in (("cpu", "cpu_cores"), ("memory", "memory_bytes")):
+        def request(raw):
+            if not isinstance(raw, dict):
+                raise ValueError(f"pod {pod_id}: invalid {resource} request")
+            return positive_number(quantity(raw.get(resource, "0"), resource),
+                                   f"pod {pod_id}.{resource}")
+
+        app_sum = sum(request(raw) for raw in value["containers"])
+        init_max = max((request(raw) for raw in value["init_containers"]), default=0)
+        result[field] = max(app_sum, init_max) + request(value["overhead"])
+    return result
 
 
 def positive_number(value, name, allow_zero=True):
@@ -93,8 +111,30 @@ def node_budgets(snapshot, scenario):
         raise ValueError("expected a complete /v1/snapshot response")
     if snapshot["next_offset"] is not None or snapshot["total"] != len(snapshot["observations"]):
         raise ValueError("snapshot is paginated; fetch all records before deciding")
-    required = ("node_ready", "node_allocatable_cpu", "node_allocatable_memory",
-                "node_cpu_usage_cores", "node_memory_working_set_bytes")
+    required = ("node_ready", "node_unschedulable", "node_capacity_cpu",
+                "node_allocatable_cpu", "node_allocatable_memory",
+                "node_cpu_usage_cores", "os_memavailable_bytes")
+    counts = snapshot["inventory"].get("counts")
+    if not isinstance(counts, dict):
+        raise ValueError("snapshot inventory needs object counts")
+    pod_count = counts.get("pod")
+    if type(pod_count) is not int or pod_count < 0:
+        raise ValueError("snapshot inventory needs a pod count")
+    pod_records = [record for record in snapshot["observations"]
+                   if record.get("subject_kind") == "pod" and
+                   record.get("metric") == "pod_resource_inputs"]
+    pod_ids = [record.get("subject_id") for record in pod_records]
+    if len(pod_records) != pod_count or any(not isinstance(uid, str) or not uid for uid in pod_ids) or \
+            len(set(pod_ids)) != pod_count or \
+            any(record.get("status") != "ok" for record in pod_records):
+        raise ValueError("pod resource inputs are incomplete or duplicated")
+    if any(not isinstance(record.get("value"), dict) or
+           not isinstance(record["value"].get("phase"), str) for record in pod_records):
+        raise ValueError("pod resource inputs have invalid values")
+    if any(record["value"]["phase"] not in ("Succeeded", "Failed") and
+           record.get("attributes", {}).get("node_name") and not record.get("node_uid")
+           for record in pod_records):
+        raise ValueError("assigned pod is missing its node UID")
     nodes = {}
     for record in snapshot["observations"]:
         if record.get("subject_kind") != "node" or record.get("metric") not in required:
@@ -118,19 +158,41 @@ def node_budgets(snapshot, scenario):
             raise ValueError(f"site {site}: missing {', '.join(sorted(absent))}")
         if metrics["node_ready"]["value"] != "True":
             raise ValueError(f"site {site}: node is not Ready")
-        cpu = positive_number(quantity(metrics["node_allocatable_cpu"]["value"], "cpu"),
-                              f"{site}.allocatable_cpu", allow_zero=False)
-        memory = positive_number(quantity(metrics["node_allocatable_memory"]["value"], "memory"),
-                                 f"{site}.allocatable_memory", allow_zero=False)
+        if metrics["node_unschedulable"]["value"] is not False:
+            raise ValueError(f"site {site}: node is unschedulable")
+        capacity_cpu = positive_number(quantity(metrics["node_capacity_cpu"]["value"], "cpu"),
+                                       f"{site}.capacity_cpu", allow_zero=False)
+        allocatable_cpu = positive_number(quantity(metrics["node_allocatable_cpu"]["value"], "cpu"),
+                                          f"{site}.allocatable_cpu", allow_zero=False)
+        allocatable_memory = positive_number(quantity(metrics["node_allocatable_memory"]["value"], "memory"),
+                                             f"{site}.allocatable_memory", allow_zero=False)
         used_cpu = positive_number(metrics["node_cpu_usage_cores"]["value"], f"{site}.used_cpu")
-        used_memory = positive_number(metrics["node_memory_working_set_bytes"]["value"], f"{site}.used_memory")
+        available_memory = positive_number(metrics["os_memavailable_bytes"]["value"],
+                                           f"{site}.os_memavailable_bytes")
+        assigned = [record for record in pod_records if record.get("node_uid") == uid and
+                    record["value"].get("phase") not in ("Succeeded", "Failed")]
+        requested = {"cpu_cores": 0.0, "memory_bytes": 0.0}
+        for record in assigned:
+            effective = effective_pod_request(record["value"], record["subject_id"])
+            for field in requested:
+                requested[field] += effective[field]
         reserve = scenario["extra_ran_reserve"]
+        scheduling = {
+            "cpu_cores": max(0, allocatable_cpu - requested["cpu_cores"] - float(reserve["cpu_cores"])),
+            "memory_bytes": max(0, allocatable_memory - requested["memory_bytes"] - float(reserve["memory_bytes"])),
+        }
+        runtime = {
+            "cpu_cores": max(0, capacity_cpu - used_cpu - float(reserve["cpu_cores"])),
+            "memory_bytes": max(0, available_memory - float(reserve["memory_bytes"])),
+        }
         result[site] = {"node_uid": uid,
-                        "cpu_cores": max(0, cpu - used_cpu - float(reserve["cpu_cores"])),
-                        "memory_bytes": max(0, memory - used_memory - float(reserve["memory_bytes"])),
-                        "capacity_model": "allocatable_minus_observed_usage_minus_extra_reserve",
+                        "cpu_cores": min(scheduling["cpu_cores"], runtime["cpu_cores"]),
+                        "memory_bytes": min(scheduling["memory_bytes"], runtime["memory_bytes"]),
+                        "scheduling_headroom": scheduling, "runtime_headroom": runtime,
+                        "existing_pod_requests": requested, "counted_pods": len(assigned),
+                        "capacity_model": "independent_scheduling_and_runtime_checks",
                         "input_provenance": sorted({record.get("provenance", "unknown")
-                                                    for record in metrics.values()})}
+                                                    for record in list(metrics.values()) + assigned})}
     return result
 
 
@@ -162,7 +224,8 @@ def decide(snapshot, scenario):
             float(profile["memory_bytes"]) for _, profile in selected)
         for site in scenario["eligible_sites"]:
             budget = budgets[site]
-            if cpu > budget["cpu_cores"] or memory > budget["memory_bytes"]:
+            if any(cpu > budget[check]["cpu_cores"] or memory > budget[check]["memory_bytes"]
+                   for check in ("scheduling_headroom", "runtime_headroom")):
                 continue
             inter_edge_bps = sum(float(profile["uplink_bps"]) for candidate, profile in selected
                                  if candidate["ingress_site"] != site)
@@ -177,7 +240,9 @@ def decide(snapshot, scenario):
             "target_id": scenario["target_id"], "snapshot_generated_at": snapshot.get("generated_at"),
             "scenario_version": scenario.get("version"), "scenario_provenance": "simulated",
             "network_provenance": "simulated", "execution": "proposal_only",
-            "budgets": budgets, "schedulability": "unverified_requests_not_aggregated"}
+            "budgets": budgets,
+            "schedulability": "cpu_memory_requests_checked_other_constraints_unverified",
+            "demand_assumption": "scenario_cpu_memory_are_both_new_pod_requests_and_expected_usage"}
     if best is None:
         return {**base, "status": "no_feasible_configuration", "min_utility": scenario["min_utility"]}
     _, site, selected, cpu, memory, by_ingress, inter_edge_bps = best

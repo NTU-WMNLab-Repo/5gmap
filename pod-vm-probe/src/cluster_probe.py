@@ -160,6 +160,17 @@ def collect():
         for metric, value in (("pod_phase", status.get("phase", "Unknown")), ("pod_ready", ready)):
             records.append(observation("pod", subject, metric, value, "state", "k8s/pod",
                                        node_uid=node_uid, site_id=site, attributes=attrs))
+        requests = {
+            "phase": status.get("phase", "Unknown"),
+            "containers": [container.get("resources", {}).get("requests", {})
+                           for container in spec.get("containers", [])],
+            "init_containers": [container.get("resources", {}).get("requests", {})
+                                for container in spec.get("initContainers", [])],
+            "overhead": spec.get("overhead") or {},
+        }
+        records.append(observation("pod", subject, "pod_resource_inputs", requests,
+                                   "k8s_resource_requests", "k8s/pod", node_uid=node_uid,
+                                   site_id=site, attributes=attrs))
         for container in status.get("containerStatuses", []):
             container_id = f"{subject}/{container['name']}"
             records.append(observation("container", container_id, "restart_count", container.get("restartCount", 0),

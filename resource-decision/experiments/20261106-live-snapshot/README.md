@@ -33,4 +33,4 @@ python3 resource-decision/experiments/20261106-live-snapshot/run.py \
 | edge uplink 降至 60 Mbps | east:high | edge | 0.5 | 2.0 cores |
 | edge uplink 降至 10 Mbps | 無可行配置 | — | — | — |
 
-上表的容量變化是模擬情境，不是 lab 網路重新量測。完整快照只在 lab 的 `/tmp`；回歸測試使用接近這次 CPU 餘量的模擬快照。
+上表的容量變化是模擬情境，不是 lab 網路重新量測。完整快照只在 lab 的 `/tmp`；回歸測試使用接近這次 CPU 餘量的模擬快照。此表由當時只檢查整機用量的第一版決策規則產生。後續版本新增 Pod requests 檢查，舊快照缺少 `pod_resource_inputs`，不能直接重播；腳本需搭配新版 probe 產生的新快照。

@@ -16,7 +16,7 @@ node-probe     ──┼─ HTTP JSON → Service → resource-manager Pod → �
 
 | 元件 | 位置 | 責任 |
 | --- | --- | --- |
-| cluster-probe | 每個 cluster 一個 Deployment | K8s Pod／Node metadata、health、Events、capacity／requests／limits；kubelet 資源 metrics |
+| cluster-probe | 每個 cluster 一個 Deployment | K8s Pod／Node metadata、health、Events、capacity／requests／limits；每個 Pod 的一般／init container requests 與 overhead；kubelet 資源 metrics |
 | node-probe | 每個受測 node 一個 DaemonSet Pod；必要時採 node 本機程序 | 主機視角 CPU／RAM、可見 GPU、指定網卡 counters 與基本連線探測 |
 | resource-manager | 一個 Deployment＋Service＋持久儲存 | 接收、驗證、去重、保存、合併配置、標示過期資料及提供查詢 |
 
