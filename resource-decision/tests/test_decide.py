@@ -1,7 +1,9 @@
 import copy
 import json
 from pathlib import Path
+import subprocess
 import sys
+import tempfile
 import unittest
 
 
@@ -56,6 +58,28 @@ class DecisionTest(unittest.TestCase):
         scenario["candidates"][0]["profiles"][0]["gpu_units"] = 1
         with self.assertRaisesRegex(ValueError, "GPU demand is unsupported"):
             decide(self.snapshot, scenario)
+
+    def test_sensitivity_matrix_at_lab_like_edge_cpu_budget(self):
+        snapshot = copy.deepcopy(self.snapshot)
+        for record in snapshot["observations"]:
+            if record["site_id"] == "edge" and record["metric"] == "node_cpu_usage_cores":
+                record["value"] = 5.34  # simulated edge headroom: 8 - 5.34 - 0.5 = 2.16 cores
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "snapshot.json"
+            path.write_text(json.dumps(snapshot), encoding="utf-8")
+            process = subprocess.run(
+                [sys.executable, "-B", str(ROOT / "experiments/20261106-live-snapshot/run.py"),
+                 "--snapshot-file", str(path)], capture_output=True, text=True, check=True)
+        lines = [line.split("\t") for line in process.stdout.strip().splitlines()]
+        rows = {line[0]: dict(zip(lines[0], line)) for line in lines[1:]}
+        self.assertEqual((rows["baseline"]["where"], rows["baseline"]["utility"]), ("az", "0.75"))
+        self.assertEqual((rows["base_cpu_0.1"]["where"], rows["base_cpu_0.1"]["utility"]),
+                         ("edge", "0.75"))
+        self.assertEqual((rows["inter_edge_40mbps"]["where"],
+                          rows["inter_edge_40mbps"]["inter_edge_bps"]), ("edge", "0"))
+        self.assertEqual((rows["uplink_60mbps"]["where"], rows["uplink_60mbps"]["utility"]),
+                         ("edge", "0.5"))
+        self.assertEqual(rows["uplink_10mbps"]["status"], "no_feasible_configuration")
 
 
 if __name__ == "__main__":

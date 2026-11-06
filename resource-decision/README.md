@@ -16,6 +16,7 @@ pod-vm-probe /v1/snapshot ─┐
 | `config/scenario.example.json` | 兩個 RSU、兩種資料品質與雙 site 的**模擬**情境，數值只供管線驗證 |
 | `examples/snapshot.example.json` | 符合 receiver `/v1/snapshot` 格式的**模擬** node 資料，供離線重播 |
 | `tests/test_decide.py` | 本地選擇、跨 site、缺值、網路限制與 GPU 需求測試 |
+| `experiments/20261106-live-snapshot/` | 實際 probe 快照的小驗證與固定快照情境敏感度腳本 |
 
 ## 執行
 
